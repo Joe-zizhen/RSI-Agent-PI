@@ -1,0 +1,27 @@
+import { type ImportedAsyncRootResult } from "./chain-root-attachment.ts";
+import { type ResultSnapshot } from "./result-files.ts";
+type ExistingAsyncRunOutcome = {
+    status: "settled";
+    result: ImportedAsyncRootResult & {
+        importedPublication: NonNullable<ImportedAsyncRootResult["importedPublication"]>;
+    };
+} | {
+    status: "unavailable";
+    reason: string;
+};
+/**
+ * Waits for an existing workflow-awaited async child, identified by its async
+ * directory and exact run id, and returns its published result without
+ * launching, consuming, or rewriting anything. Anything short of a published
+ * result file for that exact run is `unavailable`. Rejects with the signal's
+ * reason when aborted.
+ */
+export declare function awaitExistingAsyncRun(asyncDir: string, runId: string, signal: AbortSignal): Promise<ExistingAsyncRunOutcome>;
+/**
+ * Renames the published result to a file owned by `claimant`, if it is still the payload the
+ * claimant read. Only one of several concurrent importers can win the rename; the others, and a
+ * claimant whose payload a newer one replaced, get undefined and launch fresh.
+ */
+export declare function claimWorkflowAwaitedResult(asyncDir: string, claimant: string, read: ResultSnapshot): string | undefined;
+export {};
+//# sourceMappingURL=await-async-run.d.ts.map
