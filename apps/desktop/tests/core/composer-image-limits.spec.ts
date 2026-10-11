@@ -72,7 +72,7 @@ test("rejects oversized drag-drop, picker, and forged IPC images with a composer
     await attachTinyAndClear(window, harness, tinyPath);
 
     await stubNextOpenDialog(harness, [hugePath]);
-    await window.getByRole("button", { name: "Attach files" }).click();
+    await window.getByRole("button", { name: "添加文件" }).click();
     await expect(window.getByTestId("composer-error-banner")).toHaveText(
       composerImageBytesLimitMessage(),
     );
@@ -81,7 +81,7 @@ test("rejects oversized drag-drop, picker, and forged IPC images with a composer
     await attachTinyAndClear(window, harness, tinyPath);
 
     await stubNextOpenDialog(harness, bulkPaths);
-    await window.getByRole("button", { name: "Attach files" }).click();
+    await window.getByRole("button", { name: "添加文件" }).click();
     await expect(window.getByTestId("composer-error-banner")).toHaveText(
       composerImageAggregateLimitMessage(),
     );
@@ -114,7 +114,7 @@ test("rejects oversized drag-drop, picker, and forged IPC images with a composer
     await expect(window.locator(".composer-attachment")).toHaveCount(0);
 
     await stubNextOpenDialog(harness, [tinyPath]);
-    await window.getByRole("button", { name: "Attach files" }).click();
+    await window.getByRole("button", { name: "添加文件" }).click();
     await expect(window.locator(".composer-attachment--image")).toHaveCount(1);
   } finally {
     await harness.close();
@@ -257,7 +257,7 @@ test("relaunch skips oversize-pixel saved images without rewriting the attachmen
       "title",
       "tiny.png",
     );
-    await expect(window.getByRole("button", { name: "View wide.png" })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "查看 wide.png" })).toHaveCount(0);
     await captureComposerProof(window, "composer_restore_pixel_skip.png");
     expect(await readFile(attachmentPath, "utf8")).toBe(original);
   } finally {
@@ -332,7 +332,7 @@ test("legacy migration skips oversize-pixel images before the composer map", asy
       "title",
       "tiny.png",
     );
-    await expect(window.getByRole("button", { name: "View wide.png" })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "查看 wide.png" })).toHaveCount(0);
     const migrated = JSON.parse(await readFile(attachmentPath, "utf8")) as Array<{
       readonly id: string;
     }>;
@@ -441,7 +441,7 @@ async function attachTinyAndClear(
   tinyPath: string,
 ): Promise<void> {
   await stubNextOpenDialog(harness, [tinyPath]);
-  await window.getByRole("button", { name: "Attach files" }).click();
+  await window.getByRole("button", { name: "添加文件" }).click();
   await expect(window.locator(".composer-attachment--image")).toHaveCount(1);
   await window.getByRole("button", { name: "Remove tiny.png" }).click();
   await expect(window.locator(".composer-attachment")).toHaveCount(0);

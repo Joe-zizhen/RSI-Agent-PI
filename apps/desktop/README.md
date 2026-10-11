@@ -16,13 +16,13 @@ pnpm install
 Build the desktop app:
 
 ```bash
-pnpm --filter @pi-gui/desktop build
+pnpm --filter @rsi-agent-pi/desktop build
 ```
 
 Run the app in development:
 
 ```bash
-pnpm --filter @pi-gui/desktop dev
+pnpm --filter @rsi-agent-pi/desktop dev
 ```
 
 `dev` now runs through `electron-vite`, so renderer edits hot-update in place and Electron `main` / `preload` changes trigger the appropriate reload or restart behavior automatically. The desktop dev launcher also rebuilds the shared workspace packages up front and keeps them in watch mode so Node-side package changes can be picked up without manual rebuilds.
@@ -30,25 +30,25 @@ pnpm --filter @pi-gui/desktop dev
 Run the built app locally without packaging:
 
 ```bash
-pnpm --filter @pi-gui/desktop preview
+pnpm --filter @rsi-agent-pi/desktop preview
 ```
 
 Package a Linux AppImage locally:
 
 ```bash
-pnpm --filter @pi-gui/desktop run package:linux
+pnpm --filter @rsi-agent-pi/desktop run package:linux
 ```
 
 Package Windows installers locally:
 
 ```bash
-pnpm --filter @pi-gui/desktop run package:win
+pnpm --filter @rsi-agent-pi/desktop run package:win
 ```
 
 Unpacked Windows build (faster iteration):
 
 ```bash
-pnpm --filter @pi-gui/desktop run package:win:dir
+pnpm --filter @rsi-agent-pi/desktop run package:win:dir
 ```
 
 On Windows, `package:win*` routes through `scripts/package-windows.mjs`, which prefers the ASCII repo-local `tools/pnpm.cmd` shim and redirects `ELECTRON_BUILDER_CACHE` / `LOCALAPPDATA` into `.cache/` under the repo. This avoids electron-builder failures when `pnpm` lives under a non-ASCII `%USERPROFILE%` or when Developer Mode / elevation is unavailable for winCodeSign symlink extraction. Linux and Windows packaging retry GitHub 502/503/504 downloads of Electron and electron-builder binaries (including winCodeSign) up to three times. Cached binaries stay in `ELECTRON_BUILDER_CACHE` (default `.cache/electron-builder` in the repo). CI runners do not keep that cache across jobs, so the retry covers a 504 on a cold runner. Set `ELECTRON_MIRROR` if Electron downloads are flaky in your region.
@@ -63,39 +63,39 @@ Use the smallest lane that matches the changed surface.
   Background-friendly Electron UI coverage. This is the default lane for renderer, sidebar, composer, persistence, settings, skills, and worktree UI behavior.
 
   ```bash
-  pnpm --filter @pi-gui/desktop run test:e2e
-  pnpm --filter @pi-gui/desktop run test:e2e:core
+  pnpm --filter @rsi-agent-pi/desktop run test:e2e
+  pnpm --filter @rsi-agent-pi/desktop run test:e2e:core
   ```
 
 - `live`
   Runtime integration coverage, including local extension fixtures and opt-in real-provider tests. Inspect the selected spec and report skips: a green lane without real requests does not prove a provider conversation.
 
   ```bash
-  pnpm --filter @pi-gui/desktop run test:e2e:live
+  pnpm --filter @rsi-agent-pi/desktop run test:e2e:live
   ```
 
 - `native`
   macOS OS-surface coverage such as folder pickers, image pickers, and real clipboard paste. This lane is foreground-only and can take focus.
 
   ```bash
-  pnpm --filter @pi-gui/desktop run test:e2e:native
+  pnpm --filter @rsi-agent-pi/desktop run test:e2e:native
   ```
 
 - `production`
   Opt-in higher-fidelity smokes that stay out of the default fast lanes. Use these for real-auth `live` checks, packaged `.app` launch, and real macOS open-panel coverage.
 
   ```bash
-  pnpm --filter @pi-gui/desktop run test:core:auth-contract
-  pnpm --filter @pi-gui/desktop run test:prod:packaged-smoke
-  pnpm --filter @pi-gui/desktop run test:prod:applications-relaunch
-  pnpm --filter @pi-gui/desktop run test:prod:release-zip-smoke
-  pnpm --filter @pi-gui/desktop run test:prod:open-folder-real
+  pnpm --filter @rsi-agent-pi/desktop run test:core:auth-contract
+  pnpm --filter @rsi-agent-pi/desktop run test:prod:packaged-smoke
+  pnpm --filter @rsi-agent-pi/desktop run test:prod:applications-relaunch
+  pnpm --filter @rsi-agent-pi/desktop run test:prod:release-zip-smoke
+  pnpm --filter @rsi-agent-pi/desktop run test:prod:open-folder-real
   ```
 
 Run core, live, and native together (production, dev, and demo are separate):
 
 ```bash
-pnpm --filter @pi-gui/desktop run test:e2e:all
+pnpm --filter @rsi-agent-pi/desktop run test:e2e:all
 ```
 
 ## Marketing media
@@ -133,20 +133,20 @@ synthetic profiles and frames under `.artifacts/marketing/showcase-captures/`.
 For the macOS Core run on `main`, use:
 
 ```bash
-pnpm --filter @pi-gui/desktop run test:e2e:ci:mac
+pnpm --filter @rsi-agent-pi/desktop run test:e2e:ci:mac
 ```
 
 Linux CI also validates packaging via:
 
 ```bash
-pnpm --filter @pi-gui/desktop run package:linux
+pnpm --filter @rsi-agent-pi/desktop run package:linux
 pnpm --dir apps/desktop run verify:packaged-runtime-deps:linux
 ```
 
 Windows release CI validates packaging via:
 
 ```bash
-pnpm --filter @pi-gui/desktop run package:win:dir
+pnpm --filter @rsi-agent-pi/desktop run package:win:dir
 pnpm --dir apps/desktop run verify:packaged-runtime-deps:windows
 ```
 
@@ -185,33 +185,33 @@ Rerun the matching lane before closing for `core` and `live`.
 For `native`, rerun the targeted native spec by default and expand to `test:e2e:native` only when the change touches shared native helpers, multiple native specs, or lane-wide native behavior.
 
 ```bash
-pnpm --filter @pi-gui/desktop run test:core:worktrees
-pnpm --filter @pi-gui/desktop run test:core:persistence
-pnpm --filter @pi-gui/desktop run test:live:tool-calls
-pnpm --filter @pi-gui/desktop run test:native:paste
-pnpm --filter @pi-gui/desktop run test:native:open-folder
-pnpm --filter @pi-gui/desktop run test:core:attach-image
-pnpm --filter @pi-gui/desktop run test:core:auth-contract
-pnpm --filter @pi-gui/desktop run test:prod:packaged-smoke
-pnpm --filter @pi-gui/desktop run test:prod:applications-relaunch
-pnpm --filter @pi-gui/desktop run test:prod:release-zip-smoke
-pnpm --filter @pi-gui/desktop run test:prod:open-folder-real
+pnpm --filter @rsi-agent-pi/desktop run test:core:worktrees
+pnpm --filter @rsi-agent-pi/desktop run test:core:persistence
+pnpm --filter @rsi-agent-pi/desktop run test:live:tool-calls
+pnpm --filter @rsi-agent-pi/desktop run test:native:paste
+pnpm --filter @rsi-agent-pi/desktop run test:native:open-folder
+pnpm --filter @rsi-agent-pi/desktop run test:core:attach-image
+pnpm --filter @rsi-agent-pi/desktop run test:core:auth-contract
+pnpm --filter @rsi-agent-pi/desktop run test:prod:packaged-smoke
+pnpm --filter @rsi-agent-pi/desktop run test:prod:applications-relaunch
+pnpm --filter @rsi-agent-pi/desktop run test:prod:release-zip-smoke
+pnpm --filter @rsi-agent-pi/desktop run test:prod:open-folder-real
 ```
 
 For real-auth `live` specs, opt in explicitly:
 
 ```bash
 PI_APP_REAL_AUTH=1 PI_APP_REAL_AUTH_SOURCE_DIR=/absolute/path/to/agent \
-  pnpm --filter @pi-gui/desktop run test:e2e:runner -- apps/desktop/tests/live/submit-run.spec.ts
+  pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner -- apps/desktop/tests/live/submit-run.spec.ts
 
 PI_APP_REAL_AUTH=1 PI_APP_REAL_AUTH_SOURCE_DIR=/absolute/path/to/agent \
-  pnpm --filter @pi-gui/desktop run test:e2e:runner -- apps/desktop/tests/live/tool-calls.spec.ts
+  pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner -- apps/desktop/tests/live/tool-calls.spec.ts
 ```
 
 For dev-loop verification, use:
 
 ```bash
-pnpm --filter @pi-gui/desktop run test:dev:reload
+pnpm --filter @rsi-agent-pi/desktop run test:dev:reload
 ```
 
 That spec launches the app in development mode, edits isolated probe modules for renderer/Electron/shared-package wiring, and proves the running window picks up the changes.

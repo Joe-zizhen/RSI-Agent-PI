@@ -31,7 +31,7 @@ test("new thread reuses composer behaviors for slash commands, image previews, a
 
     const composer = window.getByTestId("new-thread-composer");
     await expect(window.getByTestId("new-thread-logo")).toBeVisible();
-    await expect(window.getByRole("heading", { name: "Let's build" })).toBeVisible();
+    await expect(window.getByRole("heading", { name: "开始构建" })).toBeVisible();
     await expect(composer).toBeFocused();
     await expect(composer).toHaveAttribute(
       "placeholder",
@@ -45,14 +45,14 @@ test("new thread reuses composer behaviors for slash commands, image previews, a
     await composer.fill("/stat");
     const slashMenu = window.getByTestId("slash-menu");
     await expect(slashMenu).toBeVisible();
-    await expect(slashMenu).toContainText("Status");
+    await expect(slashMenu).toContainText("状态");
     await composer.press("Tab");
     await expect(slashMenu).toHaveCount(0);
     await expect(composer).toHaveValue("/status");
 
     await composer.fill("Outline next steps /stat");
     await expect(slashMenu).toBeVisible();
-    await expect(slashMenu).toContainText("Status");
+    await expect(slashMenu).toContainText("状态");
     await composer.press("Tab");
     await expect(slashMenu).toHaveCount(0);
     await expect(composer).toHaveValue("Outline next steps /status");
@@ -67,7 +67,7 @@ test("new thread reuses composer behaviors for slash commands, image previews, a
     );
     await expect(chip.locator(".composer-attachment__name")).toHaveCount(0);
 
-    await window.getByRole("button", { name: "Start thread" }).click();
+    await window.getByRole("button", { name: "开始会话" }).click();
 
     await expect(window.getByTestId("composer")).toBeVisible({ timeout: 15_000 });
     await expect
@@ -83,7 +83,7 @@ test("new thread reuses composer behaviors for slash commands, image previews, a
         { timeout: 15_000 },
       )
       .toBe("image");
-    const sentImage = window.getByRole("button", { name: "View new-thread-image.png" });
+    const sentImage = window.getByRole("button", { name: "查看 new-thread-image.png" });
     await expect(sentImage).toBeVisible({ timeout: 15_000 });
     await expect(window.locator(".composer-attachment")).toHaveCount(0);
     await sentImage.click();
@@ -112,12 +112,12 @@ test("new thread hides the onboarding notice after picking a thread model", asyn
     await openNewThread(window);
 
     const notice = window.getByTestId("model-onboarding-notice");
-    const startButton = window.getByRole("button", { name: "Start thread" });
+    const startButton = window.getByRole("button", { name: "开始会话" });
     const modelBadge = window.locator(".new-thread__hint .model-selector__badge").first();
 
     await window.getByTestId("new-thread-composer").fill("start a thread without a default");
-    await expect(notice).toContainText("No default model set");
-    await expect(modelBadge).toHaveText("Pick a model");
+    await expect(notice).toContainText("未设置默认模型");
+    await expect(modelBadge).toHaveText("选择模型");
     await expect(startButton).toBeDisabled();
 
     await modelBadge.click();
@@ -127,8 +127,8 @@ test("new thread hides the onboarding notice after picking a thread model", asyn
     const modelFilter = dropdown.locator(".model-selector__filter-input");
     await expect(modelFilter).toBeFocused();
     await modelFilter.fill("definitely-no-model");
-    await expect(dropdown).toContainText("No matching models");
-    await expect(modelBadge).toHaveText("Pick a model");
+    await expect(dropdown).toContainText("没有匹配的模型");
+    await expect(modelBadge).toHaveText("选择模型");
     await modelFilter.fill("4o");
     await expect(dropdown).toContainText("GPT-4o");
     await expect(dropdown).not.toContainText("GPT-5");
@@ -184,22 +184,22 @@ test("new thread routes disabled-model recovery to settings models", async () =>
     await window.getByTestId("new-thread-composer").fill("try to start with all models disabled");
     const modelBadge = window.locator(".new-thread__hint .model-selector__badge").first();
     await expect(modelBadge).toBeVisible();
-    await expect(modelBadge).toHaveText("No models available");
-    await expect(window.getByTestId("model-onboarding-notice")).toContainText("Settings > Models");
-    await expect(window.getByRole("button", { name: "Start thread" })).toBeDisabled();
+    await expect(modelBadge).toHaveText("无可用模型");
+    await expect(window.getByTestId("model-onboarding-notice")).toContainText("设置 > 模型");
+    await expect(window.getByRole("button", { name: "开始会话" })).toBeDisabled();
 
     await modelBadge.click();
     const dropdown = window.locator(".new-thread__hint .model-selector__dropdown").first();
     await expect(dropdown).toBeVisible();
-    await expect(dropdown).toContainText("No models available");
-    await expect(dropdown).not.toContainText("Open Settings > Models");
+    await expect(dropdown).toContainText("无可用模型");
+    await expect(dropdown).not.toContainText("打开“设置 > 模型”");
 
     await window
       .getByTestId("model-onboarding-notice")
-      .getByRole("button", { name: "Open Settings > Models" })
+      .getByRole("button", { name: "打开“设置 > 模型”" })
       .click();
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await expect(window.locator(".view-header__title")).toHaveText("Models");
+    await expect(window.locator(".view-header__title")).toHaveText("模型");
   } finally {
     await harness.close();
   }
@@ -230,8 +230,8 @@ test("refreshing after a provider becomes available auto-enables that provider's
     const notice = window.getByTestId("model-onboarding-notice");
     const modelBadge = window.locator(".new-thread__hint .model-selector__badge").first();
     await composer.fill("connect provider");
-    await expect(modelBadge).toHaveText("No models available");
-    await expect(notice).toContainText("Open Settings > Providers");
+    await expect(modelBadge).toHaveText("无可用模型");
+    await expect(notice).toContainText("打开“设置 > 提供商”");
 
     await writeFile(
       join(agentDir, "auth.json"),
@@ -252,8 +252,8 @@ test("refreshing after a provider becomes available auto-enables that provider's
       { workspaceId: selectedWorkspaceId },
     );
 
-    await expect(modelBadge).toHaveText("Pick a model");
-    await expect(notice).toContainText("No default model set");
+    await expect(modelBadge).toHaveText("选择模型");
+    await expect(notice).toContainText("未设置默认模型");
 
     await modelBadge.click();
     const dropdown = window.locator(".new-thread__hint .model-selector__dropdown").first();
@@ -287,21 +287,21 @@ test("settings do not show stale enabled-model pills when no providers are conne
 
     await window.getByTestId("new-thread-composer").fill("check no provider settings");
     await expect(window.getByTestId("model-onboarding-notice")).toContainText(
-      "Open Settings > Providers",
+      "打开“设置 > 提供商”",
     );
 
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "Models", exact: true }).click();
-    await expect(window.locator(".view-header__title")).toHaveText("Models");
+    await window.getByRole("button", { name: "模型", exact: true }).click();
+    await expect(window.locator(".view-header__title")).toHaveText("模型");
 
     const enabledModelsSection = window.locator(".settings-section", {
-      has: window.locator(".settings-section__title", { hasText: "Enabled models" }),
+      has: window.locator(".settings-section__title", { hasText: "启用的模型" }),
     });
-    await expect(enabledModelsSection).toContainText("No connected models available yet.");
+    await expect(enabledModelsSection).toContainText("暂无已连接的可用模型。");
     await expect(enabledModelsSection).not.toContainText("openai/gpt-5");
     await expect(enabledModelsSection).not.toContainText("openai/gpt-4o");
-    await expect(enabledModelsSection.locator(".settings-section__title")).toContainText("0 of 0");
+    await expect(enabledModelsSection.locator(".settings-section__title")).toContainText("0 / 0");
   } finally {
     await harness.close();
   }

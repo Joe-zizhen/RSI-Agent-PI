@@ -5,7 +5,7 @@ import { expect, type Page } from "@playwright/test";
 export async function installDesktopExtensionFixture(
   workspace: string,
   attackUrl: string,
-  helperModulePath = require.resolve("@pi-gui/extension-ui"),
+  helperModulePath = require.resolve("@rsi-agent-pi/extension-ui"),
 ): Promise<void> {
   const directory = join(workspace, ".pi", "extensions", "desktop-security");
   await mkdir(join(directory, "dist"), { recursive: true });

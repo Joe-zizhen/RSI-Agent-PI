@@ -1,5 +1,10 @@
 # Dependencies, generated output, and local verification artifacts.
 **/node_modules/
+# Symlink to AGENTS.md. Prettier follows symlinks on Linux CI; on Windows
+# checkouts without symlink support the link body is a plain text stub.
+CLAUDE.md
+# Third-party vendored plugin sources keep their upstream formatting.
+/vendor/
 # Anchor outputs to roots so similarly named source folders stay checked.
 /dist/
 /dist-electron/
@@ -47,6 +52,8 @@
 /video/playwright-report/
 **/*.tsbuildinfo
 .artifacts/
+# Generated bundled Python runtime (scripts/fetch-python-runtime.mjs).
+/apps/desktop/runtime/
 .cursor/
 .pnpm-store/
 .worktrees/

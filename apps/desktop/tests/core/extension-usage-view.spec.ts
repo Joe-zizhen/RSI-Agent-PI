@@ -174,7 +174,7 @@ test("the Usage example totals real pi sessions for the folder and explains what
 
     // A wider panel shows every column, like the reference table.
     await frame.getByLabel("Sort threads", { exact: true }).selectOption("share");
-    const handle = window.getByRole("separator", { name: "Side panel width", exact: true });
+    const handle = window.getByRole("separator", { name: "侧边面板宽度", exact: true });
     const box = (await handle.boundingBox())!;
     await window.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await window.mouse.down();
@@ -302,10 +302,10 @@ test("the Usage example adds a card after each reply with its time, cost and con
     await waitForWorkspaceByPath(window, workspace);
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("Answer briefly.");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("Answer briefly.");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
 
     await expect(window.locator(".timeline-item--assistant .message__content")).toHaveText([
       "Scripted answer",
@@ -383,10 +383,10 @@ test("the Usage example writes one card for a reply pi retried", async () => {
     await waitForWorkspaceByPath(window, workspace);
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("Answer briefly.");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("Answer briefly.");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
     await expect(window.locator(".timeline-item--assistant .message__content").last()).toHaveText(
       "Scripted answer",
     );

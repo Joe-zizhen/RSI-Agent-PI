@@ -67,7 +67,7 @@ async function expectCompleted(window: Page, text: string): Promise<void> {
   await expect(
     window.locator(".timeline-item--assistant .message__content").filter({ hasText: text }),
   ).toBeVisible();
-  await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", "Stop run");
+  await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", "停止运行");
   await expect(window.locator(".session-row--active")).toHaveAttribute(
     "data-sidebar-indicator",
     "none",
@@ -76,7 +76,7 @@ async function expectCompleted(window: Page, text: string): Promise<void> {
 }
 
 async function openCapturedFile(window: Page): Promise<Locator> {
-  const panel = window.getByRole("region", { name: "Review", exact: true });
+  const panel = window.getByRole("region", { name: "审查", exact: true });
   await expect(panel.locator(".diff-panel__file")).toHaveCount(1);
   const row = panel.locator('.diff-panel__file[data-file-path="result.txt"]');
   await expect(row).toBeVisible();
@@ -86,7 +86,7 @@ async function openCapturedFile(window: Page): Promise<Locator> {
   await expect(await reviewComparisonIdentity(window)).toContainText("Captured");
   await window.keyboard.press("Escape");
   await expect(panel.getByRole("button", { name: /^(Stage|Staged|Unstage)$/ })).toHaveCount(0);
-  return panel.getByRole("region", { name: "Diff", exact: true });
+  return panel.getByRole("region", { name: "差异", exact: true });
 }
 
 test("Last turn captures actual tool edits and a response pins its own saved comparison", async ({}, testInfo) => {
@@ -122,16 +122,13 @@ test("Last turn captures actual tool edits and a response pins its own saved com
   try {
     let window = await harness.firstWindow();
     await waitForWorkspaceByPath(window, workspacePath);
-    await window
-      .locator(".sidebar")
-      .getByRole("button", { name: "New thread", exact: true })
-      .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("capture first");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.locator(".sidebar").getByRole("button", { name: "新建会话", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("capture first");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
     await expectCompleted(window, "First capture complete");
     expect(await readFile(join(workspacePath, "result.txt"), "utf8")).toBe("FIRST_TURN_OUTPUT\n");
-    await selectSidePanel(window, "Review");
-    await chooseReviewScope(window, "Last Turn");
+    await selectSidePanel(window, "审查");
+    await chooseReviewScope(window, "上一轮");
     let patch = await openCapturedFile(window);
     await expect(patch).toContainText("INITIAL_CONTENT");
     await expect(patch).toContainText("FIRST_TURN_OUTPUT");
@@ -141,8 +138,8 @@ test("Last turn captures actual tool edits and a response pins its own saved com
     await window.getByTestId("composer").press("Enter");
     await expectCompleted(window, "Second capture complete");
     expect(await readFile(join(workspacePath, "result.txt"), "utf8")).toBe("SECOND_TURN_OUTPUT\n");
-    await chooseReviewScope(window, "Uncommitted");
-    await chooseReviewScope(window, "Last Turn");
+    await chooseReviewScope(window, "未提交");
+    await chooseReviewScope(window, "上一轮");
     patch = await openCapturedFile(window);
     await expect(patch).toContainText("FIRST_TURN_OUTPUT");
     await expect(patch).toContainText("SECOND_TURN_OUTPUT");
@@ -151,8 +148,8 @@ test("Last turn captures actual tool edits and a response pins its own saved com
     // Later editor activity must not rewrite either captured interval.
     await writeFile(join(workspacePath, "result.txt"), "LATER_MANUAL_EDIT\n");
     await window
-      .getByRole("region", { name: "Review", exact: true })
-      .getByRole("button", { name: "Refresh", exact: true })
+      .getByRole("region", { name: "审查", exact: true })
+      .getByRole("button", { name: "刷新", exact: true })
       .click();
     patch = await openCapturedFile(window);
     await expect(patch).toContainText("SECOND_TURN_OUTPUT");
@@ -161,8 +158,8 @@ test("Last turn captures actual tool edits and a response pins its own saved com
     // Each turn's card pins its own saved comparison, not the latest one.
     const cards = window.getByTestId("turn-changes");
     await expect(cards).toHaveCount(2);
-    await cards.first().getByRole("button", { name: "Review", exact: true }).click();
-    await expect(reviewScopeButton(window)).toHaveText("Selected Turn");
+    await cards.first().getByRole("button", { name: "审查", exact: true }).click();
+    await expect(reviewScopeButton(window)).toHaveText("所选轮次");
     await expect(
       window.locator('.diff-panel__file--selected[data-file-path="result.txt"]'),
     ).toBeVisible();
@@ -171,7 +168,7 @@ test("Last turn captures actual tool edits and a response pins its own saved com
     await harness.close();
     harness = await launchDesktop(userDataDir, options);
     window = await harness.firstWindow();
-    await expect(reviewScopeButton(window)).toHaveText("Selected Turn");
+    await expect(reviewScopeButton(window)).toHaveText("所选轮次");
     patch = await openCapturedFile(window);
     await expect(patch).toContainText("INITIAL_CONTENT");
     await expect(patch).toContainText("FIRST_TURN_OUTPUT");

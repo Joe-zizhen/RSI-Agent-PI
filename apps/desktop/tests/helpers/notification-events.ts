@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import type { SessionDriverEvent } from "@pi-gui/session-driver";
+import type { SessionDriverEvent } from "@rsi-agent-pi/session-driver";
 import type { DesktopHarness } from "./electron-app";
 import { emitTestSessionEvent } from "./electron-app";
 import type { SessionContext } from "./session-event-test-helpers";

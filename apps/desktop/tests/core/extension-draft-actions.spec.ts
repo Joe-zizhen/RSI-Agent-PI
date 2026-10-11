@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import type { PiSdkDriver } from "@pi-gui/pi-sdk-driver";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import type { PiSdkDriver } from "@rsi-agent-pi/pi-sdk-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import { desktopIpc } from "../../contracts/ipc";
 import {
   createNamedThread,
@@ -20,7 +20,7 @@ test("Stop remains available while an extension saves the running task's protect
   await mkdir(join(extension, "dist"), { recursive: true });
   await writeFile(
     join(extension, "index.ts"),
-    `import { registerDesktopView } from ${JSON.stringify(require.resolve("@pi-gui/extension-ui"))};
+    `import { registerDesktopView } from ${JSON.stringify(require.resolve("@rsi-agent-pi/extension-ui"))};
 export default function extension(pi) {
   registerDesktopView(pi, {
     id: "draft-actions", title: "Draft actions", source: import.meta.url,
@@ -89,7 +89,7 @@ export default function extension(pi) {
         });
         const { createRequire } = process.getBuiltinModule("module");
         const load = createRequire(input.entry);
-        const { PiSdkDriver: Driver } = load("@pi-gui/pi-sdk-driver") as {
+        const { PiSdkDriver: Driver } = load("@rsi-agent-pi/pi-sdk-driver") as {
           PiSdkDriver: typeof PiSdkDriver;
         };
         const hooks = (
@@ -157,7 +157,7 @@ export default function extension(pi) {
     await frame.getByRole("button", { name: "Prepare task draft", exact: true }).click();
     await expect(window.getByTestId("composer-prepare-task-status")).toBeVisible();
     expect(await composer.evaluate((element) => element.closest("[inert]") !== null)).toBe(true);
-    const stop = window.getByRole("button", { name: "Stop run", exact: true });
+    const stop = window.getByRole("button", { name: "停止运行", exact: true });
     await expect(stop).toBeEnabled();
     expect(await stop.evaluate((element) => element.closest("[inert]") === null)).toBe(true);
     await stop.click();

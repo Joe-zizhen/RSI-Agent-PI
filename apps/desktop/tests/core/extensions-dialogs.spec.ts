@@ -198,7 +198,7 @@ test("renders extension dialogs in the Electron surface and routes responses bac
     await composer.press("Enter");
     await expect(dialog).toContainText("Enter a value");
     await dialog.getByPlaceholder("type here").fill("typed value");
-    await dialog.getByRole("button", { name: "Submit", exact: true }).click();
+    await dialog.getByRole("button", { name: "提交", exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await expect(window.getByTestId("extension-notices")).toContainText("Input typed value");
 
@@ -220,7 +220,7 @@ test("renders extension dialogs in the Electron surface and routes responses bac
     await editor.press("Enter");
     await editor.type("Line 2");
     await expect(editor).toHaveValue("Line 1\nLine 2");
-    await dialog.getByRole("button", { name: "Submit", exact: true }).click();
+    await dialog.getByRole("button", { name: "提交", exact: true }).click();
     await expect(dialog).toHaveCount(0);
     await expect(window.getByTestId("extension-notices")).toContainText("Editor lines 2");
   } finally {

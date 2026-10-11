@@ -22,7 +22,7 @@ test("one icon and keyboard shortcuts toggle the selected workspace tool", async
     await createNamedThread(window, "Shortcut thread");
     // The toggle sits in the topbar while the pane is hidden and in the
     // workbench tab strip while it is shown; there is only ever one.
-    const toggle = window.getByRole("button", { name: "Toggle side panel" });
+    const toggle = window.getByRole("button", { name: "切换侧边面板" });
     await expect(toggle).toHaveCount(1);
     await expect(toggle).toBeVisible();
     await expect(toggle).toHaveText("");
@@ -34,7 +34,7 @@ test("one icon and keyboard shortcuts toggle the selected workspace tool", async
     await expect(tile("Review").locator("kbd")).toHaveText(`${modifierLabel}R`);
     await expect(tile("Terminal").locator("kbd")).toHaveText(`${modifierLabel}J`);
     await expect(tile("Files").locator("kbd")).toHaveCount(0);
-    await selectSidePanel(window, "Files");
+    await selectSidePanel(window, "文件");
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
 
     await window.getByTestId("composer").click();
@@ -44,7 +44,7 @@ test("one icon and keyboard shortcuts toggle the selected workspace tool", async
     await window.keyboard.press(desktopShortcut("Alt+B"));
     await expect(window.getByTestId("file-workbench")).toBeVisible();
 
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     await expect(window.locator(".diff-panel")).toBeVisible();
     await expect(window.getByTestId("file-workbench")).toHaveCount(0);
     await window.keyboard.press(desktopShortcut("R"));

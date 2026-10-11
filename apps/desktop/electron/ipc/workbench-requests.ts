@@ -1,4 +1,4 @@
-import type { SessionRef } from "@pi-gui/session-driver";
+import type { SessionRef } from "@rsi-agent-pi/session-driver";
 import type { SaveTaskWorkbenchTemplateInput } from "../../contracts/workbench";
 import type { DesktopAppStore } from "../application/app-store";
 import { SerializedActionQueue } from "../windows/action-queue";

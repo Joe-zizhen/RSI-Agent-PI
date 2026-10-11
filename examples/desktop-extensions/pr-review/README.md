@@ -4,7 +4,7 @@ A normal, file-based Pi extension with an optional custom desktop view. It revie
 
 ## Build and load
 
-From the repository root, with the existing dependencies and `@pi-gui/extension-ui` workspace package built:
+From the repository root, with the existing dependencies and `@rsi-agent-pi/extension-ui` workspace package built:
 
 ```sh
 node examples/desktop-extensions/pr-review/build.mjs

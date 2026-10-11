@@ -27,8 +27,8 @@ test("Control or Alt with 1-9 selects side panel tabs while Cmd or Ctrl keeps sw
     const title = window.locator(".chat-header__title");
     await createNamedThread(window, "Tab Alpha");
     await createNamedThread(window, "Tab Bravo");
-    await selectSidePanel(window, "Files");
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "文件");
+    await selectSidePanel(window, "终端");
     const tabs = window.getByRole("tablist", { name: "Workspace tools" });
     const tab = (name: string) => tabs.getByRole("tab", { name, exact: true });
     await expect(tabs.getByRole("tab")).toHaveCount(3);

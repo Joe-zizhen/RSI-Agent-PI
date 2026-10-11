@@ -7,7 +7,10 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from "react";
-import type { RuntimeExtensionRecord, RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type {
+  RuntimeExtensionRecord,
+  RuntimeSnapshot,
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import { extensionSourceSummary } from "../../extensions/extension-display";
 import type { PiDesktopApi } from "../../../../contracts/ipc";
 import { nextMenuIndex } from "./use-slash-menu";
@@ -317,9 +320,9 @@ function describeExtension(extension: RuntimeExtensionRecord): string {
 
   const contributionParts = [
     extension.commands.length > 0
-      ? pluralizeContribution(extension.commands.length, "command")
+      ? pluralizeContribution(extension.commands.length, "命令")
       : undefined,
-    extension.tools.length > 0 ? pluralizeContribution(extension.tools.length, "tool") : undefined,
+    extension.tools.length > 0 ? pluralizeContribution(extension.tools.length, "工具") : undefined,
   ].filter(Boolean);
   if (contributionParts.length > 0) {
     return contributionParts.join(" · ");
@@ -378,5 +381,5 @@ function normalizeMentionText(value: string): string {
 }
 
 function pluralizeContribution(count: number, label: string): string {
-  return `${count} ${label}${count === 1 ? "" : "s"}`;
+  return `${count} 个${label}`;
 }

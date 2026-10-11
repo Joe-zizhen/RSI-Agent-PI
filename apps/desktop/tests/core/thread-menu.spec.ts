@@ -85,22 +85,22 @@ test("right-click thread menu supports rename, archive/restore, mark read, and c
     await row.click({ button: "right" });
     const menu = row.getByRole("menu");
     expect(await menuItemTitles(menu)).toEqual([
-      "Rename thread",
-      "Pin thread",
-      "Archive thread",
-      "Mark as read",
-      "Add scheduled task…",
-      "Copy session ID",
+      "重命名会话",
+      "置顶会话",
+      "归档会话",
+      "标为已读",
+      "添加计划任务…",
+      "复制会话记录 ID",
     ]);
     await captureProof(window, "01-open-menu.png");
 
-    await menu.getByRole("button", { name: "Copy session ID" }).click();
+    await menu.getByRole("button", { name: "复制会话记录 ID" }).click();
     await expect
       .poll(() => window.evaluate(() => navigator.clipboard.readText()))
       .toBe(target!.sessionId);
 
     await row.click({ button: "right" });
-    await row.getByRole("menu").getByRole("button", { name: "Mark as read" }).click();
+    await row.getByRole("menu").getByRole("button", { name: "标为已读" }).click();
     await expect(row).toHaveAttribute("data-sidebar-indicator", "none");
     await captureProof(window, "02-marked-read.png");
 
@@ -136,16 +136,16 @@ test("right-click thread menu supports rename, archive/restore, mark read, and c
     await captureProof(window, "06-gap-fixed.png");
 
     await row.click({ button: "right" });
-    await row.getByRole("menu").getByRole("button", { name: "Rename thread" }).click();
+    await row.getByRole("menu").getByRole("button", { name: "重命名会话" }).click();
     const renameInput = window.getByLabel(`Rename thread ${targetTitle}`);
     await renameInput.fill(renamedTitle);
-    await window.getByRole("button", { name: "Save" }).click();
+    await window.getByRole("button", { name: "保存" }).click();
     row = window.locator(".session-row", { hasText: renamedTitle }).first();
     await expect(row).toBeVisible();
     await captureProof(window, "03-renamed.png");
 
     await row.click({ button: "right" });
-    await row.getByRole("menu").getByRole("button", { name: "Archive thread" }).click();
+    await row.getByRole("menu").getByRole("button", { name: "归档会话" }).click();
     await expect(
       window.locator(".session-list > .session-row", { hasText: renamedTitle }),
     ).toHaveCount(0);
@@ -158,7 +158,7 @@ test("right-click thread menu supports rename, archive/restore, mark read, and c
       hasText: renamedTitle,
     });
     await archivedRow.click({ button: "right" });
-    await archivedRow.getByRole("menu").getByRole("button", { name: "Restore thread" }).click();
+    await archivedRow.getByRole("menu").getByRole("button", { name: "恢复会话" }).click();
     await expect(
       window.locator(".session-list > .session-row", { hasText: renamedTitle }),
     ).toHaveCount(1);
@@ -192,10 +192,10 @@ test("header and right-click menus match, show shortcuts, and Shift chords renam
     const rowMenu = row.getByRole("menu");
     const rowItems = await menuItemTitles(rowMenu);
     await expect(
-      rowMenu.getByRole("button", { name: "Rename thread" }).locator(".workspace-menu__shortcut"),
+      rowMenu.getByRole("button", { name: "重命名会话" }).locator(".workspace-menu__shortcut"),
     ).toHaveText(isMac ? "⇧⌘R" : "Ctrl+Shift+R");
     await expect(
-      rowMenu.getByRole("button", { name: "Archive thread" }).locator(".workspace-menu__shortcut"),
+      rowMenu.getByRole("button", { name: "归档会话" }).locator(".workspace-menu__shortcut"),
     ).toHaveText(isMac ? "⇧⌘A" : "Ctrl+Shift+A");
     await captureProof(window, "07-row-menu-hints.png");
     await window.keyboard.press("Escape");
@@ -223,7 +223,7 @@ test("header and right-click menus match, show shortcuts, and Shift chords renam
     const renameInput = window.getByLabel(`Rename thread ${targetTitle}`);
     await expect(renameInput).toBeFocused();
     await renameInput.fill(renamedTitle);
-    await window.getByRole("button", { name: "Save" }).click();
+    await window.getByRole("button", { name: "保存" }).click();
     await expect(window.locator(".chat-header__title")).toHaveText(renamedTitle);
 
     await window.keyboard.press(`${modifier}+Shift+A`);

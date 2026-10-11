@@ -1,6 +1,10 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import { parseExtensionUrl, type ExtensionAction, type SessionRef } from "@pi-gui/session-driver";
+import {
+  parseExtensionUrl,
+  type ExtensionAction,
+  type SessionRef,
+} from "@rsi-agent-pi/session-driver";
 import type { WorkspaceRecord } from "../../contracts/desktop-state";
 import type { ExtensionActionEffect } from "../../contracts/extension-actions";
 import { resolveExistingWorkspacePath } from "../platform/files/workspace-paths";
@@ -35,9 +39,9 @@ export async function runExtensionAction(
     case "openFile": {
       // Only files inside the thread's checkout; the renderer opens the returned relative path.
       const workspacePath = host.workspacePath(target.workspaceId);
-      if (!workspacePath) throw new Error("The thread's folder is unavailable");
+      if (!workspacePath) throw new Error("该会话的文件夹不可用");
       const filePath = await resolveExistingWorkspacePath(workspacePath, action.path);
-      if (!(await stat(filePath)).isFile()) throw new Error(`${action.path} is not a file`);
+      if (!(await stat(filePath)).isFile()) throw new Error(`${action.path} 不是文件`);
       return {
         kind: "openFile",
         path: path.relative(workspacePath, filePath),
@@ -49,7 +53,7 @@ export async function runExtensionAction(
       return { kind: "composer", text: action.text };
     case "url": {
       const url = parseExtensionUrl(action.url);
-      if (!url) throw new Error("Extensions can only open https links");
+      if (!url) throw new Error("扩展只能打开 https 链接");
       await host.openExternal(url);
       return undefined;
     }
@@ -59,7 +63,7 @@ export async function runExtensionAction(
     case "openThread": {
       const resolve = () => {
         const thread = threadInFolder(host.workspaces(), target, action.sessionId);
-        if (!thread) throw new Error("That thread isn't open in this folder");
+        if (!thread) throw new Error("该会话未在此文件夹中打开");
         return thread;
       };
       // Refuse at once, and again in the queue in case the thread was archived meanwhile.

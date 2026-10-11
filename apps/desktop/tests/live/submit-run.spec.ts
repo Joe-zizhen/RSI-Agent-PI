@@ -25,10 +25,10 @@ test("submits a real prompt and shows the response in the transcript", async () 
 
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
-    await window.getByLabel("New thread prompt").fill("Reply with only the uppercase word READY.");
-    await window.getByRole("button", { name: "Start thread" }).click();
+    await window.getByLabel("新建会话输入").fill("Reply with only the uppercase word READY.");
+    await window.getByRole("button", { name: "开始会话" }).click();
 
     await expect(
       window.locator(".timeline-item--assistant .message__content").last(),

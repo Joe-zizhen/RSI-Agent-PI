@@ -1,5 +1,5 @@
 {
-  "name": "@pi-gui/catalogs",
+  "name": "@rsi-agent-pi/catalogs",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -29,6 +29,6 @@
     "test": "tsc -p tsconfig.json && node --test \"test/**/*.test.mts\""
   },
   "dependencies": {
-    "@pi-gui/session-driver": "workspace:*"
+    "@rsi-agent-pi/session-driver": "workspace:*"
   }
 }

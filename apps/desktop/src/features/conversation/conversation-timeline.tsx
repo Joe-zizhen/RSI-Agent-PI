@@ -230,7 +230,7 @@ function TranscriptSkeleton() {
         <span className="skeleton-line" style={{ width: "80%" }} />
         <span className="skeleton-line" style={{ width: "72%" }} />
       </div>
-      <span className="sr-only">Loading transcript…</span>
+      <span className="sr-only">正在加载对话记录…</span>
     </div>
   );
 }
@@ -244,8 +244,8 @@ function TranscriptHydrateError({
 }) {
   return (
     <div className="transcript-hydrate-error" data-testid="transcript-hydrate-error">
-      <h2>Couldn't load this thread</h2>
-      <p>The selected conversation couldn't be restored. Retry to try again.</p>
+      <h2>无法加载此会话</h2>
+      <p>所选对话未能恢复。点击重试再试一次。</p>
       <div className="transcript-hydrate-error__actions">
         <button
           className="button button--primary"
@@ -254,7 +254,7 @@ function TranscriptHydrateError({
           disabled={retrying || !onRetry}
           onClick={onRetry}
         >
-          {retrying ? "Retrying…" : "Retry"}
+          {retrying ? "重试中…" : "重试"}
         </button>
       </div>
     </div>
@@ -267,8 +267,8 @@ function TranscriptEmptyState() {
       <span className="transcript-empty__glyph" aria-hidden="true">
         <SparkIcon />
       </span>
-      <p className="transcript-empty__title">Start the conversation</p>
-      <p className="transcript-empty__hint">Send a prompt below to begin this session.</p>
+      <p className="transcript-empty__title">开始对话</p>
+      <p className="transcript-empty__hint">在下方发送提示词以开始本会话记录。</p>
     </div>
   );
 }

@@ -48,7 +48,7 @@ test("requests notification permission in the packaged app when active work move
     await selectSessionByTitle(window, "Packaged Session B");
     await expect.poll(() => readOptionalLog(requestLogPath), { timeout: 5_000 }).not.toBe("");
 
-    await window.getByRole("button", { name: "Settings", exact: true }).click();
+    await window.getByRole("button", { name: "设置", exact: true }).click();
     await window.getByRole("button", { name: "Notifications", exact: true }).click();
     await expect(window.locator(".settings-view")).toContainText("Enabled");
   } finally {

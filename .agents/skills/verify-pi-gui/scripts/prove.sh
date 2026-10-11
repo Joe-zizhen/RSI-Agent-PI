@@ -20,7 +20,7 @@ if [ "$spec" = conversation.spec.ts ] || [ "$spec" = maintenance.spec.ts ]; then
     exit 2
   fi
 fi
-if pnpm --filter @pi-gui/desktop run build >"$PI_GUI_PROOF_DIR/build.log" 2>&1; then
+if pnpm --filter @rsi-agent-pi/desktop run build >"$PI_GUI_PROOF_DIR/build.log" 2>&1; then
   :
 else
   cat "$PI_GUI_PROOF_DIR/build.log"

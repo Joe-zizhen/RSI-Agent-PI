@@ -17,6 +17,7 @@ import {
   type CustomProviderProbeResult,
   type McpServerScope,
   type McpServersSnapshot,
+  type MemloopSettingsSnapshot,
   type NewMcpServerInput,
   type ChangedFilesResult,
   type DesktopNotificationPermissionStatus,
@@ -43,14 +44,14 @@ import type {
   ChangeReviewFileStageInput,
   ChangeReviewFileStageResult,
 } from "../contracts/review";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type {
   NavigateSessionTreeOptions,
   NavigateSessionTreeResult,
   SessionTreeSnapshot,
-} from "@pi-gui/session-driver/types";
-import type { HostUiResponse } from "@pi-gui/session-driver";
-import type { RuntimeSettingsSnapshot } from "@pi-gui/session-driver/runtime-types";
+} from "@rsi-agent-pi/session-driver/types";
+import type { HostUiResponse } from "@rsi-agent-pi/session-driver";
+import type { RuntimeSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
   AppView,
   ComposerAttachment,
@@ -410,6 +411,18 @@ contextBridge.exposeInMainWorld("piApp", {
       workspaceId,
       alwaysOn,
     ) as Promise<DesktopAppState>,
+  getMemloopSettings: (workspaceId: string) =>
+    ipcRenderer.invoke(
+      desktopIpc.getMemloopSettings,
+      workspaceId,
+    ) as Promise<MemloopSettingsSnapshot>,
+  setMemloopSettings: (workspaceId: string, verdictCmd: string) =>
+    ipcRenderer.invoke(
+      desktopIpc.setMemloopSettings,
+      workspaceId,
+      verdictCmd,
+    ) as Promise<DesktopAppState>,
+  checkForUpdates: () => ipcRenderer.invoke(desktopIpc.checkForUpdates) as Promise<void>,
   respondToHostUiRequest: (workspaceId: string, sessionId: string, response: HostUiResponse) =>
     ipcRenderer.invoke(
       desktopIpc.respondToHostUiRequest,

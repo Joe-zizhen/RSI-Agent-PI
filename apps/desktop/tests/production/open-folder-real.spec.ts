@@ -30,7 +30,7 @@ test("opens the real macOS folder picker from the empty state button and adds th
 
     await Promise.all([
       acceptOpenFolderDialog(workspacePath),
-      window.getByRole("button", { name: "Open first folder" }).click(),
+      window.getByRole("button", { name: "打开第一个文件夹" }).click(),
     ]);
 
     await expect

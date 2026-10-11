@@ -38,8 +38,8 @@ test("every published marketing asset has one runnable producer and live consume
 
 test("product build excludes media rendering and marketing commands are explicit", async () => {
   const rootPackage = await readJson("package.json");
-  assert.match(rootPackage.scripts.build, /--filter @pi-gui\/desktop run build/);
-  assert.match(rootPackage.scripts.build, /--filter @pi-gui\/website run build/);
+  assert.match(rootPackage.scripts.build, /--filter @rsi-agent-pi\/desktop run build/);
+  assert.match(rootPackage.scripts.build, /--filter @rsi-agent-pi\/website run build/);
   assert.doesNotMatch(rootPackage.scripts.build, /video|render|recursive| -r(?:\s|$)/);
   assert.match(rootPackage.scripts["marketing:render"], /@pi-app\/video run render/);
 });

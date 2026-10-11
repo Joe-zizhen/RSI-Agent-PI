@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo } from "react";
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import { extensionToolLabels, type ExtensionToolLabels } from "../../../contracts/tool-labels";
 
 /** Tool labels for the selected folder's extensions, read by transcript tool rows. */

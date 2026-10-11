@@ -13,7 +13,7 @@ export function WorkbenchResizeHandle({
   return (
     <PaneResizeHandle
       className="workbench__resize-handle"
-      label="Side panel width"
+      label="侧边面板宽度"
       controls="task-workbench"
       edge="left"
       bounds={workbenchBounds}

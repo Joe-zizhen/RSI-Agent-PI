@@ -1,4 +1,4 @@
-import type { SessionRef, SessionStatus, WorkspaceId } from "@pi-gui/session-driver";
+import type { SessionRef, SessionStatus, WorkspaceId } from "@rsi-agent-pi/session-driver";
 
 export type { SessionRef, SessionStatus, WorkspaceId };
 

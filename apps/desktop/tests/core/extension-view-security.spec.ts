@@ -68,7 +68,7 @@ test("custom frontend exchanges Chord state while its opaque frame cannot access
       .info()
       .attach("Opaque frame with live Chord state", { path: screenshot, contentType: "image/png" });
 
-    await window.getByRole("button", { name: "Reload view", exact: true }).click();
+    await window.getByRole("button", { name: "重新加载视图", exact: true }).click();
     await expect(frame.locator("#counter")).toHaveText("Count 1 · activations 1");
     const oldFrameUrl = await frameElement.getAttribute("src");
     expect(oldFrameUrl).toBeTruthy();
@@ -125,7 +125,7 @@ test("a failed author mount keeps conversation editable and Reload view recovers
     await window.getByTestId("composer").fill("Draft while custom view is broken");
     await expect(window.getByTestId("composer")).toHaveValue("Draft while custom view is broken");
     await installFixture(workspace, "http://127.0.0.1:9/unused");
-    await window.getByRole("button", { name: "Reload view", exact: true }).click();
+    await window.getByRole("button", { name: "重新加载视图", exact: true }).click();
     const frame = window.frameLocator('[data-testid="extension-view-frame"]');
     await expect(frame.locator("#counter")).toHaveText("Count 0 · activations 1");
     await expect(window.getByTestId("composer")).toHaveValue("Draft while custom view is broken");

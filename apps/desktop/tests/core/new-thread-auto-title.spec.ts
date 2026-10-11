@@ -35,10 +35,8 @@ test("auto-titles a brand-new local thread after showing the placeholder first",
       prompt: "Refactor the session title flow and keep sidebar state in sync",
     });
 
-    const placeholderRow = window
-      .locator(".session-row__select", { hasText: "New thread" })
-      .first();
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    const placeholderRow = window.locator(".session-row__select", { hasText: "新会话" }).first();
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await expect(placeholderRow).toBeVisible();
 
     await resolveDeferredThreadTitleEventually(harness, "Refactor title flow");
@@ -47,7 +45,7 @@ test("auto-titles a brand-new local thread after showing the placeholder first",
     await expect(
       window.locator(".session-row__select", { hasText: "Refactor title flow" }).first(),
     ).toBeVisible();
-    await expect(window.locator(".session-row__select", { hasText: "New thread" })).toHaveCount(0);
+    await expect(window.locator(".session-row__select", { hasText: "新会话" })).toHaveCount(0);
   } finally {
     await harness.close();
   }
@@ -81,10 +79,8 @@ test("auto-titles a brand-new worktree thread after showing the placeholder firs
     await waitForDeferredThreadTitleRequest(harness);
     await waitForSelectedSessionReady(window, startedSession);
 
-    const placeholderRow = window
-      .locator(".session-row__select", { hasText: "New thread" })
-      .first();
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    const placeholderRow = window.locator(".session-row__select", { hasText: "新会话" }).first();
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await expect(placeholderRow).toBeVisible();
 
     await resolveDeferredThreadTitle(harness, "Fix worktree rename");
@@ -117,7 +113,7 @@ test("switching away does not cancel a pending auto-title", async () => {
       prompt: "Keep auto title alive after switching views",
     });
 
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await waitForDeferredThreadTitleRequest(harness);
     await selectSession(window, "Existing thread");
     await expect
@@ -155,9 +151,9 @@ test("manual rename beats a delayed auto-title result", async () => {
     });
 
     const composer = window.getByTestId("composer");
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await expect(
-      window.locator(".session-row__select", { hasText: "New thread" }).first(),
+      window.locator(".session-row__select", { hasText: "新会话" }).first(),
     ).toBeVisible();
     await waitForComposerReadyForNextSubmit(window);
 
@@ -202,19 +198,19 @@ test("manual rename applies after the run is aborted via Stop", async () => {
     });
 
     const composer = window.getByTestId("composer");
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
 
     // Abort the run while it is still active. The regression this covers: the
     // /name IPC response is built while abort-fallout events are still being
     // applied, so the response snapshot is older than the pushed state that
     // carries the rename — applying it unguarded rolled the title back.
-    const stopButton = window.getByRole("button", { name: "Stop run" });
+    const stopButton = window.getByRole("button", { name: "停止运行" });
     try {
       await stopButton.click({ timeout: 10_000 });
     } catch {
       // Run finished before Stop was clickable; the rename must still apply.
     }
-    await expect(window.getByRole("button", { name: "Send message" })).toBeVisible({
+    await expect(window.getByRole("button", { name: "发送消息" })).toBeVisible({
       timeout: 15_000,
     });
 
@@ -248,7 +244,7 @@ test("later sends do not retrigger auto-title generation", async () => {
       prompt: "Track a one-shot title request token",
     });
 
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await resolveDeferredThreadTitleEventually(harness, "Track title token");
     await expect(window.locator(".chat-header__title")).toHaveText("Track title token");
     await expect(
@@ -293,7 +289,7 @@ test("reopen heals a stale placeholder catalog title after auto-title finished",
       prompt: "Verify the app heals stale placeholder titles on reopen",
     });
 
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await resolveDeferredThreadTitleEventually(harness, generatedTitle);
     await expect(window.locator(".chat-header__title")).toHaveText(generatedTitle);
     await expect(
@@ -316,7 +312,7 @@ test("reopen heals a stale placeholder catalog title after auto-title finished",
   };
   catalogs.sessions = catalogs.sessions.map((session) =>
     session.sessionRef.workspaceId === workspaceId && session.sessionRef.sessionId === sessionId
-      ? { ...session, title: "New thread" }
+      ? { ...session, title: "新会话" }
       : session,
   );
   await writeFile(catalogsPath, `${JSON.stringify(catalogs, null, 2)}\n`, "utf8");
@@ -329,19 +325,19 @@ test("reopen heals a stale placeholder catalog title after auto-title finished",
     await expect(
       window.locator(".session-row__select", { hasText: generatedTitle }).first(),
     ).toBeVisible();
-    await expect(window.locator(".session-row__select", { hasText: "New thread" })).toHaveCount(0);
+    await expect(window.locator(".session-row__select", { hasText: "新会话" })).toHaveCount(0);
   } finally {
     await secondRun.close();
   }
 });
 
 async function waitForComposerReadyForNextSubmit(window: Page): Promise<void> {
-  const sendButton = window.getByRole("button", { name: "Send message" });
+  const sendButton = window.getByRole("button", { name: "发送消息" });
   if (await sendButton.isVisible().catch(() => false)) {
     return;
   }
 
-  const stopButton = window.getByRole("button", { name: "Stop run" });
+  const stopButton = window.getByRole("button", { name: "停止运行" });
   await expect
     .poll(
       async () => {

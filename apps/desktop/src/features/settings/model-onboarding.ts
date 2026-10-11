@@ -1,4 +1,4 @@
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import { buildModelOptions } from "../conversation/composer-commands";
 
 export type ModelOnboardingSettingsSection = "models" | "providers";
@@ -48,26 +48,24 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: false,
       requiresModelSelection: true,
-      unselectedModelLabel: "No models available",
-      emptyModelTitle: "No models available",
+      unselectedModelLabel: "无可用模型",
+      emptyModelTitle: "无可用模型",
       emptyModelDescription:
         connectedProviderCount > 0
-          ? "Open Settings > Models to enable models."
-          : "Open Settings > Providers to connect a provider and make models available.",
+          ? "打开“设置 > 模型”以启用模型。"
+          : "打开“设置 > 提供商”以连接提供商并获得可用模型。",
       notice:
         connectedProviderCount > 0
           ? {
-              title: "No models available",
-              description:
-                "All available models are currently disabled. Open Settings > Models to enable models.",
-              actionLabel: "Open Settings > Models",
+              title: "无可用模型",
+              description: "当前所有可用模型都已禁用。打开“设置 > 模型”以启用模型。",
+              actionLabel: "打开“设置 > 模型”",
               actionSection: "models",
             }
           : {
-              title: "No models available",
-              description:
-                "Connect a provider in Settings > Providers before choosing a model or setting a default.",
-              actionLabel: "Open Settings > Providers",
+              title: "无可用模型",
+              description: "请先在“设置 > 提供商”中连接提供商，然后再选择模型或设置默认模型。",
+              actionLabel: "打开“设置 > 提供商”",
               actionSection: "providers",
             },
     };
@@ -77,15 +75,15 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: true,
       requiresModelSelection: true,
-      unselectedModelLabel: "Pick a model",
-      emptyModelTitle: "No models available",
-      emptyModelDescription: "Pick a model.",
+      unselectedModelLabel: "选择模型",
+      emptyModelTitle: "无可用模型",
+      emptyModelDescription: "请选择模型。",
       notice: {
-        title: "Selected model unavailable",
+        title: "所选模型不可用",
         description: hasDefaultModel
-          ? "The model selected for this thread is no longer available. Choose another model, then open Settings > Models to update the default."
-          : "The model selected for this thread is no longer available. Choose another model, then open Settings > Models to choose the app default.",
-        actionLabel: "Open Settings > Models",
+          ? "为本会话选择的模型已不可用。请另选一个模型，然后打开“设置 > 模型”更新默认模型。"
+          : "为本会话选择的模型已不可用。请另选一个模型，然后打开“设置 > 模型”选择应用默认模型。",
+        actionLabel: "打开“设置 > 模型”",
         actionSection: "models",
       },
     };
@@ -95,15 +93,15 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: true,
       requiresModelSelection: !currentSelectionUsable,
-      unselectedModelLabel: "Pick a model",
-      emptyModelTitle: "No default model set",
-      emptyModelDescription: "Pick a model.",
+      unselectedModelLabel: "选择模型",
+      emptyModelTitle: "未设置默认模型",
+      emptyModelDescription: "请选择模型。",
       notice: currentSelectionUsable
         ? undefined
         : {
-            title: "No default model set",
-            description: "Set a default model in Settings > Models.",
-            actionLabel: "Open Settings > Models",
+            title: "未设置默认模型",
+            description: "请在“设置 > 模型”中设置默认模型。",
+            actionLabel: "打开“设置 > 模型”",
             actionSection: "models",
           },
     };
@@ -114,15 +112,15 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: true,
       requiresModelSelection: !currentSelectionUsable,
-      unselectedModelLabel: "Pick a model",
-      emptyModelTitle: "Default model unavailable",
-      emptyModelDescription: "Pick a model.",
+      unselectedModelLabel: "选择模型",
+      emptyModelTitle: "默认模型不可用",
+      emptyModelDescription: "请选择模型。",
       notice: {
-        title: "Default model unavailable",
+        title: "默认模型不可用",
         description: currentSelectionUsable
-          ? `Your saved default (${defaultLabel}) is no longer available. Open Settings > Models to update it.`
-          : `Your saved default (${defaultLabel}) is no longer available. Choose a model for this thread, then open Settings > Models to update it.`,
-        actionLabel: "Open Settings > Models",
+          ? `你保存的默认模型（${defaultLabel}）已不可用。打开“设置 > 模型”以更新。`
+          : `你保存的默认模型（${defaultLabel}）已不可用。请为本会话选择一个模型，然后打开“设置 > 模型”以更新。`,
+        actionLabel: "打开“设置 > 模型”",
         actionSection: "models",
       },
     };
@@ -131,9 +129,9 @@ export function deriveModelOnboardingState(
   return {
     hasSelectableModels: true,
     requiresModelSelection: false,
-    unselectedModelLabel: "Pick a model",
-    emptyModelTitle: "No models available",
-    emptyModelDescription: "Pick a model.",
+    unselectedModelLabel: "选择模型",
+    emptyModelTitle: "无可用模型",
+    emptyModelDescription: "请选择模型。",
   };
 }
 

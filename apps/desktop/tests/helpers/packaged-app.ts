@@ -15,7 +15,7 @@ export async function resolvePackagedAppBundle(releaseDir = packagedReleaseDir):
   } catch (error) {
     if (isMissingPathError(error)) {
       throw new Error(
-        `Packaged release directory not found: ${releaseDir}. Run pnpm --filter @pi-gui/desktop run package:dir first.`,
+        `Packaged release directory not found: ${releaseDir}. Run pnpm --filter @rsi-agent-pi/desktop run package:dir first.`,
       );
     }
     throw error;
@@ -25,7 +25,7 @@ export async function resolvePackagedAppBundle(releaseDir = packagedReleaseDir):
     appBundles.find((candidate) => basename(candidate) === "pi-gui.app") ?? appBundles[0];
   if (!appBundle) {
     throw new Error(
-      `No .app bundle found under ${releaseDir}. Run pnpm --filter @pi-gui/desktop run package:dir first.`,
+      `No .app bundle found under ${releaseDir}. Run pnpm --filter @rsi-agent-pi/desktop run package:dir first.`,
     );
   }
 
@@ -62,7 +62,7 @@ export async function resolvePackagedReleaseZip(releaseDir = packagedReleaseDir)
 
   if (!zipEntry) {
     throw new Error(
-      `No packaged macOS release zip found under ${releaseDir}. Run pnpm --filter @pi-gui/desktop run package first.`,
+      `No packaged macOS release zip found under ${releaseDir}. Run pnpm --filter @rsi-agent-pi/desktop run package first.`,
     );
   }
 

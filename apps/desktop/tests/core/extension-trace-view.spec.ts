@@ -115,10 +115,10 @@ test("the Trace example shows a live waterfall of the reply's model calls and to
     await waitForWorkspaceByPath(window, workspace);
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("What do the notes say?");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("What do the notes say?");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
     await expect(window.locator(".chat-header__title")).toBeVisible();
 
     const frame = await openTrace(window);

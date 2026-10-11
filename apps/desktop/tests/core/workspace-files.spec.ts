@@ -47,14 +47,14 @@ test("Files workbench puts the explorer to the right of an open file pane", asyn
   try {
     const window = await harness.firstWindow();
     await createNamedThread(window, "Plain folder files");
-    await selectSidePanel(window, "Files");
+    await selectSidePanel(window, "文件");
 
     const workbench = window.getByTestId("file-workbench");
     await expect(workbench).toBeVisible();
     await expect(window.locator(".diff-panel")).toHaveCount(0);
     await expect(window.getByTestId("file-workbench-filter")).toHaveAttribute(
       "placeholder",
-      "Filter files…",
+      "筛选文件…",
     );
     await expectConversationFileExplorerSplit(window);
 
@@ -109,7 +109,7 @@ test("Files explorer drops the previous workspace tree after a folder switch", a
     await createNamedThread(window, "Alpha files", { workspaceName: "alpha-files-workspace" });
     await createNamedThread(window, "Bravo files", { workspaceName: "bravo-files-workspace" });
     await window.locator(".session-row__select", { hasText: "Alpha files" }).click();
-    await selectSidePanel(window, "Files");
+    await selectSidePanel(window, "文件");
     const tree = window.getByTestId("file-workbench-tree");
     await expect(
       tree.locator('.file-workbench__tree-row--file[data-file-path="alpha-only.md"]'),
@@ -121,7 +121,7 @@ test("Files explorer drops the previous workspace tree after a folder switch", a
     await window.locator(".session-row__select", { hasText: "Bravo files" }).click();
     const workbench = window.getByTestId("file-workbench");
     if ((await workbench.count()) === 0) {
-      await selectSidePanel(window, "Files");
+      await selectSidePanel(window, "文件");
     }
     await expect(workbench).toBeVisible();
     await expect(

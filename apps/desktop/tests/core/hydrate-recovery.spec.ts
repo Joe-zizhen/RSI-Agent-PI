@@ -51,7 +51,7 @@ test("recovers from a rejected first state hydrate without rewriting persisted U
 
     const card = window.getByTestId("shell-status-card");
     await expect(card).toHaveAttribute("data-status", "failed");
-    await expect(window.getByRole("heading", { name: "Couldn't restore sessions" })).toBeVisible();
+    await expect(window.getByRole("heading", { name: "无法恢复会话记录" })).toBeVisible();
     await expect(window.locator(".sidebar")).toHaveCount(0);
     await expect(window.locator("body")).not.toContainText(HYDRATE_TEST_SENTINEL);
     expect(await readFile(uiStatePath)).toEqual(persistedUiState);
@@ -103,7 +103,7 @@ test("keeps the shell usable when only the selected transcript hydrate rejects",
     await expect(window.getByTestId("shell-status-card")).toHaveCount(0);
     const transcriptError = window.getByTestId("transcript-hydrate-error");
     await expect(transcriptError).toBeVisible();
-    await expect(transcriptError).toContainText("Couldn't load this thread");
+    await expect(transcriptError).toContainText("无法加载此会话");
     await expect(window.locator("body")).not.toContainText(HYDRATE_TEST_SENTINEL);
     expect(await readFile(uiStatePath)).toEqual(persistedUiState);
 
@@ -145,7 +145,7 @@ test("uncaught renderer errors show a recoverable fallback instead of a blank wi
 
     const card = window.getByTestId("shell-status-card");
     await expect(card).toHaveAttribute("data-status", "crashed");
-    await expect(window.getByRole("heading", { name: "Something went wrong" })).toBeVisible();
+    await expect(window.getByRole("heading", { name: "出现问题" })).toBeVisible();
     await expect(window.locator("body")).not.toContainText(HYDRATE_TEST_SENTINEL);
     await expect(window.locator("body")).not.toContainText("secret-token");
 

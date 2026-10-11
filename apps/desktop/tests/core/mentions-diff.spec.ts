@@ -87,11 +87,8 @@ test("toggles the diff panel from the keyboard shortcut and renders changed file
 
     const topbarActions = window.locator(".topbar__actions");
     await expect(topbarActions.locator(".topbar__icon")).toHaveCount(1);
-    await expect(topbarActions.getByLabel("Toggle side panel")).toBeVisible();
-    await expect(topbarActions.getByLabel("Toggle side panel")).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
+    await expect(topbarActions.getByLabel("切换侧边面板")).toBeVisible();
+    await expect(topbarActions.getByLabel("切换侧边面板")).toHaveAttribute("aria-pressed", "false");
     await expect(topbarActions.getByLabel("Toggle terminal")).toHaveCount(0);
     await expect(topbarActions.getByLabel("Toggle review")).toHaveCount(0);
     await expect(topbarActions.getByLabel("Toggle files")).toHaveCount(0);
@@ -118,7 +115,7 @@ test("toggles the diff panel from the keyboard shortcut and renders changed file
     expect(panelBox?.x ?? 0).toBeGreaterThan((mainBox?.x ?? 0) + (mainBox?.width ?? 0) / 2);
 
     await diffPanel.locator(".diff-panel__file-name").click();
-    const combined = diffPanel.getByRole("region", { name: "Diff", exact: true });
+    const combined = diffPanel.getByRole("region", { name: "差异", exact: true });
     await expect(combined.locator(".diff-inline")).toBeVisible();
     await expect(combined.locator(".diff-line--added")).toHaveCount(1);
 

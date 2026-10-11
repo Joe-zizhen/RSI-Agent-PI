@@ -1,4 +1,4 @@
-import type { SessionSchemaInfo } from "@pi-gui/session-driver";
+import type { SessionSchemaInfo } from "@rsi-agent-pi/session-driver";
 import { open } from "node:fs/promises";
 import { CURRENT_SESSION_VERSION } from "@earendil-works/pi-coding-agent";
 

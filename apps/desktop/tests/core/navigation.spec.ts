@@ -165,12 +165,12 @@ test("switching sessions republishes the selected transcript", async () => {
     await selectSession(window, "Thread one");
     await expect(window.locator(".chat-header__title")).toHaveText("Thread one");
     await expect(window.getByTestId("transcript")).toContainText("alpha response");
-    await expect(window.getByTestId("transcript")).not.toContainText("Loading transcript");
+    await expect(window.getByTestId("transcript")).not.toContainText("正在加载对话记录");
 
     await selectSession(window, "Thread two");
     await expect(window.locator(".chat-header__title")).toHaveText("Thread two");
     await expect(window.getByTestId("transcript")).toContainText("beta response");
-    await expect(window.getByTestId("transcript")).not.toContainText("Loading transcript");
+    await expect(window.getByTestId("transcript")).not.toContainText("正在加载对话记录");
   } finally {
     await harness.close();
   }

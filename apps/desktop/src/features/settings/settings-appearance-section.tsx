@@ -15,9 +15,9 @@ interface SettingsAppearanceSectionProps {
 }
 
 const THEME_MODES: readonly { readonly mode: ThemeMode; readonly label: string }[] = [
-  { mode: "system", label: "System" },
-  { mode: "light", label: "Light" },
-  { mode: "dark", label: "Dark" },
+  { mode: "system", label: "系统" },
+  { mode: "light", label: "浅色" },
+  { mode: "dark", label: "深色" },
 ];
 
 export function SettingsAppearanceSection({
@@ -32,9 +32,9 @@ export function SettingsAppearanceSection({
   const { variant } = useActiveTheme();
   return (
     <>
-      <SettingsGroup title="Theme" plain>
+      <SettingsGroup title="主题" plain>
         <div
-          aria-label="Theme"
+          aria-label="主题"
           className="theme-mode-tiles"
           role="radiogroup"
           style={tilePalette(themePresetId)}
@@ -64,7 +64,7 @@ export function SettingsAppearanceSection({
       </SettingsGroup>
 
       <SettingsGroup>
-        <SettingsRow title="Color preset" description={activePreset.description}>
+        <SettingsRow title="颜色预设" description={activePreset.description}>
           <span className="settings-preset-control">
             <span aria-hidden="true" className="settings-preset-swatches">
               {themeSwatches(themePresetId, variant).map((swatch, index) => (
@@ -72,20 +72,17 @@ export function SettingsAppearanceSection({
               ))}
             </span>
             <SettingsSelect
-              label="Color preset"
+              label="颜色预设"
               options={themePresets.map((preset) => ({ value: preset.id, label: preset.name }))}
               value={themePresetId}
               onChange={onSetThemePresetId}
             />
           </span>
         </SettingsRow>
-        <SettingsRow
-          title="Window transparency"
-          description="Let desktop colors show through supported surfaces."
-        >
+        <SettingsRow title="窗口透明" description="让桌面颜色透过受支持的界面显示。">
           <SettingsSwitch
             checked={enableTransparency}
-            label="Window transparency"
+            label="窗口透明"
             onChange={onSetEnableTransparency}
           />
         </SettingsRow>

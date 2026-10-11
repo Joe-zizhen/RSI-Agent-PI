@@ -19,7 +19,7 @@ test("folder rows start a new thread in that folder", async () => {
     await waitForWorkspaceByPath(window, workspaceA);
     await waitForWorkspaceByPath(window, workspaceB);
 
-    const workspacePicker = window.getByRole("combobox", { name: "Workspace" });
+    const workspacePicker = window.getByRole("combobox", { name: "项目" });
     // Start each time from the other folder's page, so the "+" target is never the
     // folder that is already selected when New thread opens.
     for (const [path, other] of [
@@ -56,7 +56,7 @@ test("the sidebar can be dragged wider, remembers its width and resets on double
     await waitForWorkspaceByPath(window, workspace);
     const defaultWidth = await sidebarWidth(window);
 
-    const handle = window.getByRole("separator", { name: "Sidebar width" });
+    const handle = window.getByRole("separator", { name: "侧边栏宽度" });
     const start = (await handle.boundingBox())!;
     await window.mouse.move(start.x + 3, start.y + 200);
     await window.mouse.down();
@@ -115,7 +115,7 @@ test("the sidebar can be dragged wider, remembers its width and resets on double
     await waitForWorkspaceByPath(window, workspace);
     await expect.poll(() => sidebarWidth(window)).toBe(220);
 
-    await window.getByRole("separator", { name: "Sidebar width" }).dblclick();
+    await window.getByRole("separator", { name: "侧边栏宽度" }).dblclick();
     const defaultWidth = await window.evaluate(() =>
       Number.parseFloat(
         getComputedStyle(document.querySelector(".shell")!).getPropertyValue("--sidebar-width"),

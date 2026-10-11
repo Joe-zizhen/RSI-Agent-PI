@@ -202,7 +202,7 @@ export function CommandPalette<F extends string>({
             onChange={(event) => onQueryChange(event.target.value)}
           />
           <button
-            aria-label="Close"
+            aria-label="关闭"
             className="command-palette__close"
             type="button"
             onClick={onClose}
@@ -212,7 +212,7 @@ export function CommandPalette<F extends string>({
         </div>
 
         {filters && filters.length > 0 ? (
-          <div aria-label="Filters" className="command-palette__filters" role="tablist">
+          <div aria-label="筛选" className="command-palette__filters" role="tablist">
             {filters.map((filter) => (
               <button
                 key={filter.id}

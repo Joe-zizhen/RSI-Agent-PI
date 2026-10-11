@@ -1,4 +1,4 @@
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 
 /** Tool name → the label its extension registered, for one folder's loaded extensions. */
 export type ExtensionToolLabels = ReadonlyMap<string, string>;

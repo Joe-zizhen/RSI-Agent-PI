@@ -50,6 +50,10 @@ test("desktop assets belong to one loaded extension and its browser build", asyn
 });
 
 test("desktop asset validation rejects symlink escapes at registration and serving", async () => {
+  test.skip(
+    process.platform === "win32",
+    "Creates symlink fixtures; Windows needs symlink privilege.",
+  );
   const directory = await mkdtemp(path.join(os.tmpdir(), "pi-desktop-escape-"));
   try {
     const extension = path.join(directory, "extension");

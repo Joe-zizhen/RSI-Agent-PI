@@ -3,14 +3,14 @@ import type {
   SessionCatalogEntry,
   WorkspaceCatalogEntry,
   WorktreeCatalogEntry,
-} from "@pi-gui/catalogs";
-import { sessionKey } from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/catalogs";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
 import type {
   SessionAttachment,
   SessionConfig,
   SessionQueuedMessage,
   SessionRef,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 import type {
   ComposerAttachment,
   QueuedComposerMessage,
@@ -409,7 +409,7 @@ function mergeQueuedComposerAttachments(
       return {
         id: `${messageId}:image:${index}:${randomUUID()}`,
         kind: "image",
-        name: attachment.name ?? `Image ${index + 1}`,
+        name: attachment.name ?? `图片 ${index + 1}`,
         mimeType: attachment.mimeType,
         data: attachment.data,
       } satisfies ComposerAttachment;

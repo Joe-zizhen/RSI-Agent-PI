@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { ExtensionFlagValues } from "@pi-gui/session-driver";
-import type { RuntimeExtensionFlag, RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { ExtensionFlagValues } from "@rsi-agent-pi/session-driver";
+import type {
+  RuntimeExtensionFlag,
+  RuntimeSnapshot,
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import { SettingsSwitch } from "../settings/settings-controls";
 
 interface FlagGroup {
@@ -22,7 +25,7 @@ function setFlagEntries(values: ExtensionFlagValues | undefined): [string, true 
 }
 
 function flagsBadgeLabel(count: number): string {
-  return count > 0 ? `Flags · ${count}` : "Flags";
+  return count > 0 ? `标志 · ${count}` : "标志";
 }
 
 /**
@@ -106,7 +109,7 @@ export function ExtensionFlagsSelector({
                           type="text"
                           className="extension-flags__input"
                           aria-label={`--${flag.name}`}
-                          placeholder={typeof flag.default === "string" ? flag.default : "value"}
+                          placeholder={typeof flag.default === "string" ? flag.default : "值"}
                           spellCheck={false}
                           value={typeof value === "string" ? value : ""}
                           onChange={(event) => onSetFlag(flag.name, event.target.value)}
@@ -139,7 +142,7 @@ export function ExtensionFlagsBadge({
     <span
       className="model-selector__badge extension-flags__badge--readonly"
       data-testid="extension-flags-session-badge"
-      title={`Started with:\n${summary}`}
+      title={`启动参数：\n${summary}`}
     >
       {flagsBadgeLabel(entries.length)}
     </span>

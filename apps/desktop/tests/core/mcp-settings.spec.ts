@@ -24,8 +24,8 @@ async function readJson(path: string): Promise<Record<string, unknown>> {
 async function openMcpSettings(window: Page) {
   await window.keyboard.press(desktopShortcut(","));
   await expect(window.getByTestId("settings-surface")).toBeVisible();
-  await window.getByRole("button", { name: "MCP servers", exact: true }).click();
-  await expect(window.locator(".view-header__title")).toHaveText("MCP servers");
+  await window.getByRole("button", { name: "MCP 服务器", exact: true }).click();
+  await expect(window.locator(".view-header__title")).toHaveText("MCP 服务器");
 }
 
 test("adds, switches and removes an MCP server from Settings, editing mcp.json in place", async () => {
@@ -65,18 +65,18 @@ test("adds, switches and removes an MCP server from Settings, editing mcp.json i
       surface.locator(`[data-testid="mcp-server-row"][data-server-name="${name}"]`);
 
     await expect(row("existing")).toContainText("existing-server --port 1");
-    await expect(row("project-docs")).toContainText("This project · http://127.0.0.1:9/mcp");
-    await expect(row("project-docs").getByRole("button", { name: "Remove" })).toHaveCount(0);
+    await expect(row("project-docs")).toContainText("本项目 · http://127.0.0.1:9/mcp");
+    await expect(row("project-docs").getByRole("button", { name: "移除" })).toHaveCount(0);
     await expect(surface).not.toContainText("do-not-show-this");
 
-    await surface.getByLabel("Server name").fill("fixture");
-    await surface.getByLabel("Server description").fill("Writes marker files");
-    await surface.getByLabel("Server command").fill(process.execPath);
-    await surface.getByLabel("Server arguments").fill(`"${MCP_SERVER_FIXTURE}" "${markerDir}"`);
-    await surface.getByRole("button", { name: "Add server", exact: true }).click();
+    await surface.getByLabel("服务器名称").fill("fixture");
+    await surface.getByLabel("服务器说明").fill("Writes marker files");
+    await surface.getByLabel("服务器命令").fill(process.execPath);
+    await surface.getByLabel("服务器参数").fill(`"${MCP_SERVER_FIXTURE}" "${markerDir}"`);
+    await surface.getByRole("button", { name: "添加服务器", exact: true }).click();
     await expect(row("fixture")).toContainText("Writes marker files");
-    await expect(surface.getByLabel("Server name")).toHaveValue("");
-    await expect(surface.getByLabel("Server description")).toHaveValue("");
+    await expect(surface.getByLabel("服务器名称")).toHaveValue("");
+    await expect(surface.getByLabel("服务器说明")).toHaveValue("");
 
     const afterAdd = await readJson(mcpPath);
     expect(afterAdd).toEqual({
@@ -92,13 +92,13 @@ test("adds, switches and removes an MCP server from Settings, editing mcp.json i
     });
 
     // pi would skip one of two servers whose names differ only by "-" and "_".
-    await surface.getByLabel("Server name").fill("project_docs");
-    await surface.getByLabel("Server command").fill("node");
-    await surface.getByRole("button", { name: "Add server", exact: true }).click();
+    await surface.getByLabel("服务器名称").fill("project_docs");
+    await surface.getByLabel("服务器命令").fill("node");
+    await surface.getByRole("button", { name: "添加服务器", exact: true }).click();
     await expect(surface).toContainText('An MCP server named "project-docs" already exists');
     await expect(row("project_docs")).toHaveCount(0);
-    await surface.getByLabel("Server name").fill("");
-    await surface.getByLabel("Server command").fill("");
+    await surface.getByLabel("服务器名称").fill("");
+    await surface.getByLabel("服务器命令").fill("");
     expect(await readFile(mcpPath, "utf8")).toMatch(/^ {4}"autoEnableCodemode"/m);
 
     // A thread starts the servers in mcp.json, the same file terminal pi reads.
@@ -106,7 +106,7 @@ test("adds, switches and removes an MCP server from Settings, editing mcp.json i
     await expect.poll(() => existsSync(join(markerDir, "initialized.txt"))).toBe(true);
     await openMcpSettings(window);
 
-    const fixtureSwitch = row("fixture").getByRole("switch", { name: "Enable fixture" });
+    const fixtureSwitch = row("fixture").getByRole("switch", { name: "启用 fixture" });
     await expect(fixtureSwitch).toBeChecked();
     await fixtureSwitch.click();
     await expect(fixtureSwitch).not.toBeChecked();
@@ -133,7 +133,7 @@ test("adds, switches and removes an MCP server from Settings, editing mcp.json i
       },
     });
 
-    const projectSwitch = row("project-docs").getByRole("switch", { name: "Enable project-docs" });
+    const projectSwitch = row("project-docs").getByRole("switch", { name: "启用 project-docs" });
     await projectSwitch.click();
     await expect(projectSwitch).not.toBeChecked();
     await expect(projectSwitch).toBeEnabled();
@@ -147,10 +147,8 @@ test("adds, switches and removes an MCP server from Settings, editing mcp.json i
       await dialog.dismiss();
       return message;
     });
-    await row("existing").getByRole("button", { name: "Remove" }).click();
-    expect(await declined).toContain(
-      "hidden settings (environment variables, headers, sign-in config) are deleted too",
-    );
+    await row("existing").getByRole("button", { name: "移除" }).click();
+    expect(await declined).toContain("其隐藏设置（环境变量、请求头、登录配置）也会被删除。");
     await expect(row("existing")).toBeVisible();
     expect((await readJson(mcpPath)).mcpServers).toEqual({
       existing,
@@ -166,17 +164,15 @@ test("adds, switches and removes an MCP server from Settings, editing mcp.json i
       await dialog.accept();
       return message;
     });
-    await row("fixture").getByRole("button", { name: "Remove" }).click();
-    expect(await accepted).toBe(
-      'Remove MCP server "fixture"? pi in the terminal stops using it too.',
-    );
+    await row("fixture").getByRole("button", { name: "移除" }).click();
+    expect(await accepted).toBe("移除 MCP 服务器“fixture”？终端里的 pi 也会停止使用它。");
     await expect(row("fixture")).toHaveCount(0);
     expect(await readJson(mcpPath)).toEqual({
       autoEnableCodemode: true,
       mcpServers: { existing },
     });
 
-    const codemodeSwitch = surface.getByRole("switch", { name: "Code mode always on" });
+    const codemodeSwitch = surface.getByRole("switch", { name: "始终开启代码模式" });
     await expect(codemodeSwitch).not.toBeChecked();
     await codemodeSwitch.click();
     await expect(codemodeSwitch).toBeChecked();
@@ -213,12 +209,12 @@ test("rejects a server Settings cannot run and leaves mcp.json alone", async () 
     await expect(surface).toContainText(`Saved to ${mcpPath}.`);
     await expect(surface.getByTestId("mcp-servers-empty")).toContainText("/mcp");
 
-    await surface.getByLabel("Server name").fill("local-file");
-    await surface.getByRole("group", { name: "Server type" }).getByText("URL").click();
-    await surface.getByLabel("Server URL").fill("file:///etc/passwd");
-    await surface.getByRole("button", { name: "Add server", exact: true }).click();
+    await surface.getByLabel("服务器名称").fill("local-file");
+    await surface.getByRole("group", { name: "服务器类型" }).getByText("URL").click();
+    await surface.getByLabel("服务器 URL").fill("file:///etc/passwd");
+    await surface.getByRole("button", { name: "添加服务器", exact: true }).click();
     await expect(surface).toContainText("MCP server URL must be a valid http:// or https:// URL");
-    await expect(surface.getByLabel("Server name")).toHaveValue("local-file");
+    await expect(surface.getByLabel("服务器名称")).toHaveValue("local-file");
     expect(existsSync(mcpPath)).toBe(false);
 
     // pi in the terminal adds a server while the app is in the background; focus shows it.

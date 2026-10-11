@@ -1,6 +1,6 @@
-appId: com.pi-gui.desktop
-productName: pi-gui
-copyright: Copyright 2026 Matthew Lam
+appId: com.rsi-agent-pi.desktop
+productName: RSI-Agent-PI
+copyright: Copyright 2026 RSI-Agent-PI contributors. Based on pi-gui, Copyright 2026 Matthew Lam.
 electronVersion: 37.10.3
 
 directories:
@@ -26,6 +26,13 @@ files:
 extraResources:
   - from: resources/icon.png
     to: icon.png
+  - from: runtime/python
+    to: runtime/python
+  - from: runtime/memloop-py
+    to: runtime/memloop-py
+  # Bundled pi plugins and safety extensions seeded into ~/.pi/agent on first run.
+  - from: ../../vendor
+    to: vendor
 
 asar: true
 asarUnpack:
@@ -54,9 +61,9 @@ mac:
 
 linux:
   category: Development
-  executableName: pi-gui
+  executableName: RSI-Agent-PI
   maintainer: Matthew Lam <minghinmatthew.lam@gmail.com>
-  vendor: pi-gui
+  vendor: RSI-Agent-PI
   synopsis: Codex-style desktop app for the pi coding agent
   description: A native desktop interface for pi coding agent sessions, workspaces, and tools.
   target:
@@ -69,7 +76,7 @@ linux:
 
 deb:
   artifactName: ${productName}_${version}_${arch}.${ext}
-  packageName: pi-gui
+  packageName: rsi-agent-pi
   packageCategory: devel
   priority: optional
   afterRemove: resources/linux/after-remove.sh
@@ -86,9 +93,10 @@ deb:
     - libgbm1
 
 win:
-  executableName: pi-gui
-  # Keep icon/version metadata editing; signing is optional without credentials.
-  signAndEditExecutable: true
+  executableName: RSI-Agent-PI
+  # rcedit/signtool per-executable editing is off: it downloads winCodeSign per exe
+  # and its unzip needs symlink privileges on Windows. No signing cert in this build.
+  signAndEditExecutable: false
   target:
     - target: nsis
       arch:
@@ -121,5 +129,7 @@ dmg:
 
 publish:
   provider: github
-  owner: minghinmatthewlam
-  repo: pi-gui
+  # Release source for the RSI-Agent-PI fork. Replace the placeholder owner and
+  # repository with the real GitHub coordinates before publishing a release.
+  owner: Joe-zizhen
+  repo: RSI-Agent-PI

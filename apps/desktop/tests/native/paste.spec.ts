@@ -57,7 +57,7 @@ test("pastes an image from the real Electron clipboard into the new thread compo
     await pasteTinyPngViaClipboard(harness, window, "new-thread-composer");
     await expect(window.locator(".composer-attachment")).toHaveCount(1);
 
-    await window.getByRole("button", { name: "Start thread" }).click();
+    await window.getByRole("button", { name: "开始会话" }).click();
     await expect(window.getByTestId("composer")).toBeVisible({ timeout: 15_000 });
     await expect(window.locator(".timeline-item__attachment")).toBeVisible({ timeout: 15_000 });
     await expect(window.locator(".composer-attachment")).toHaveCount(0);

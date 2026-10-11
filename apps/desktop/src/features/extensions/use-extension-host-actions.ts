@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { PiDesktopApi } from "../../../contracts/ipc";
 import type { useWorkbench } from "../workbench/use-workbench";
 
@@ -34,10 +34,9 @@ export function useExtensionHostActions({
   const beforePrepareTaskDraft = useCallback(async () => {
     const draftTarget = target;
     if (!draftTarget || targetRef.current !== draftTarget)
-      throw new Error("Return to the extension's task to create a task draft.");
+      throw new Error("请返回扩展的任务以创建任务草稿。");
     await flushComposerDraftAsync(draftTarget);
-    if (targetRef.current !== draftTarget)
-      throw new Error("The task changed before its draft could be saved.");
+    if (targetRef.current !== draftTarget) throw new Error("任务已更改，草稿未能保存。");
   }, [flushComposerDraftAsync, target]);
   const handlePrepareTaskDraftPendingChange = useCallback(
     (pending: boolean, requestKey: string) => {
@@ -72,7 +71,7 @@ export function useExtensionHostActions({
             if (targetRef.current !== current || fileRequestRef.current !== request) return;
             setFileError({
               target: current,
-              message: `Couldn't open ${event.path}. ${error instanceof Error ? error.message : "Try opening the file again."}`,
+              message: `无法打开 ${event.path}。${error instanceof Error ? error.message : "请重试打开该文件。"}`,
             });
           });
       }),

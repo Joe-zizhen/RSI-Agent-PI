@@ -38,14 +38,14 @@ test("queues follow-ups with Enter and steers the current run with Cmd+Enter", a
 
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
     await window
-      .getByLabel("New thread prompt")
+      .getByLabel("新建会话输入")
       .fill(
         'Use your bash or shell tool to run `python - <<\'PY\'\nimport time\nprint("queue-start")\ntime.sleep(8)\nprint("queue-end")\nPY` and, after the tool call, reply with exactly BASELINE_DONE.',
       );
-    await window.getByRole("button", { name: "Start thread" }).click();
+    await window.getByRole("button", { name: "开始会话" }).click();
 
     await expect
       .poll(

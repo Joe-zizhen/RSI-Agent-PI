@@ -148,7 +148,7 @@ function validateBuilderConfig(config, desktopPackage, afterRemoveSource) {
   );
 
   assert(
-    desktopPackage.homepage === "https://github.com/minghinmatthewlam/pi-gui",
+    desktopPackage.homepage === "https://github.com/Joe-zizhen/RSI-Agent-PI",
     "Desktop package metadata must provide the Debian Homepage",
   );
   assert(
@@ -167,7 +167,10 @@ function validateBuilderConfig(config, desktopPackage, afterRemoveSource) {
     "pnpm Windows packaging must keep the canonical Windows packager",
   );
 
-  assert(config.linux?.executableName === "pi-gui", "Linux executable name must remain pi-gui");
+  assert(
+    config.linux?.executableName === "RSI-Agent-PI",
+    "Linux executable name must remain RSI-Agent-PI",
+  );
   assert(
     config.linux?.maintainer === "Matthew Lam <minghinmatthew.lam@gmail.com>",
     "Linux package maintainer must include an email address",
@@ -189,7 +192,10 @@ function validateBuilderConfig(config, desktopPackage, afterRemoveSource) {
     config.deb?.artifactName === "${productName}_${version}_${arch}.${ext}",
     "Debian artifact naming must remain deterministic",
   );
-  assert(config.deb?.packageName === "pi-gui", "Debian package name must remain pi-gui");
+  assert(
+    config.deb?.packageName === "rsi-agent-pi",
+    "Debian package name must remain rsi-agent-pi",
+  );
   assert(config.deb?.packageCategory === "devel", "Debian Section must remain devel");
   assert(config.deb?.priority === "optional", "Debian Priority must remain optional");
   assert(
@@ -340,7 +346,7 @@ function validateWorkflow(workflow, finalizerSource, linuxVerifierSource, window
   for (const marker of [
     "--appimage-extract",
     '"$extracted/AppRun"',
-    '"$extracted/pi-gui"',
+    '"$extracted/RSI-Agent-PI"',
     "resources/app.asar",
     "dpkg-deb --info",
     "dpkg-deb --contents",

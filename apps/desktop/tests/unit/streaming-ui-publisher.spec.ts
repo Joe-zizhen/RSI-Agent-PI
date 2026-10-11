@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import {
   STREAMING_UI_PUBLISH_INTERVAL_MS,
   StreamingUiPublisher,

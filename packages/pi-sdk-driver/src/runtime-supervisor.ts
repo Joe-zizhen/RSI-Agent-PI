@@ -27,8 +27,8 @@ import type {
   RuntimeSkillRecord,
   RuntimeSourceInfo,
   RuntimeSnapshot,
-} from "@pi-gui/session-driver/runtime-types";
-import type { WorkspaceRef } from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver/runtime-types";
+import type { WorkspaceRef } from "@rsi-agent-pi/session-driver";
 import { createRuntimeDependencies } from "./runtime-deps.js";
 import {
   createSettingsManagerWithoutNpmPackages,

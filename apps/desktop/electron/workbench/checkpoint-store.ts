@@ -14,7 +14,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import type { SessionRef, TurnCaptureBoundary } from "@pi-gui/session-driver";
+import type { SessionRef, TurnCaptureBoundary } from "@rsi-agent-pi/session-driver";
 import type { ReviewCoverage, ReviewIssue } from "../../contracts/review";
 import { readJsonWithBackup, writeFileAtomicQueued } from "../persistence/atomic-file-write";
 import { isolatedGitEnvironment } from "../platform/files/git-environment";
@@ -297,10 +297,7 @@ export class TurnCheckpointStore {
     // write may include it); restart marks either one interrupted, never complete.
     const capture = await this.capture(boundary.workspace.path, signal);
     const safeCapture = signal.aborted
-      ? unavailableCapture(
-          "capture-aborted",
-          "The capture was interrupted or exceeded its time limit.",
-        )
+      ? unavailableCapture("capture-aborted", "捕获被中断或超出时间限制。")
       : capture;
     if (safeCapture.state === "unavailable" && safeCapture.code === "capture-aborted")
       this.warmInventory(checkoutPath);
@@ -362,7 +359,7 @@ export class TurnCheckpointStore {
     } catch {
       return unavailableReview(
         "checkpoint-storage-unavailable",
-        "Checkpoint metadata could not be read; existing data was retained.",
+        "无法读取检查点元数据，已保留现有数据。",
       );
     }
     const record = input.checkpointId
@@ -380,10 +377,7 @@ export class TurnCheckpointStore {
       !sameTarget(record.target, input.target) ||
       record.checkoutId !== input.checkoutId
     ) {
-      return unavailableReview(
-        "checkpoint-unavailable",
-        "No captured turn exists for this task and checkout.",
-      );
+      return unavailableReview("checkpoint-unavailable", "此任务和工作副本没有已捕获的轮次。");
     }
     return resolveRecord(this.repositoryPath, record);
   }
@@ -469,13 +463,10 @@ export class TurnCheckpointStore {
       const root = await realpath(workspacePath);
       const rootStat = await lstat(root);
       if (!rootStat.isDirectory() || rootStat.isSymbolicLink())
-        throw new CaptureError("checkout-changing", "The checkout root changed during capture.");
+        throw new CaptureError("checkout-changing", "捕获期间工作副本根目录已更改。");
       const repositoryRoot = stripLine(await git(root, ["rev-parse", "--show-toplevel"], signal));
       if ((await realpath(repositoryRoot)) !== root)
-        throw new CaptureError(
-          "checkout-root-required",
-          "Turn captures require the Git checkout root.",
-        );
+        throw new CaptureError("checkout-root-required", "轮次捕获需要 Git 工作副本根目录。");
       const [trackedOutput, otherOutput] = await Promise.all([
         git(root, ["ls-files", "--stage", "-v", "-z"], signal),
         git(root, ["ls-files", "--others", "--exclude-standard", "-z"], signal),
@@ -484,25 +475,13 @@ export class TurnCheckpointStore {
       for (const entry of nulRecords(trackedOutput)) {
         const match = /^([A-Za-z?]) ([0-7]{6}) ([a-f0-9]{40,64}) ([0-3])\t([\s\S]+)$/.exec(entry);
         if (!match)
-          throw new CaptureError(
-            "inventory-invalid",
-            "Git returned an unreadable tracked-file inventory.",
-          );
+          throw new CaptureError("inventory-invalid", "Git 返回了无法读取的跟踪文件清单。");
         if (match[1]!.toUpperCase() === "S")
-          throw new CaptureError(
-            "sparse-checkout",
-            "Sparse checkout paths are not yet supported by turn captures.",
-          );
+          throw new CaptureError("sparse-checkout", "轮次捕获尚不支持稀疏检出路径。");
         if (match[2] === "160000")
-          throw new CaptureError(
-            "submodule",
-            "Submodule contents are excluded; this turn capture is unavailable.",
-          );
+          throw new CaptureError("submodule", "子模块内容被排除，此轮次捕获不可用。");
         if (match[4] !== "0")
-          throw new CaptureError(
-            "conflicted-checkout",
-            "Resolve Git index conflicts before capturing a complete turn.",
-          );
+          throw new CaptureError("conflicted-checkout", "请先解决 Git 索引冲突，再捕获完整轮次。");
         paths.add(match[5]!);
       }
       // Git lists an untracked nested repository (or linked worktree) as one "dir/" entry.
@@ -538,10 +517,7 @@ export class TurnCheckpointStore {
             signal,
             (size) => {
               if (size > this.limits.maxFileBytes || byteCount + size > this.limits.maxBytes) {
-                throw new CaptureError(
-                  "byte-limit",
-                  "The checkout exceeds the bounded turn-capture size limit.",
-                );
+                throw new CaptureError("byte-limit", "工作副本超出轮次捕获的大小上限。");
               }
               byteCount += size;
             },
@@ -671,16 +647,10 @@ export class TurnCheckpointStore {
       failure.abort();
       const result =
         timeout.aborted || parentSignal?.aborted
-          ? unavailableCapture(
-              "capture-aborted",
-              "The capture was interrupted or exceeded its time limit.",
-            )
+          ? unavailableCapture("capture-aborted", "捕获被中断或超出时间限制。")
           : error instanceof CaptureError
             ? unavailableCapture(error.code, error.message)
-            : unavailableCapture(
-                "capture-failed",
-                "The checkout could not be captured completely; no partial diff will be shown.",
-              );
+            : unavailableCapture("capture-failed", "工作副本无法完整捕获，不会显示部分差异。");
       return { ...result, fileCount, byteCount, durationMs: Date.now() - started };
     } finally {
       if (spoolPath) await rm(spoolPath, { recursive: true, force: true });
@@ -703,7 +673,7 @@ export class TurnCheckpointStore {
       try {
         const existing = await lstat(this.repositoryPath);
         if (!existing.isDirectory() || existing.isSymbolicLink())
-          throw new Error("Invalid checkpoint repository.");
+          throw new Error("检查点仓库无效。");
       } catch (error) {
         if (!isMissing(error)) throw error;
         const initializingPath = join(this.directory, `objects.git.initializing.${randomUUID()}`);
@@ -716,7 +686,7 @@ export class TurnCheckpointStore {
           stripLine(await git(initializingPath, ["rev-parse", "--is-bare-repository"], signal)) !==
           "true"
         ) {
-          throw new Error("Checkpoint repository initialization did not finish.");
+          throw new Error("检查点仓库初始化未完成。");
         }
         signal.throwIfAborted();
         // Publish only a validated repository. A killed init leaves its unique staging path
@@ -727,7 +697,7 @@ export class TurnCheckpointStore {
         stripLine(await git(this.repositoryPath, ["rev-parse", "--is-bare-repository"], signal)) !==
         "true"
       )
-        throw new Error("Checkpoint repository must be bare.");
+        throw new Error("检查点仓库必须是裸仓库。");
     })().catch((error: unknown) => {
       this.gitReady = undefined;
       throw error;
@@ -739,7 +709,7 @@ export class TurnCheckpointStore {
     this.loaded ??= (async () => {
       const result = await readJsonWithBackup(this.metadataPath);
       if (result.corrupted && !result.recovered)
-        throw new Error("Invalid checkpoint metadata; original data retained.");
+        throw new Error("检查点元数据无效，已保留原始数据。");
       const metadata =
         result.value === undefined
           ? { version: 1 as const, records: [] }
@@ -751,10 +721,7 @@ export class TurnCheckpointStore {
           this.records.set(record.checkpointId, {
             ...record,
             outcome: "interrupted",
-            after: unavailableCapture(
-              "runtime-interrupted",
-              "The app exited before this interval's final capture.",
-            ),
+            after: unavailableCapture("runtime-interrupted", "应用在本区间的最终捕获前退出。"),
           });
         } else this.records.set(record.checkpointId, record);
       }
@@ -933,7 +900,7 @@ async function inspectSnapshotFile(
     path.includes("\0") ||
     (sep === "\\" && path.includes("\\"))
   )
-    throw new CaptureError("unsafe-path", "The checkout contains an unsafe capture path.");
+    throw new CaptureError("unsafe-path", "工作副本包含不安全的捕获路径。");
   const absolute = resolve(root, path);
   if (relative(root, absolute).startsWith(`..${sep}`))
     throw new CaptureError("unsafe-path", "A capture path escapes the checkout.");
@@ -1109,10 +1076,7 @@ function stripLine(buffer: Buffer): string {
 function nulRecords(buffer: Buffer): string[] {
   const text = buffer.toString("utf8");
   if (!Buffer.from(text).equals(buffer) || (text && !text.endsWith("\0")))
-    throw new CaptureError(
-      "inventory-encoding",
-      "Git paths cannot be represented safely by the app.",
-    );
+    throw new CaptureError("inventory-encoding", "应用无法安全表示这些 Git 路径。");
   return text ? text.slice(0, -1).split("\0") : [];
 }
 
@@ -1136,8 +1100,7 @@ function sameTarget(left: SessionRef, right: SessionRef): boolean {
   return left.workspaceId === right.workspaceId && left.sessionId === right.sessionId;
 }
 
-const NESTED_REPOSITORY_NOTE =
-  "Nested Git repositories inside this checkout are not included in turn captures.";
+const NESTED_REPOSITORY_NOTE = "此工作副本内的嵌套 Git 仓库不包含在轮次捕获中。";
 
 function unavailableCapture(code: string, message: string): CheckpointCapture {
   return {
@@ -1164,17 +1127,15 @@ function resolveRecord(
     const failed = record.before.state === "unavailable" ? record.before : record.after;
     return unavailableReview(
       "checkpoint-incomplete",
-      failed?.state === "unavailable"
-        ? failed.message
-        : "This turn does not have complete before and after captures.",
+      failed?.state === "unavailable" ? failed.message : "此轮次没有完整的变更前后捕获。",
     );
   }
   const notes = [...record.before.coverage.notes, ...record.after.coverage.notes];
   if (record.outcome !== "completed")
-    notes.push(`This interval ended ${record.outcome}; it is not a completed turn.`);
+    notes.push(`此区间以 ${record.outcome} 结束，不是完整的轮次。`);
   if (record.overlaps.length)
     notes.push(
-      `Other runs overlapped this interval in the same checkout (${record.overlaps.length}). Changes cannot be attributed to this agent alone.`,
+      `其他运行在此期间与同一工作副本重叠（${record.overlaps.length} 次）。不能将变更仅归因于此智能体。`,
     );
   return {
     state: "available",
@@ -1195,7 +1156,7 @@ function unavailableReview(code: string, message: string): ReviewIssue {
 function decodeMetadata(value: unknown): CheckpointMetadata {
   const root = metadataRecord(value, ["version", "records"]);
   if (root.version !== 1 || !Array.isArray(root.records))
-    throw new Error("Unsupported checkpoint metadata; original data retained.");
+    throw new Error("不支持的检查点元数据，已保留原始数据。");
   const records = root.records.map((value: unknown): StoredTurnCheckpoint => {
     const record = metadataRecord(value, [
       "checkpointId",
@@ -1224,7 +1185,7 @@ function decodeMetadata(value: unknown): CheckpointMetadata {
       outcome !== "failed" &&
       outcome !== "interrupted"
     )
-      throw new Error("Invalid checkpoint outcome.");
+      throw new Error("检查点结果无效。");
     return {
       checkpointId: metadataText(record.checkpointId),
       target: {
@@ -1248,7 +1209,7 @@ function decodeMetadata(value: unknown): CheckpointMetadata {
     };
   });
   if (new Set(records.map((record) => record.checkpointId)).size !== records.length)
-    throw new Error("Duplicate checkpoint identity.");
+    throw new Error("检查点标识重复。");
   return { version: 1, records };
 }
 
@@ -1266,7 +1227,7 @@ function decodeCapture(value: unknown): CheckpointCapture {
   ]);
   const coverage = metadataRecord(record.coverage, ["state", "notes"]);
   if (coverage.state !== "complete" && coverage.state !== "partial")
-    throw new Error("Invalid checkpoint coverage.");
+    throw new Error("检查点覆盖范围无效。");
   const parsedCoverage: ReviewCoverage = {
     state: coverage.state,
     notes: metadataTexts(coverage.notes),
@@ -1294,7 +1255,7 @@ function decodeCapture(value: unknown): CheckpointCapture {
     !Number.isSafeInteger(record.byteCount) ||
     Number(record.byteCount) < 0
   )
-    throw new Error("Invalid checkpoint capture.");
+    throw new Error("检查点捕获无效。");
   return { state: "available", treeOid: record.treeOid, ...common };
 }
 
@@ -1305,23 +1266,23 @@ function metadataRecord(value: unknown, keys: readonly string[]): Record<string,
     Array.isArray(value) ||
     Object.keys(value).some((key) => !keys.includes(key))
   )
-    throw new Error("Invalid checkpoint metadata; original data retained.");
+    throw new Error("检查点元数据无效，已保留原始数据。");
   return value as Record<string, unknown>;
 }
 
 function metadataText(value: unknown): string {
   if (typeof value !== "string" || !value || value.includes("\0"))
-    throw new Error("Invalid checkpoint reference.");
+    throw new Error("检查点引用无效。");
   return value;
 }
 
 function metadataTexts(value: unknown): string[] {
-  if (!Array.isArray(value)) throw new Error("Invalid checkpoint references.");
+  if (!Array.isArray(value)) throw new Error("检查点引用列表无效。");
   return value.map(metadataText);
 }
 
 function metadataNumber(value: unknown): number {
   if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0)
-    throw new Error("Invalid checkpoint metric.");
+    throw new Error("检查点指标无效。");
   return value;
 }

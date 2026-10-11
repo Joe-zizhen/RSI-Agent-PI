@@ -8,7 +8,7 @@ import {
   type ExtensionAPI,
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
-import { registerDesktopView } from "@pi-gui/extension-ui";
+import { registerDesktopView } from "@rsi-agent-pi/extension-ui";
 import { isActive, outcomeLabel, TestRuns, type Suite } from "./contract.ts";
 import { TestRunOwner } from "./run-owner.ts";
 

@@ -97,23 +97,20 @@ test("a turn that edits files gets a changes card whose rows open that file's di
   try {
     const window = await harness.firstWindow();
     await waitForWorkspaceByPath(window, workspacePath);
-    await window
-      .locator(".sidebar")
-      .getByRole("button", { name: "New thread", exact: true })
-      .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("edit files");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.locator(".sidebar").getByRole("button", { name: "新建会话", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("edit files");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
     await expectCompleted(window, "Edited the files");
 
     const card = window.getByTestId("turn-changes");
     await expect(card).toHaveCount(1);
-    await expect(card).toContainText("Edited 7 files");
+    await expect(card).toContainText("已编辑 7 个文件");
     // a.txt replaces one line; six new files add two lines each.
     await expect(card.locator(".turn-changes__header .turn-changes__stats")).toHaveText("+13-1");
     const rows = card.locator(".turn-changes__file[data-file-path]");
     await expect(rows).toHaveCount(5);
     await expect(card.locator('[data-file-path="a.txt"] .turn-changes__stats')).toHaveText("+1-1");
-    await card.getByRole("button", { name: "Show 2 more", exact: true }).click();
+    await card.getByRole("button", { name: "再显示 2 个", exact: true }).click();
     await expect(rows).toHaveCount(7);
     await expect(card.locator('[data-file-path="src/nested/g.txt"] .turn-changes__dir')).toHaveText(
       "src/nested/",
@@ -132,21 +129,21 @@ test("a turn that edits files gets a changes card whose rows open that file's di
     ).toHaveCount(0);
 
     await card.locator('.turn-changes__file[data-file-path="src/nested/f.txt"]').click();
-    const panel = window.getByRole("region", { name: "Review", exact: true });
-    await expect(reviewScopeButton(window)).toHaveText("Selected Turn");
+    const panel = window.getByRole("region", { name: "审查", exact: true });
+    await expect(reviewScopeButton(window)).toHaveText("所选轮次");
     await expect(panel.locator(".diff-panel__file")).toHaveCount(7);
     await expect(
       panel.locator('.diff-panel__file--selected[data-file-path="src/nested/f.txt"]'),
     ).toBeVisible();
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "line two",
     );
 
-    await card.getByRole("button", { name: "Review", exact: true }).click();
+    await card.getByRole("button", { name: "审查", exact: true }).click();
     await expect(
       panel.locator('.diff-panel__file--selected[data-file-path="a.txt"]'),
     ).toBeVisible();
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "old line",
     );
 
@@ -156,7 +153,7 @@ test("a turn that edits files gets a changes card whose rows open that file's di
     await expectCompleted(window, "Nothing to change");
     await expect(card).toHaveCount(1);
     await expect(
-      window.getByTestId("transcript").getByRole("button", { name: "Review", exact: true }),
+      window.getByTestId("transcript").getByRole("button", { name: "审查", exact: true }),
     ).toHaveCount(1);
   } finally {
     await harness.close();

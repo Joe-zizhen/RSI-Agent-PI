@@ -41,11 +41,11 @@ test("a real model calls an MCP tool added in Settings, through code mode", asyn
     await surface.getByLabel("Server name").fill("fixture");
     await surface.getByLabel("Server command").fill(process.execPath);
     await surface.getByLabel("Server arguments").fill(`"${MCP_SERVER_FIXTURE}" "${markerDir}"`);
-    await surface.getByRole("button", { name: "Add server", exact: true }).click();
+    await surface.getByRole("button", { name: "添加服务器", exact: true }).click();
     await expect(
       surface.locator('[data-testid="mcp-server-row"][data-server-name="fixture"]'),
     ).toBeVisible();
-    await window.getByRole("button", { name: "Back to app" }).click();
+    await window.getByRole("button", { name: "返回应用" }).click();
 
     await createNamedThread(window, "MCP code mode");
     await expect.poll(() => existsSync(join(markerDir, "initialized.txt"))).toBe(true);

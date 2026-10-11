@@ -60,7 +60,7 @@ test("new threads start with the chosen extension flags, remembered per workspac
     const window = await firstRun.firstWindow();
     await openNewThread(window);
     const badge = window.getByTestId("extension-flags-badge");
-    await expect(badge).toHaveText("Flags");
+    await expect(badge).toHaveText("标志");
 
     await badge.click();
     const dropdown = window.getByTestId("extension-flags-dropdown");
@@ -72,32 +72,32 @@ test("new threads start with the chosen extension flags, remembered per workspac
     await dropdown.getByLabel("--dry-run").check();
     await dropdown.getByLabel("--dry-run").uncheck();
     await dropdown.getByLabel("--env").fill("staging");
-    await expect(badge).toHaveText("Flags · 2");
+    await expect(badge).toHaveText("标志 · 2");
 
     await startReportThread(window);
     await expect(window.getByTestId("extension-dock-summary")).toHaveText(
       "plan=true dry-run=false env=staging",
     );
-    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("Flags · 2");
+    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("标志 · 2");
 
     // The next new thread starts from the same choices; a switch turned off stays off.
     await openNewThread(window);
-    await expect(badge).toHaveText("Flags · 2");
+    await expect(badge).toHaveText("标志 · 2");
     await badge.click();
     await expect(dropdown.getByLabel("--plan")).toBeChecked();
     await expect(dropdown.getByLabel("--dry-run")).not.toBeChecked();
     await expect(dropdown.getByLabel("--env")).toHaveValue("staging");
     await dropdown.getByLabel("--plan").uncheck();
-    await expect(badge).toHaveText("Flags · 1");
+    await expect(badge).toHaveText("标志 · 1");
 
     await startReportThread(window);
     await expect(window.getByTestId("extension-dock-summary")).toHaveText(
       "plan=false dry-run=false env=staging",
     );
-    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("Flags · 1");
+    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("标志 · 1");
 
     await openNewThread(window);
-    await expect(badge).toHaveText("Flags · 1");
+    await expect(badge).toHaveText("标志 · 1");
     await badge.click();
     await expect(dropdown.getByLabel("--plan")).not.toBeChecked();
   } finally {
@@ -112,7 +112,7 @@ test("new threads start with the chosen extension flags, remembered per workspac
   try {
     const window = await secondRun.firstWindow();
     await window.locator(".session-row__select").first().click();
-    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("Flags · 1");
+    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("标志 · 1");
     await reportInThread(window);
     await expect(window.getByTestId("extension-dock-summary")).toHaveText(
       "plan=false dry-run=false env=staging",
@@ -138,7 +138,7 @@ test("a session an extension starts in place keeps the thread's flags", async ()
     await window.getByTestId("extension-flags-badge").click();
     await window.getByTestId("extension-flags-dropdown").getByLabel("--plan").check();
     await startReportThread(window);
-    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("Flags · 1");
+    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("标志 · 1");
     const parentSessionId = (await getDesktopState(window)).selectedSessionId;
 
     await window.getByTestId("composer").fill("/spawn-child ");
@@ -146,7 +146,7 @@ test("a session an extension starts in place keeps the thread's flags", async ()
     await expect
       .poll(async () => (await getDesktopState(window)).selectedSessionId)
       .not.toBe(parentSessionId);
-    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("Flags · 1");
+    await expect(window.getByTestId("extension-flags-session-badge")).toHaveText("标志 · 1");
     await reportInThread(window);
     await expect(window.getByTestId("extension-dock-summary")).toHaveText(
       "plan=true dry-run=false env=undefined",

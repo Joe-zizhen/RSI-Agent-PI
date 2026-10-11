@@ -85,7 +85,7 @@ test("the actual Test Runs example streams real processes, retains closed-tab wo
       "Slow test started",
     );
     await expect(frame.getByRole("button", { name: "Stop run", exact: true })).toBeEnabled();
-    await window.getByRole("button", { name: "Close Test Runs tab", exact: true }).click();
+    await window.getByRole("button", { name: "关闭 Test Runs 标签页", exact: true }).click();
     frame = await openExample(window, "Test Runs");
     await expect(
       frame.getByRole("heading", { name: "Slow fixture · try Stop · Running", exact: true }),
@@ -105,7 +105,7 @@ test("the actual Test Runs example streams real processes, retains closed-tab wo
       .info()
       .attach("Test Runs actual example", { path: screenshot, contentType: "image/png" });
 
-    await window.getByRole("button", { name: "Reload view", exact: true }).click();
+    await window.getByRole("button", { name: "重新加载视图", exact: true }).click();
     await expect(
       frame.getByRole("heading", { name: "Timeout fixture · Timed out", exact: true }),
     ).toBeVisible();
@@ -114,9 +114,9 @@ test("the actual Test Runs example streams real processes, retains closed-tab wo
     ).toHaveCount(4);
     const oldFrameUrl = await window.getByTestId("extension-view-frame").getAttribute("src");
     // Runtime refresh also works before a model has been configured.
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
-    await window.getByRole("button", { name: "Refresh", exact: true }).click();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
+    await window.getByRole("button", { name: "刷新", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expect(window.getByTestId("extension-view-frame")).not.toHaveAttribute(
       "src",
       oldFrameUrl!,
@@ -219,7 +219,7 @@ test("the actual PR Review example records a Pi review, opens files, prepares a 
         .locator(".timeline-item--assistant .message__content")
         .filter({ hasText: "Fixture review recorded." }),
     ).toBeVisible();
-    await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", "Stop run");
+    await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", "停止运行");
     // Background windows may keep a completed result unread; both are idle states.
     await expect(window.locator(".session-row--active")).toHaveAttribute(
       "data-sidebar-indicator",
@@ -252,7 +252,7 @@ test("the actual PR Review example records a Pi review, opens files, prepares a 
     await selectSession(window, "Example PR source task");
     await expect(window.getByTestId("composer")).toHaveValue("Unsent source task draft");
     frame = await openExample(window, "PR Review");
-    await window.getByRole("button", { name: "Reload view", exact: true }).click();
+    await window.getByRole("button", { name: "重新加载视图", exact: true }).click();
     await expect(
       frame.getByRole("heading", { name: "Review · completed", exact: true }),
     ).toBeVisible();

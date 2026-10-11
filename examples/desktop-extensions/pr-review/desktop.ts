@@ -1,5 +1,5 @@
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { DesktopViewContext } from "@pi-gui/extension-ui/browser";
+import type { DesktopViewContext } from "@rsi-agent-pi/extension-ui/browser";
 import { PRReview, staleReason, type ReviewState } from "./contract";
 
 export async function mount(

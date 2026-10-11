@@ -35,11 +35,11 @@ test("attached files reach the real runtime as usable context", async () => {
     );
 
     await window
-      .getByLabel("New thread prompt")
+      .getByLabel("新建会话输入")
       .fill(
         "Read the attached file from disk and reply with only the exact sentinel string it contains.",
       );
-    await window.getByRole("button", { name: "Start thread" }).click();
+    await window.getByRole("button", { name: "开始会话" }).click();
 
     await expect(window.locator(".timeline-item__attachment--file")).toContainText(
       "attached-context.txt",

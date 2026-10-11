@@ -23,13 +23,13 @@ import type {
   SessionTranscriptPin,
   SessionUsageSnapshot,
   WorkspaceRef,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 import {
   EXTENSION_CARD_CUSTOM_TYPE,
   EXTENSION_PIN_CUSTOM_TYPE,
   parseExtensionAction,
-} from "@pi-gui/session-driver";
-import type { SessionQueuedMessage } from "@pi-gui/session-driver/types";
+} from "@rsi-agent-pi/session-driver";
+import type { SessionQueuedMessage } from "@rsi-agent-pi/session-driver/types";
 
 const FILE_ATTACHMENT_BLOCK_START = "<pi-gui-file-attachments>";
 const FILE_ATTACHMENT_BLOCK_END = "</pi-gui-file-attachments>";

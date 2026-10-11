@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { SessionManager, type CustomEntry } from "@earendil-works/pi-coding-agent";
-import type { SessionDriverEvent, SessionTranscriptItem } from "@pi-gui/session-driver";
+import type { SessionDriverEvent, SessionTranscriptItem } from "@rsi-agent-pi/session-driver";
 import { PiSdkDriver } from "../dist/pi-sdk-driver.js";
 import { createAgentSessionRuntimeWithNpmFallback } from "../dist/npm-package-fallback.js";
 import {

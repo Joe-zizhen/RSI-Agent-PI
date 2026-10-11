@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import type { PiSdkDriver } from "@pi-gui/pi-sdk-driver";
-import type { SessionMessageInput } from "@pi-gui/session-driver";
+import type { PiSdkDriver } from "@rsi-agent-pi/pi-sdk-driver";
+import type { SessionMessageInput } from "@rsi-agent-pi/session-driver";
 import {
   createNamedThread,
   getDesktopState,
@@ -97,7 +97,7 @@ test("adds transcript selections to chat with comments and sends them before the
       (_electron, input) => {
         const { createRequire } = process.getBuiltinModule("module");
         const load = createRequire(input.entry);
-        const { PiSdkDriver: Driver } = load("@pi-gui/pi-sdk-driver") as {
+        const { PiSdkDriver: Driver } = load("@rsi-agent-pi/pi-sdk-driver") as {
           PiSdkDriver: typeof PiSdkDriver;
         };
         const sent: SessionMessageInput[] = [];
@@ -119,7 +119,7 @@ test("adds transcript selections to chat with comments and sends them before the
 
     // Select, then add with the shortcut; the comment box opens on a numbered marker.
     await dragSelect(page, "hold up the reply");
-    await expect(page.getByTestId("add-to-chat")).toContainText("Add to Chat");
+    await expect(page.getByTestId("add-to-chat")).toContainText("添加到对话");
     await page.keyboard.press("ControlOrMeta+L");
     const editor = page.getByTestId("annotation-editor");
     await expect(editor.getByRole("textbox")).toBeFocused();
@@ -128,17 +128,17 @@ test("adds transcript selections to chat with comments and sends them before the
     await expect(editor).toHaveCount(0);
     await expect(page.getByTestId("annotation-marker")).toHaveText("1");
     const chip = page.getByTestId("annotation-chip");
-    await expect(chip).toContainText("1 annotation");
+    await expect(chip).toContainText("1 条批注");
 
     // Second one through the button.
     await dragSelect(page, "official admission record");
     await page.getByTestId("add-to-chat").click();
     await page.getByTestId("annotation-editor").getByRole("textbox").press("Enter");
     await expect(page.getByTestId("annotation-marker")).toHaveText(["1", "2"]);
-    await expect(chip).toContainText("2 annotations");
+    await expect(chip).toContainText("2 条批注");
 
     // Hovering the chip lists each quote and note.
-    await chip.getByRole("button", { name: "2 annotations" }).hover();
+    await chip.getByRole("button", { name: "2 条批注" }).hover();
     const popover = page.getByTestId("annotation-chip-popover");
     await expect(popover).toBeVisible();
     await expect(popover).toContainText("hold up the reply");
@@ -162,17 +162,17 @@ test("adds transcript selections to chat with comments and sends them before the
     await dragSelect(page, "Your I-94");
     await page.getByTestId("add-to-chat").click();
     await page.getByTestId("annotation-editor").getByRole("textbox").press("Enter");
-    await expect(chip).toContainText("2 annotations");
-    await chip.getByRole("button", { name: "2 annotations" }).hover();
+    await expect(chip).toContainText("2 条批注");
+    await chip.getByRole("button", { name: "2 条批注" }).hover();
     await expect(popover).toBeVisible();
-    const removeSecond = popover.getByRole("button", { name: "Remove annotation 2" });
+    const removeSecond = popover.getByRole("button", { name: "移除批注 2" });
     const removeBox = (await removeSecond.boundingBox())!;
     await page.mouse.move(removeBox.x + removeBox.width / 2, removeBox.y + removeBox.height / 2, {
       steps: 12,
     });
     await removeSecond.click();
     await expect(page.getByTestId("annotation-marker")).toHaveText(["1"]);
-    await expect(chip).toContainText("1 annotation");
+    await expect(chip).toContainText("1 条批注");
 
     // A failed send gives back the typed text and the annotation, not the formatted blocks.
     await harness.electronApp.evaluate(() => {
@@ -182,7 +182,7 @@ test("adds transcript selections to chat with comments and sends them before the
     await page.getByTestId("send").click();
     await expect(page.getByTestId("composer-error-banner")).toContainText("Simulated send failure");
     await expect(page.getByTestId("composer")).toHaveValue("Thanks, one more thing.");
-    await expect(chip).toContainText("1 annotation");
+    await expect(chip).toContainText("1 条批注");
     await expect(page.getByTestId("annotation-marker")).toHaveText(["1"]);
 
     // Sending puts the annotation before the typed text and clears the markers.
@@ -282,7 +282,7 @@ test("a multi-line drag that runs past the text still adds its lines", async () 
     await page.getByTestId("annotation-editor").getByRole("textbox").press("Enter");
 
     await settled();
-    await page.getByRole("button", { name: "2 annotations" }).hover();
+    await page.getByRole("button", { name: "2 条批注" }).hover();
     const items = page.getByTestId("annotation-chip-popover").locator(".annotation-chip__quote");
     await expect(items).toHaveText([
       `${paragraph("First")}\n\n${paragraph("Second")}`,

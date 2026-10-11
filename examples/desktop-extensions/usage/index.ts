@@ -1,7 +1,7 @@
 import { defineFacet } from "@earendil-works/chord";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { registerDesktopView } from "@pi-gui/extension-ui";
+import { registerDesktopView } from "@rsi-agent-pi/extension-ui";
 import { collectUsage, reduceThread, type CurrentThread } from "./collect.ts";
 import { Usage, type UsageState } from "./contract.ts";
 import { cacheHitRate, formatCost, formatPercent, formatTokens, summarize } from "./model.ts";

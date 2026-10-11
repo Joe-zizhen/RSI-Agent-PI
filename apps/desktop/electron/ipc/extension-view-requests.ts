@@ -1,4 +1,4 @@
-import { parseDesktopHostAction } from "@pi-gui/extension-ui/browser";
+import { parseDesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";
 import { desktopIpc } from "../../contracts/ipc";
 import type { DesktopExtensionViewOwner } from "../extensions/extension-view-owner";
 import type { WindowOwner } from "../windows/window-owner";
@@ -88,7 +88,7 @@ export function registerExtensionViewRequests(
       return;
     }
     const requestId = expectNonEmptyString(message.requestId, "requestId");
-    if (requestId.length > 200) throw new Error("Invalid host action request ID");
+    if (requestId.length > 200) throw new Error("无效的宿主操作请求 ID");
     // Validate connection ownership before returning any result to this sender.
     owner.getConnectionContext(connectionId, contents.id);
     let pending = pendingActions.get(connectionId);
@@ -103,7 +103,7 @@ export function registerExtensionViewRequests(
           type: "host-action-result",
           requestId,
           ok: false,
-          error: "Too many pending desktop actions. Wait for the current actions to finish.",
+          error: "待处理的桌面操作过多。请等待当前操作完成。",
         },
       });
       return;
@@ -122,7 +122,7 @@ export function registerExtensionViewRequests(
         type: "host-action-result",
         requestId,
         ok: false,
-        error: error instanceof Error ? error.message : "Extension action failed",
+        error: error instanceof Error ? error.message : "扩展操作失败",
       };
     }
     pending.delete(requestId);

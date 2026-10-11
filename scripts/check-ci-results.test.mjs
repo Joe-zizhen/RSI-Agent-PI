@@ -142,13 +142,13 @@ function assertCoreShards(workflow) {
   assert.equal(mac.if, "${{ runner.os == 'macOS' }}");
   assert.equal(
     mac.run,
-    "pnpm --filter @pi-gui/desktop run test:e2e:ci:mac --shard=${{ matrix.shard }}/4 --reporter=line,json",
+    "pnpm --filter @rsi-agent-pi/desktop run test:e2e:ci:mac --shard=${{ matrix.shard }}/4 --reporter=line,json",
   );
   const linux = matrix.steps.find((step) => step.name === "Desktop Core (Linux)");
   assert.equal(linux.if, "${{ runner.os == 'Linux' }}");
   assert.match(
     linux.run,
-    /^xvfb-run .* pnpm --filter @pi-gui\/desktop run test:e2e:core --shard=\$\{\{ matrix\.shard \}\}\/4 --reporter=line,json$/,
+    /^xvfb-run .* pnpm --filter @rsi-agent-pi\/desktop run test:e2e:core --shard=\$\{\{ matrix\.shard \}\}\/4 --reporter=line,json$/,
   );
   const upload = matrix.steps.find((step) => isAction(step.uses, "actions/upload-artifact"));
   assert.equal(upload.with.name, "desktop-core-test-results-${{ matrix.shard }}");

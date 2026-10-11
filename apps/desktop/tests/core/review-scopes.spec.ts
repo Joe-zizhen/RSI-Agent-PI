@@ -43,15 +43,15 @@ async function openReview(
   const workspace = await waitForWorkspaceByPath(window, workspacePath);
   await beforeThread?.(window, workspace);
   await createNamedThread(window, "Review scope task", { workspaceName: workspace.name });
-  await selectSidePanel(window, "Review");
-  const panel = window.getByRole("region", { name: "Review", exact: true });
+  await selectSidePanel(window, "审查");
+  const panel = window.getByRole("region", { name: "审查", exact: true });
   await expect(panel).toBeVisible();
   return { harness, window, panel, workspace };
 }
 
 function fileRow(panel: Locator, path: string): Locator {
   return panel.locator(".diff-panel__file").filter({
-    has: panel.page().getByRole("checkbox", { name: `Mark ${path} reviewed`, exact: true }),
+    has: panel.page().getByRole("checkbox", { name: `将 ${path} 标记为已审查`, exact: true }),
   });
 }
 
@@ -60,9 +60,9 @@ async function openFile(panel: Locator, path: string): Promise<void> {
 }
 
 async function chooseBranch(window: Page, baseRef: string): Promise<void> {
-  await chooseReviewScope(window, "Branch");
+  await chooseReviewScope(window, "分支");
   await window.getByLabel("Base branch", { exact: true }).fill(baseRef);
-  await window.getByRole("button", { name: "Compare", exact: true }).click();
+  await window.getByRole("button", { name: "对比", exact: true }).click();
 }
 
 test("Uncommitted preserves staged and unstaged changes that cancel each other", async () => {
@@ -75,23 +75,23 @@ test("Uncommitted preserves staged and unstaged changes that cancel each other",
   await writeFile(join(workspacePath, "result.txt"), "baseline content\n");
   const { harness, window, panel } = await openReview(workspacePath);
   try {
-    await expect(reviewScopeButton(window)).toHaveText("Uncommitted");
+    await expect(reviewScopeButton(window)).toHaveText("未提交");
     await expect(panel.locator(".diff-panel__file")).toHaveCount(1);
     await openFile(panel, "result.txt");
     await expect(panel).toContainText("staged and unstaged changes cancel each other");
-    const diff = panel.getByRole("region", { name: "Diff", exact: true });
+    const diff = panel.getByRole("region", { name: "差异", exact: true });
     await expect(diff).toHaveCount(0);
-    await chooseReviewScope(window, "Staged");
+    await chooseReviewScope(window, "已暂存");
     await expect(diff.locator(".diff-line--added")).toContainText("staged content");
-    await chooseReviewScope(window, "Unstaged");
+    await chooseReviewScope(window, "未暂存");
     await expect(diff.locator(".diff-line--removed")).toContainText("staged content");
     await expect(diff.locator(".diff-line--added")).toContainText("baseline content");
-    await chooseReviewScope(window, "Uncommitted");
+    await chooseReviewScope(window, "未提交");
     await expect(
-      fileRow(panel, "result.txt").getByRole("button", { name: "Unstage", exact: true }),
+      fileRow(panel, "result.txt").getByRole("button", { name: "取消暂存", exact: true }),
     ).toBeEnabled();
-    await fileRow(panel, "result.txt").getByRole("button", { name: "Stage", exact: true }).click();
-    await expect(panel.getByText("No changes", { exact: true })).toBeVisible();
+    await fileRow(panel, "result.txt").getByRole("button", { name: "暂存", exact: true }).click();
+    await expect(panel.getByText("无变更", { exact: true })).toBeVisible();
     expect(await git(workspacePath, "diff", "--cached", "--", "result.txt")).toBe("");
   } finally {
     await harness.close();
@@ -111,20 +111,20 @@ test("Uncommitted keeps a reviewed mark through stage and unstage until the file
     await mark.click();
     await expect(mark).toBeChecked();
 
-    await row.getByRole("button", { name: "Stage", exact: true }).click();
-    await expect(row.getByRole("button", { name: "Unstage", exact: true })).toBeEnabled();
+    await row.getByRole("button", { name: "暂存", exact: true }).click();
+    await expect(row.getByRole("button", { name: "取消暂存", exact: true })).toBeEnabled();
     expect(await git(workspacePath, "diff", "--cached", "--name-only")).toBe("result.txt\n");
     await expect(mark).toBeChecked();
 
-    await row.getByRole("button", { name: "Unstage", exact: true }).click();
-    await expect(row.getByRole("button", { name: "Stage", exact: true })).toBeEnabled();
+    await row.getByRole("button", { name: "取消暂存", exact: true }).click();
+    await expect(row.getByRole("button", { name: "暂存", exact: true })).toBeEnabled();
     expect(await git(workspacePath, "diff", "--cached", "--name-only")).toBe("");
     await expect(mark).toBeChecked();
 
     await writeFile(join(workspacePath, "result.txt"), "edited after review\n");
-    await panel.getByRole("button", { name: "Refresh", exact: true }).click();
+    await panel.getByRole("button", { name: "刷新", exact: true }).click();
     await openFile(panel, "result.txt");
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "edited after review",
     );
     await expect(mark).not.toBeChecked();
@@ -151,18 +151,18 @@ test("Branch compares committed revisions and reports a missing base explicitly"
     await window.keyboard.press("Escape");
     await expect(panel.locator(".diff-panel__file")).toHaveCount(1);
     await openFile(panel, "result.txt");
-    const patch = panel.getByRole("region", { name: "Diff", exact: true });
+    const patch = panel.getByRole("region", { name: "差异", exact: true });
     await expect(patch).toContainText("committed feature revision");
     await expect(patch).not.toContainText("unsaved working revision");
-    await expect(panel.getByRole("button", { name: /^(Stage|Staged|Unstage)$/ })).toHaveCount(0);
+    await expect(panel.getByRole("button", { name: /^(暂存|已暂存|取消暂存)$/ })).toHaveCount(0);
     await fileRow(panel, "result.txt").getByRole("checkbox").click();
-    await expect(panel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 1 of 1");
+    await expect(panel.getByTestId("diff-panel-counter")).toHaveText("已审查 1 / 1");
 
-    await chooseReviewScope(window, "Uncommitted");
+    await chooseReviewScope(window, "未提交");
     await expect(panel.locator(".diff-panel__file")).toHaveCount(2);
     await expect(fileRow(panel, "result.txt").getByRole("checkbox")).not.toBeChecked();
     await openFile(panel, "result.txt");
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "unsaved working revision",
     );
 
@@ -170,7 +170,7 @@ test("Branch compares committed revisions and reports a missing base explicitly"
     await expect(panel.getByTestId("changed-files-unavailable")).toContainText(
       /base reference.*unavailable/i,
     );
-    await expect(panel.getByText("No changes", { exact: true })).toHaveCount(0);
+    await expect(panel.getByText("无变更", { exact: true })).toHaveCount(0);
     await expect(panel.getByTestId("diff-panel-counter")).toHaveCount(0);
   } finally {
     await harness.close();
@@ -187,7 +187,7 @@ test("an outdated comparison cannot mark or stage newer working content", async 
   try {
     await expect(fileRow(panel, "result.txt")).toBeVisible();
     // The first file's diff opens on its own; let that read finish before the file changes.
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "first edit",
     );
     await writeFile(join(workspacePath, "result.txt"), "changed after comparison\n");
@@ -196,19 +196,19 @@ test("an outdated comparison cannot mark or stage newer working content", async 
     await expect(panel.getByTestId("review-stale")).toBeVisible();
     await expect(fileRow(panel, "result.txt").getByRole("checkbox")).not.toBeChecked();
     await expect(
-      fileRow(panel, "result.txt").getByRole("button", { name: "Stage", exact: true }),
+      fileRow(panel, "result.txt").getByRole("button", { name: "暂存", exact: true }),
     ).toBeDisabled();
     expect(await git(workspacePath, "diff", "--cached", "--", "result.txt")).toBe("");
     await panel
       .getByTestId("review-stale")
-      .getByRole("button", { name: "Refresh comparison", exact: true })
+      .getByRole("button", { name: "刷新对比", exact: true })
       .click();
     await openFile(panel, "result.txt");
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "changed after comparison",
     );
     await fileRow(panel, "result.txt").getByRole("checkbox").click();
-    await expect(panel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 1 of 1");
+    await expect(panel.getByTestId("diff-panel-counter")).toHaveText("已审查 1 / 1");
   } finally {
     await harness.close();
   }
@@ -237,18 +237,18 @@ test("binary, oversized, and conflicted files show incomplete review coverage", 
     await expect(
       panel.getByTestId("review-coverage").filter({ hasText: "Binary file contents" }).first(),
     ).toBeVisible();
-    await expect(panel.getByText("No changes", { exact: true })).toHaveCount(0);
+    await expect(panel.getByText("无变更", { exact: true })).toHaveCount(0);
     await openFile(panel, "oversized.txt");
     await expect(
       panel.getByTestId("review-coverage").filter({ hasText: "8 MiB" }).first(),
-    ).toContainText("Comparison has limits");
+    ).toContainText("对比存在限制");
     await openFile(panel, "conflict.txt");
     await expect(panel).toContainText("Unmerged index stages");
     await expect(
       panel.getByTestId("review-coverage").filter({ hasText: "Unmerged index" }).first(),
     ).toBeVisible();
     await expect(
-      fileRow(panel, "conflict.txt").getByRole("button", { name: "Stage", exact: true }),
+      fileRow(panel, "conflict.txt").getByRole("button", { name: "暂存", exact: true }),
     ).toBeDisabled();
   } finally {
     await harness.close();
@@ -295,9 +295,9 @@ test("choosing another review checkout preserves the task and terminal checkout"
     await expect(window.locator(".chat-header__title")).toHaveText("Review scope task");
     await expect(window.getByTestId("composer")).toHaveValue("Draft belongs to the original task");
     await openFile(panel, "linked-only.txt");
-    await panel.getByRole("button", { name: "Open in Files", exact: true }).click();
+    await panel.getByRole("button", { name: "在文件中打开", exact: true }).click();
     await expect(window.getByTestId("file-workbench-preview")).toContainText("linked changes");
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     const terminal = window.getByTestId("integrated-terminal");
     await terminal.locator(".xterm").click();
     await window.keyboard.type("printf 'TASK_CWD=%s\\n' \"${PWD##*/}\"");
@@ -320,12 +320,12 @@ test("an existing task without captures shows Last turn as unavailable", async (
   await writeFile(join(workspacePath, "manual.txt"), "manual change is not a captured turn\n");
   const { harness, window, panel } = await openReview(workspacePath);
   try {
-    await chooseReviewScope(window, "Last Turn");
+    await chooseReviewScope(window, "上一轮");
     await expect(panel.getByTestId("changed-files-unavailable")).toBeVisible();
     await expect(panel.getByTestId("changed-files-unavailable")).toContainText(/captur|turn/i);
     await expect(panel.locator(".diff-panel__file")).toHaveCount(0);
-    await expect(panel.getByText("No changes", { exact: true })).toHaveCount(0);
-    await chooseReviewScope(window, "Uncommitted");
+    await expect(panel.getByText("无变更", { exact: true })).toHaveCount(0);
+    await chooseReviewScope(window, "未提交");
     await expect(fileRow(panel, "manual.txt")).toBeVisible();
   } finally {
     await harness.close();
@@ -354,7 +354,7 @@ test("large changed-file lists scroll with bounded row layout and expandable cov
     const rows = panel.locator(".diff-panel__file");
     await expect(rows).toHaveCount(2000, { timeout: 30_000 });
     const notice = panel.getByTestId("review-coverage").first();
-    await expect(notice.locator("summary")).toHaveText("Comparison has limits");
+    await expect(notice.locator("summary")).toHaveText("对比存在限制");
     await expect(notice.locator("ul")).toBeHidden();
     await notice.locator("summary").click();
     await expect(notice.locator("ul")).toBeVisible();
@@ -384,10 +384,10 @@ test("large changed-file lists scroll with bounded row layout and expandable cov
     // which forces layout of each skipped content-visibility row and takes ~30s for 2000 rows.
     const lastRow = rows.and(panel.locator('[data-file-path="file-1999.txt"]'));
     const lastReviewed = panel.getByTestId("diff-panel-reviewed-file-1999.txt");
-    await expect(lastReviewed).toHaveAccessibleName("Mark file-1999.txt reviewed");
+    await expect(lastReviewed).toHaveAccessibleName("将 file-1999.txt 标记为已审查");
     await lastRow.locator(".diff-panel__file-name").focus();
     await window.keyboard.press("Enter");
-    await expect(panel.getByRole("region", { name: "Diff", exact: true })).toContainText(
+    await expect(panel.getByRole("region", { name: "差异", exact: true })).toContainText(
       "source 1999",
     );
     await expect(lastRow).toBeInViewport();

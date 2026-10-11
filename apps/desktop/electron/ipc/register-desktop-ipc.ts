@@ -1,6 +1,6 @@
 import { ipcMain, shell, type BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import path from "node:path";
-import type { SessionRef } from "@pi-gui/session-driver";
+import type { SessionRef } from "@rsi-agent-pi/session-driver";
 import type {
   ComposerAttachment,
   DesktopAppState,
@@ -160,6 +160,8 @@ type SettingsOwner = Pick<
   | "removeMcpServer"
   | "setMcpServerEnabled"
   | "setCodemodeAlwaysOn"
+  | "getMemloopSettings"
+  | "setMemloopSettings"
   | "setNotificationPreferences"
   | "setIntegratedTerminalShell"
   | "setEnableTransparency"
@@ -184,6 +186,7 @@ export interface DesktopIpcCapabilities {
   readonly ping: () => string;
   readonly theme: ThemeManager;
   readonly openExternal: (url: string) => Promise<void>;
+  readonly checkForUpdates: (window: BrowserWindow | null) => Promise<void>;
   readonly pickWorkspace: (window: BrowserWindow) => Promise<DesktopAppState>;
   readonly createLoginCallbacks: (
     window: BrowserWindow,
@@ -356,7 +359,7 @@ export function registerDesktopIpc({
     const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
     const workspacePath = owners.workspace.getWorkspacePath(workspaceId);
     if (!workspacePath) {
-      throw new Error(`Unknown workspace: ${workspaceId}`);
+      throw new Error(`未知项目：${workspaceId}`);
     }
     await shell.openPath(workspacePath);
   });
@@ -625,6 +628,23 @@ export function registerDesktopIpc({
         ),
       ),
   );
+  ipcMain.handle(desktopIpc.getMemloopSettings, (event, rawWorkspaceId: unknown) => {
+    windows.windowForSender(event.sender);
+    return owners.settings.getMemloopSettings(expectNonEmptyString(rawWorkspaceId, "workspaceId"));
+  });
+  ipcMain.handle(
+    desktopIpc.setMemloopSettings,
+    (event, rawWorkspaceId: unknown, rawVerdictCmd: unknown) =>
+      run(event, () =>
+        owners.settings.setMemloopSettings(
+          expectNonEmptyString(rawWorkspaceId, "workspaceId"),
+          expectString(rawVerdictCmd, "verdictCmd"),
+        ),
+      ),
+  );
+  ipcMain.handle(desktopIpc.checkForUpdates, (event) =>
+    capabilities.checkForUpdates(senderWindow(windows, event)),
+  );
   ipcMain.handle(
     desktopIpc.respondToHostUiRequest,
     (event, rawWorkspaceId: unknown, rawSessionId: unknown, rawResponse: unknown) =>
@@ -841,7 +861,7 @@ export function registerDesktopIpc({
             workspace.sessions.some((session) => session.id === target.sessionId),
         )
       ) {
-        throw new Error("The draft's task is unavailable");
+        throw new Error("草稿的任务不可用");
       }
       await windows.withComposerDraftPersistOrigin(event.sender, () =>
         owners.conversation.updateComposerDraft(target, draft),
@@ -891,7 +911,7 @@ export function registerDesktopIpc({
           selected?.workspaceId !== target.workspaceId ||
           selected.sessionId !== target.sessionId
         ) {
-          throw new Error("Return to the card's thread to use its buttons");
+          throw new Error("请返回卡片所属的会话以使用其按钮");
         }
       };
       requireCardThread();
@@ -1082,7 +1102,7 @@ function registerWorkspaceFileIpc(
       const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
       const workspacePath = workspace.getWorkspacePath(workspaceId);
       if (!workspacePath) {
-        throw new Error(`Unknown workspace: ${workspaceId}`);
+        throw new Error(`未知项目：${workspaceId}`);
       }
       return capabilities.readWorkspaceFile(workspacePath, expectString(rawFilePath, "filePath"));
     },
@@ -1094,7 +1114,7 @@ function registerWorkspaceFileIpc(
       const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
       const workspacePath = workspace.getWorkspacePath(workspaceId);
       if (!workspacePath) {
-        throw new Error(`Unknown workspace: ${workspaceId}`);
+        throw new Error(`未知项目：${workspaceId}`);
       }
       await capabilities.revealWorkspaceFile(workspacePath, expectString(rawFilePath, "filePath"));
     },
@@ -1109,7 +1129,7 @@ function registerWorkspaceFileIpc(
         state: "unavailable",
         error: {
           code: "workspace-unavailable",
-          message: "Changed files are unavailable because this workspace could not be found.",
+          message: "未找到此项目，变更文件不可用。",
         },
       } satisfies ChangedFilesResult;
     }
@@ -1134,7 +1154,7 @@ function registerWorkspaceFileIpc(
       const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
       const workspacePath = workspace.getWorkspacePath(workspaceId);
       if (!workspacePath) {
-        throw new Error(`Unknown workspace: ${workspaceId}`);
+        throw new Error(`未知项目：${workspaceId}`);
       }
       await capabilities.stageFile(workspacePath, expectString(rawFilePath, "filePath"), {
         sourcePath: expectOptionalString(rawStagingSourcePath, "stagingSourcePath"),
@@ -1149,7 +1169,7 @@ async function openOwnedFileInFinder(
   kind: "skill" | "extension",
 ): Promise<void> {
   if (!resolvedPath) {
-    throw new Error(`Unknown ${kind}: ${requestedPath}`);
+    throw new Error(`未知的 ${kind}：${requestedPath}`);
   }
   await shell.openPath(path.dirname(resolvedPath));
 }

@@ -1,9 +1,9 @@
-import { JsonCatalogStore } from "@pi-gui/catalogs/node";
-import { sessionKey } from "@pi-gui/session-driver";
-import type { ExtensionFlagValues, SessionSchemaInfo } from "@pi-gui/session-driver";
+import { JsonCatalogStore } from "@rsi-agent-pi/catalogs/node";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
+import type { ExtensionFlagValues, SessionSchemaInfo } from "@rsi-agent-pi/session-driver";
 import type { BrowserWindow } from "electron";
 import { randomUUID } from "node:crypto";
-import { readFile, stat } from "node:fs/promises";
+import { readFile, stat, writeFile } from "node:fs/promises";
 import { homedir, hostname } from "node:os";
 import { join, resolve, sep } from "node:path";
 import {
@@ -13,13 +13,13 @@ import {
   PiSdkDriver,
   type PiSdkDriverConfig,
   SessionLeasedError,
-} from "@pi-gui/pi-sdk-driver";
-import type { SessionCatalogEntry } from "@pi-gui/catalogs";
+} from "@rsi-agent-pi/pi-sdk-driver";
+import type { SessionCatalogEntry } from "@rsi-agent-pi/catalogs";
 import type {
   NavigateSessionTreeOptions,
   NavigateSessionTreeResult,
   SessionTreeSnapshot,
-} from "@pi-gui/session-driver/types";
+} from "@rsi-agent-pi/session-driver/types";
 import type {
   CreateSessionOptions,
   HostUiResponse,
@@ -30,14 +30,14 @@ import type {
   SessionRef,
   SessionSnapshot,
   WorkspaceRef,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 import type {
   ModelSettingsSnapshot,
   RuntimeCommandRecord,
   RuntimeLoginCallbacks,
   RuntimeSettingsSnapshot,
   RuntimeSnapshot,
-} from "@pi-gui/session-driver/runtime-types";
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import {
   type AppView,
   type ComposerAttachment,
@@ -71,6 +71,7 @@ import {
   type ScheduledTaskRecord,
   type UpdateScheduledTaskInput,
 } from "../../contracts/desktop-state";
+import type { MemloopSettingsSnapshot } from "../../contracts/ipc";
 import {
   applyTimelineEvent,
   appendAssistantDelta,
@@ -609,9 +610,8 @@ export class DesktopAppStore {
 
   private requireWorkbenchTask(target: SessionRef): void {
     if (this.persistenceReadiness !== "ready")
-      throw new Error("Saved UI state is unavailable; repair or restore it before saving layouts.");
-    if (!this.sessionFromState(target))
-      throw new Error("Workbench task does not exist in this workspace.");
+      throw new Error("已保存的 UI 状态不可用，请先修复或恢复后再保存布局。");
+    if (!this.sessionFromState(target)) throw new Error("工作台任务不在此项目中。");
   }
 
   snapshot(): DesktopAppState {
@@ -979,7 +979,7 @@ export class DesktopAppStore {
     await this.initialize();
     const sessionRef = toSessionRef(target);
     if (!this.sessionFromState(sessionRef)) {
-      return this.withError(`Unknown session: ${target.workspaceId}:${target.sessionId}`);
+      return this.withError(`未知会话记录：${target.workspaceId}:${target.sessionId}`);
     }
     if (!this.markSessionViewed(sessionRef)) {
       return structuredClone(this.state);
@@ -1001,12 +1001,10 @@ export class DesktopAppStore {
     const sessionRef = toSessionRef(target);
     const session = this.sessionFromState(sessionRef);
     if (!session) {
-      return this.withError(`Unknown session: ${target.workspaceId}:${target.sessionId}`);
+      return this.withError(`未知会话记录：${target.workspaceId}:${target.sessionId}`);
     }
     if (pinned && session.archivedAt) {
-      return this.withError(
-        `Cannot pin archived session: ${target.workspaceId}:${target.sessionId}`,
-      );
+      return this.withError(`不能置顶已归档的会话记录：${target.workspaceId}:${target.sessionId}`);
     }
 
     const key = sessionKey(sessionRef);
@@ -1123,7 +1121,7 @@ export class DesktopAppStore {
     this.addExtensionNotice(sessionRef, {
       id: `action-failure:${randomUUID()}`,
       level: "error",
-      message: `Couldn't run that button: ${message}`,
+      message: `无法运行该按钮：${message}`,
       createdAt: new Date().toISOString(),
     });
     this.state = this.syncDerivedSessionState(
@@ -1420,7 +1418,7 @@ export class DesktopAppStore {
   async setThemeMode(themeMode: ThemeMode): Promise<DesktopAppState> {
     await this.initialize();
     if (!isThemeMode(themeMode)) {
-      throw new Error(`Unsupported theme mode: ${String(themeMode)}`);
+      throw new Error(`不支持的主题模式：${String(themeMode)}`);
     }
     if (this.state.themeMode === themeMode) {
       return structuredClone(this.state);
@@ -1438,7 +1436,7 @@ export class DesktopAppStore {
   async setThemePresetId(themePresetId: ThemePresetId): Promise<DesktopAppState> {
     await this.initialize();
     if (!isThemePresetId(themePresetId)) {
-      throw new Error(`Unsupported theme preset: ${String(themePresetId)}`);
+      throw new Error(`不支持的主题预设：${String(themePresetId)}`);
     }
     if (this.state.themePresetId === themePresetId) {
       return structuredClone(this.state);
@@ -1491,9 +1489,7 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError(
-            "Some open threads could not reload; they pick up the change when reopened.",
-          );
+        : this.withError("部分打开的会话未能重新加载，重新打开后将应用更改。");
     });
   }
 
@@ -1519,7 +1515,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(targetWorkspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${targetWorkspaceId}`);
+      return this.withError(`未知项目：${targetWorkspaceId}`);
     }
     return this.withErrorHandling(async () => {
       const snapshot = await this.driver.runtimeSupervisor.setProjectDefaultModel(ws, {
@@ -1545,7 +1541,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(targetWorkspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${targetWorkspaceId}`);
+      return this.withError(`未知项目：${targetWorkspaceId}`);
     }
     return this.withErrorHandling(async () => {
       const snapshot = await this.driver.runtimeSupervisor.setProjectDefaultThinkingLevel(
@@ -1574,7 +1570,7 @@ export class DesktopAppStore {
     const targetWorkspaceId = this.resolveModelSettingsWorkspaceId(workspaceId);
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${workspaceId}`);
+      return this.withError(`未知项目：${workspaceId}`);
     }
 
     return this.withErrorHandling(async () => {
@@ -1665,7 +1661,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(targetWorkspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${targetWorkspaceId}`);
+      return this.withError(`未知项目：${targetWorkspaceId}`);
     }
     return this.withErrorHandling(async () => {
       const snapshot = await this.driver.runtimeSupervisor.setProjectScopedModelPatterns(
@@ -1768,7 +1764,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${workspaceId}`);
+      return this.withError(`未知项目：${workspaceId}`);
     }
     const wasDisabled = this.disabledBuiltinExtensions.has(name);
     const setDisabled = (disabled: boolean) =>
@@ -1794,9 +1790,7 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError(
-            "Some open threads could not reload; they pick up the pi-gui tools change when reopened.",
-          );
+        : this.withError("部分打开的会话未能重新加载，重新打开后将应用 RSI-Agent-PI 工具更改。");
     });
   }
 
@@ -1826,7 +1820,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      throw new Error(`Unknown workspace: ${workspaceId}`);
+      throw new Error(`未知项目：${workspaceId}`);
     }
     const listing = this.driver.runtimeSupervisor.listMcpServers(ws);
     return {
@@ -1877,7 +1871,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${workspaceId}`);
+      return this.withError(`未知项目：${workspaceId}`);
     }
     return this.withErrorHandling(async () => {
       await this.driver.runtimeSupervisor.setCodemodeAlwaysOn(ws, alwaysOn);
@@ -1890,7 +1884,48 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError("Some open threads could not reload; they get code mode when reopened.");
+        : this.withError("部分打开的会话未能重新加载，重新打开后将获得代码模式。");
+    });
+  }
+
+  /**
+   * The `memloop` section of ~/.pi/agent/settings.json that Settings → 记忆 edits.
+   * The memloop extension reads the same file to resolve its world verdict command.
+   */
+  async getMemloopSettings(workspaceId: string): Promise<MemloopSettingsSnapshot> {
+    await this.initialize();
+    const ws = this.workspaceRefFromState(workspaceId);
+    if (!ws) {
+      throw new Error(`未知项目：${workspaceId}`);
+    }
+    const record = await readGlobalSettingsRecord();
+    const section = record.memloop;
+    const sectionRecord =
+      section !== null && typeof section === "object" && !Array.isArray(section)
+        ? (section as Record<string, unknown>)
+        : {};
+    const verdictCmd = sectionRecord.verdictCmd;
+    return { verdictCmd: typeof verdictCmd === "string" ? verdictCmd : "" };
+  }
+
+  async setMemloopSettings(workspaceId: string, verdictCmd: string): Promise<DesktopAppState> {
+    await this.initialize();
+    const ws = this.workspaceRefFromState(workspaceId);
+    if (!ws) {
+      return this.withError(`未知项目：${workspaceId}`);
+    }
+    return this.withErrorHandling(async () => {
+      const record = await readGlobalSettingsRecord();
+      const section = record.memloop;
+      const sectionRecord =
+        section !== null && typeof section === "object" && !Array.isArray(section)
+          ? ({ ...(section as Record<string, unknown>) } as Record<string, unknown>)
+          : {};
+      sectionRecord.verdictCmd = verdictCmd.trim();
+      record.memloop = sectionRecord;
+      await writeFile(resolveGlobalSettingsPath(), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+      await this.recordSettingsSelfWrite();
+      return this.refreshState({ clearLastError: true });
     });
   }
 
@@ -1907,7 +1942,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${workspaceId}`);
+      return this.withError(`未知项目：${workspaceId}`);
     }
     return this.withErrorHandling(async () => {
       await change(ws);
@@ -1918,9 +1953,7 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError(
-            "Some open threads could not reload; they pick up the MCP change when reopened.",
-          );
+        : this.withError("部分打开的会话未能重新加载，重新打开后将应用 MCP 更改。");
     });
   }
 
@@ -1935,7 +1968,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`Unknown workspace: ${workspaceId}`);
+      return this.withError(`未知项目：${workspaceId}`);
     }
 
     return this.withErrorHandling(async () => {
@@ -1963,9 +1996,7 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError(
-            "Some open threads could not reload; they pick up the change when reopened.",
-          );
+        : this.withError("部分打开的会话未能重新加载，重新打开后将应用更改。");
     });
   }
 
@@ -2052,7 +2083,7 @@ export class DesktopAppStore {
       this.blockPersistence();
       startupDiagnostics.push({
         scope: "application",
-        message: `Persisted UI state could not be fully restored: ${message}`,
+        message: `无法完整恢复已保存的 UI 状态：${message}`,
       });
       this.state = {
         ...this.state,
@@ -2077,7 +2108,7 @@ export class DesktopAppStore {
       this.blockPersistence();
       startupDiagnostics.push({
         scope: "application",
-        message: `Saved attachments could not be validated: ${message}`,
+        message: `无法验证已保存的附件：${message}`,
       });
       this.state = {
         ...this.state,
@@ -2102,7 +2133,7 @@ export class DesktopAppStore {
       this.blockPersistence();
       startupDiagnostics.push({
         scope: "application",
-        message: `Legacy UI state could not be fully migrated: ${message}`,
+        message: `无法完整迁移旧版 UI 状态：${message}`,
       });
       this.state = {
         ...this.state,
@@ -2129,7 +2160,7 @@ export class DesktopAppStore {
       this.state = { ...this.state, scheduledTasks: [] };
       startupDiagnostics.push({
         scope: "application",
-        message: `Scheduled tasks could not be loaded: ${message}`,
+        message: `无法加载计划任务：${message}`,
       });
     }
 
@@ -2286,7 +2317,7 @@ export class DesktopAppStore {
     try {
       const workspaceStat = await stat(workspacePath);
       if (!workspaceStat.isDirectory()) {
-        throw new Error("Path is not a directory.");
+        throw new Error("路径不是目录。");
       }
       await this.driver.syncWorkspace(workspacePath, displayName);
       return undefined;
@@ -3185,7 +3216,7 @@ export class DesktopAppStore {
     const key = sessionKey(sessionRef);
     const pending = this.pendingRuntimeCommandsBySession.get(key);
     if (pending) {
-      const message = `/${pending.command.name} requires terminal-only ${formatCapabilityLabel(issue.capability)} and is not supported in pi-gui yet. Use pi in the terminal for this command.`;
+      const message = `/${pending.command.name} 需要终端专属的 ${formatCapabilityLabel(issue.capability)}，RSI-Agent-PI 暂不支持。请在终端中使用 pi 执行该命令。`;
       pending.blockedMessage = message;
       recordLearnedCommandCompatibility(
         this.extensionCommandCompatibilityByWorkspace,
@@ -4780,12 +4811,11 @@ function applyModelSettingsSnapshot(
 function describeStoreError(error: unknown): string {
   if (isSessionLeasedError(error)) {
     const { holder } = error;
-    const where = holder.surface === "pi-cli" ? "the pi CLI" : "another pi instance";
+    const where = holder.surface === "pi-cli" ? "pi CLI" : "另一个 pi 实例";
     // A holder on this machine keeps its lease while it runs; one elsewhere
     // may have crashed, and its lease then expires after a few minutes.
-    const next =
-      holder.hostname === hostname() ? "Close it there" : "Close it there or wait a few minutes";
-    return `This session is currently open in ${where} (pid ${holder.pid} on host ${holder.hostname}). ${next} to continue here.`;
+    const next = holder.hostname === hostname() ? "请在那里关闭它" : "请在那里关闭它，或等待几分钟";
+    return `此会话记录当前在 ${where} 打开（${holder.hostname} 主机上的 pid ${holder.pid}）。${next}，即可在此继续。`;
   }
   return error instanceof Error ? error.message : String(error);
 }
@@ -4829,6 +4859,19 @@ function resolveGlobalSettingsPath(): string {
       : override
     : join(homedir(), ".pi", "agent");
   return join(agentDir, "settings.json");
+}
+
+/** Pi's global settings file as a plain record; missing or invalid files read as empty. */
+async function readGlobalSettingsRecord(): Promise<Record<string, unknown>> {
+  try {
+    const raw = await readFile(resolveGlobalSettingsPath(), "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
 }
 
 async function readProjectModelSettingsFile(
@@ -4930,15 +4973,15 @@ function reconcilePinnedSessionOrder(
 function formatCapabilityLabel(capability: string): string {
   switch (capability) {
     case "custom":
-      return "custom UI";
+      return "自定义界面";
     case "onTerminalInput":
-      return "terminal input";
+      return "终端输入";
     case "setEditorComponent":
-      return "custom editor UI";
+      return "自定义编辑器界面";
     case "setFooter":
-      return "footer UI";
+      return "底部界面";
     case "setHeader":
-      return "header UI";
+      return "顶部界面";
     default:
       return capability.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
   }

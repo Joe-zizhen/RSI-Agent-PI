@@ -1,5 +1,5 @@
-import { sessionKey } from "@pi-gui/session-driver";
-import type { SessionDriverEvent, SessionSnapshot } from "@pi-gui/session-driver";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
+import type { SessionDriverEvent, SessionSnapshot } from "@rsi-agent-pi/session-driver";
 import type {
   DesktopAppState,
   SessionRecord,

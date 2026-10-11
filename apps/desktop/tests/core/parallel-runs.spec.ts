@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SessionDriverEvent } from "@pi-gui/session-driver";
+import type { SessionDriverEvent } from "@rsi-agent-pi/session-driver";
 import {
   clickSession,
   emitTestSessionEvent,

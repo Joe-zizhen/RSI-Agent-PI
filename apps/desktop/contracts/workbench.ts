@@ -1,4 +1,4 @@
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import { decodeReviewScope, type ReviewScope } from "./review";
 
 export const MAX_WORKBENCH_FILE_TABS = 100;

@@ -79,16 +79,8 @@ export interface ScheduledTaskOrigin {
   readonly title: string;
 }
 
-const WEEKDAY_NAMES = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const;
-const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+const WEEKDAY_NAMES = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] as const;
+const WEEKDAY_SHORT = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"] as const;
 const WEEKDAY_ALIASES: Readonly<Record<string, Weekday>> = {
   sun: 0,
   sunday: 0,
@@ -320,45 +312,45 @@ function joinNames(names: readonly string[]): string {
     return names[0]!;
   }
   if (names.length === 2) {
-    return `${names[0]} and ${names[1]}`;
+    return `${names[0]}、${names[1]}`;
   }
-  return `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`;
+  return `${names.slice(0, -1).join("、")}、${names[names.length - 1]}`;
 }
 
 export function formatScheduledTaskRecurrence(schedule: ScheduledTaskSchedule): string {
   if (schedule.kind === "once") {
     const at = Date.parse(schedule.at);
     if (Number.isNaN(at)) {
-      return "Once";
+      return "一次";
     }
-    return `Once at ${new Date(at).toLocaleString(undefined, {
+    return `${new Date(at).toLocaleString(undefined, {
       month: "short",
       day: "numeric",
       year: "numeric",
       hour: "numeric",
       minute: "2-digit",
-    })}`;
+    })} 一次性`;
   }
   if (schedule.kind === "interval") {
     const minutes = Math.round(schedule.everyMs / 60_000);
     if (minutes % (24 * 60) === 0) {
       const days = minutes / (24 * 60);
-      return days === 1 ? "Every day" : `Every ${days} days`;
+      return days === 1 ? "每天" : `每 ${days} 天`;
     }
     if (minutes % 60 === 0) {
       const hours = minutes / 60;
-      return hours === 1 ? "Every hour" : `Every ${hours} hours`;
+      return hours === 1 ? "每小时" : `每 ${hours} 小时`;
     }
-    return minutes === 1 ? "Every minute" : `Every ${minutes} minutes`;
+    return minutes === 1 ? "每分钟" : `每 ${minutes} 分钟`;
   }
   const time = formatClockTime(schedule.hour, schedule.minute);
   if (schedule.kind === "daily") {
-    return `Daily at ${time}`;
+    return `每天 ${time}`;
   }
   const names = [...schedule.days]
     .sort((left, right) => left - right)
     .map((day) => WEEKDAY_SHORT[day]!);
-  return `${joinNames(names)} at ${time}`;
+  return `${joinNames(names)} ${time}`;
 }
 
 export function formatScheduledTaskNextRun(nextRunAt: string, now = new Date()): string {
@@ -368,21 +360,21 @@ export function formatScheduledTaskNextRun(nextRunAt: string, now = new Date()):
   }
   const diffMs = timestamp - now.getTime();
   if (diffMs <= 0) {
-    return "Due now";
+    return "现在到期";
   }
   const diffMinutes = Math.floor(diffMs / 60_000);
   if (diffMinutes < 1) {
-    return "Next run in under a minute";
+    return "不足一分钟后运行";
   }
   if (diffMinutes < 60) {
-    return `Next run in ${diffMinutes} minute${diffMinutes === 1 ? "" : "s"}`;
+    return `${diffMinutes} 分钟后运行`;
   }
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) {
-    return `Next run in ${diffHours} hour${diffHours === 1 ? "" : "s"}`;
+    return `${diffHours} 小时后运行`;
   }
   const diffDays = Math.floor(diffHours / 24);
-  return `Next run in ${diffDays} day${diffDays === 1 ? "" : "s"}`;
+  return `${diffDays} 天后运行`;
 }
 
 export function formatScheduledTaskRowMeta(task: ScheduledTaskRecord, now = new Date()): string {
@@ -391,7 +383,7 @@ export function formatScheduledTaskRowMeta(task: ScheduledTaskRecord, now = new 
     return recurrence;
   }
   if (task.status === "paused") {
-    return `${recurrence} · Paused`;
+    return `${recurrence} · 已暂停`;
   }
   if (!task.nextRunAt) {
     return recurrence;

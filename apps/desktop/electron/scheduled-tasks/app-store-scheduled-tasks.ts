@@ -5,8 +5,8 @@ import type {
   SessionRef,
   SessionSnapshot,
   WorkspaceRef,
-} from "@pi-gui/session-driver";
-import type { PiSdkDriver } from "@pi-gui/pi-sdk-driver";
+} from "@rsi-agent-pi/session-driver";
+import type { PiSdkDriver } from "@rsi-agent-pi/pi-sdk-driver";
 import {
   MAX_SCHEDULED_TASK_RUNS,
   SCHEDULED_TASK_INTERVIEW_PROMPT,
@@ -146,8 +146,8 @@ function nextRunOrUndefined(schedule: ScheduledTaskSchedule, from: Date): string
 
 function missingNextRunError(schedule: ScheduledTaskSchedule): string {
   return schedule.kind === "once"
-    ? "One-time tasks must be scheduled in the future."
-    : "Scheduled task has no next run.";
+    ? "一次性任务必须安排在未来的时间。"
+    : "计划任务没有下次运行时间。";
 }
 
 function isClaimable(task: ScheduledTaskRecord, now: Date): boolean {
@@ -265,14 +265,10 @@ function leftoverClaimedOnce(task: ScheduledTaskRecord, now: Date): ScheduledTas
           firedAt: task.lastRunAt,
           instruction: task.instruction,
           outcome: "failed",
-          error: "Scheduled run did not finish.",
+          error: "计划任务运行未完成。",
         }
       : undefined;
-  return pauseWithError(
-    failedRun ? appendRun(task, failedRun) : task,
-    now,
-    "Scheduled run did not finish.",
-  );
+  return pauseWithError(failedRun ? appendRun(task, failedRun) : task, now, "计划任务运行未完成。");
 }
 
 async function createScheduledTask(
@@ -281,17 +277,17 @@ async function createScheduledTask(
 ): Promise<DesktopAppState> {
   await store.initialize();
   if (!store.canWriteScheduledTasks()) {
-    return store.withError("Scheduled tasks could not be loaded; repair scheduled-tasks.json.");
+    return store.withError("无法加载计划任务，请修复 scheduled-tasks.json。");
   }
   const title = input.title.trim();
   const instruction = input.instruction.trim();
   if (!title || !instruction) {
-    return store.withError("Scheduled tasks need a title and instructions.");
+    return store.withError("计划任务需要标题和指令。");
   }
   const schedule = assertScheduledTaskSchedule(input.schedule);
   const target = assertScheduledTaskTarget(input.target);
   if (!store.workspaceRefFromState(target.workspaceId)) {
-    return store.withError(`Unknown workspace: ${target.workspaceId}`);
+    return store.withError(`未知项目：${target.workspaceId}`);
   }
   if (target.kind === "existing-thread") {
     const session = store.sessionFromState({
@@ -299,15 +295,15 @@ async function createScheduledTask(
       sessionId: target.sessionId,
     });
     if (!session) {
-      return store.withError(`Unknown session: ${target.workspaceId}:${target.sessionId}`);
+      return store.withError(`未知会话记录：${target.workspaceId}:${target.sessionId}`);
     }
     if (session.archivedAt) {
-      return store.withError("Cannot bind a scheduled task to an archived thread.");
+      return store.withError("不能将计划任务绑定到已归档的会话。");
     }
   }
   const current = store.scheduledTasks();
   if (bindingConflict(current, target)) {
-    return store.withError("This thread already has a scheduled task.");
+    return store.withError("此会话已有一个计划任务。");
   }
   const now = new Date();
   const next = nextRunOrUndefined(schedule, now);
@@ -337,22 +333,22 @@ async function updateScheduledTask(
 ): Promise<DesktopAppState> {
   await store.initialize();
   if (!store.canWriteScheduledTasks()) {
-    return store.withError("Scheduled tasks could not be loaded; repair scheduled-tasks.json.");
+    return store.withError("无法加载计划任务，请修复 scheduled-tasks.json。");
   }
   const current = store.scheduledTasks();
   const existing = current.find((task) => task.id === id);
   if (!existing) {
-    return store.withError(`Unknown scheduled task: ${id}`);
+    return store.withError(`未知计划任务：${id}`);
   }
   const title = patch.title?.trim() ?? existing.title;
   const instruction = patch.instruction?.trim() ?? existing.instruction;
   if (!title || !instruction) {
-    return store.withError("Scheduled tasks need a title and instructions.");
+    return store.withError("计划任务需要标题和指令。");
   }
   const schedule = patch.schedule ? assertScheduledTaskSchedule(patch.schedule) : existing.schedule;
   const target = patch.target ? assertScheduledTaskTarget(patch.target) : existing.target;
   if (!store.workspaceRefFromState(target.workspaceId)) {
-    return store.withError(`Unknown workspace: ${target.workspaceId}`);
+    return store.withError(`未知项目：${target.workspaceId}`);
   }
   if (target.kind === "existing-thread") {
     const session = store.sessionFromState({
@@ -360,11 +356,11 @@ async function updateScheduledTask(
       sessionId: target.sessionId,
     });
     if (!session || session.archivedAt) {
-      return store.withError("Cannot bind a scheduled task to a missing or archived thread.");
+      return store.withError("不能将计划任务绑定到缺失或已归档的会话。");
     }
   }
   if (bindingConflict(current, target, id)) {
-    return store.withError("This thread already has a scheduled task.");
+    return store.withError("此会话已有一个计划任务。");
   }
   const now = new Date();
   const status = patch.status ?? existing.status;
@@ -380,9 +376,7 @@ async function updateScheduledTask(
     !claimInFlight &&
     onceActivationNeedsNewTime(schedule, lastRunAt, now)
   ) {
-    return store.withError(
-      "This one-time task already claimed its run. Set a new time to run it again.",
-    );
+    return store.withError("此一次性任务已执行过。设置新的时间以再次运行。");
   }
   if (status === "active") {
     completedAt = undefined;
@@ -427,7 +421,7 @@ async function deleteScheduledTask(
 ): Promise<DesktopAppState> {
   await store.initialize();
   if (!store.canWriteScheduledTasks()) {
-    return store.withError("Scheduled tasks could not be loaded; repair scheduled-tasks.json.");
+    return store.withError("无法加载计划任务，请修复 scheduled-tasks.json。");
   }
   return replaceAndPersist(
     store,
@@ -442,7 +436,7 @@ async function beginScheduledTaskInterview(
   await store.initialize();
   const workspaceId = store.selectedWorkspaceId() || store.workspaces()[0]?.id;
   if (!workspaceId) {
-    return store.withError("Open a folder before creating a scheduled task.");
+    return store.withError("创建计划任务前请先打开一个文件夹。");
   }
   const state = await store.createForegroundSession({
     workspaceId,
@@ -453,7 +447,7 @@ async function beginScheduledTaskInterview(
     sessionId: state.selectedSessionId,
   };
   if (!sessionRef.workspaceId || !sessionRef.sessionId) {
-    return store.withError("Could not open a thread for the scheduled-task interview.");
+    return store.withError("无法为计划任务访谈打开会话。");
   }
   return store.updateComposerDraft(sessionRef, SCHEDULED_TASK_INTERVIEW_PROMPT);
 }
@@ -465,7 +459,7 @@ async function createBackgroundSession(
 ): Promise<SessionRef> {
   const workspace = store.workspaceRefFromState(workspaceId);
   if (!workspace) {
-    throw new Error(`Unknown workspace: ${workspaceId}`);
+    throw new Error(`未知项目：${workspaceId}`);
   }
   const createOptions = (await store.buildCreateSessionOptions(workspaceId)) ?? {};
   const session = await store.driver.createSession(workspace, {
@@ -572,7 +566,7 @@ async function claimDueScheduledTasks(
         continue;
       }
       if (claimed.schedule.kind !== "once" && !advancedNext) {
-        await writeTask(store, pauseWithError(claimed, now, "Scheduled task has no next run."));
+        await writeTask(store, pauseWithError(claimed, now, "计划任务没有下次运行时间。"));
         continue;
       }
 
@@ -592,7 +586,7 @@ async function claimDueScheduledTasks(
           };
           const session = store.sessionFromState(sessionRef);
           if (!session || session.archivedAt) {
-            throw new Error("Scheduled task target thread is missing or archived.");
+            throw new Error("计划任务的目标会话缺失或已归档。");
           }
         }
       } catch (error) {

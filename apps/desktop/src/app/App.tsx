@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import {
   getSelectedSession,
   getSelectedWorkspace,
@@ -1136,9 +1136,9 @@ export default function App() {
             ) : (
               <section className="canvas canvas--empty">
                 <div className="empty-panel">
-                  <div className="session-header__eyebrow">Workspace</div>
-                  <h1>Open a folder to start</h1>
-                  <p>Add a project folder before creating a new thread.</p>
+                  <div className="session-header__eyebrow">项目</div>
+                  <h1>打开文件夹以开始</h1>
+                  <p>创建新会话前请先添加项目文件夹。</p>
                 </div>
               </section>
             )
@@ -1153,16 +1153,16 @@ export default function App() {
                       data-testid="schema-skew-notice"
                     >
                       <span className="schema-skew-notice__text">
-                        This session was written by a newer version of pi — some content may not
-                        display. Update pi-gui (or open it with the pi CLI) to see everything.
+                        此会话记录由更新版本的 pi 写入，部分内容可能无法显示。请更新
+                        RSI-Agent-PI（或用 pi CLI 打开）以查看全部内容。
                       </span>
                       <button
                         type="button"
                         className="schema-skew-notice__dismiss"
-                        aria-label="Dismiss notice"
+                        aria-label="关闭提示"
                         onClick={() => dismissSchemaSkewNotice(selectedSessionKey)}
                       >
-                        Dismiss
+                        关闭
                       </button>
                     </div>
                   ) : null}
@@ -1303,9 +1303,9 @@ export default function App() {
           ) : selectedWorkspace ? (
             <section className="canvas canvas--empty">
               <div className="empty-panel">
-                <div className="session-header__eyebrow">Workspace</div>
+                <div className="session-header__eyebrow">项目</div>
                 <h1>{selectedWorkspace.name}</h1>
-                <p>Create a thread for this folder, then jump between sessions from the sidebar.</p>
+                <p>为此文件夹创建会话，然后从侧边栏在会话记录之间跳转。</p>
                 <div className="empty-panel__actions">
                   <button
                     className="button button--primary"
@@ -1316,7 +1316,7 @@ export default function App() {
                       )
                     }
                   >
-                    New thread
+                    新建会话
                   </button>
                 </div>
               </div>
@@ -1324,12 +1324,9 @@ export default function App() {
           ) : (
             <section className="canvas canvas--empty">
               <div className="empty-panel">
-                <div className="session-header__eyebrow">Workspace</div>
-                <h1>Open a folder to start</h1>
-                <p>
-                  Add project folders, group sessions under them, and jump between threads from the
-                  sidebar.
-                </p>
+                <div className="session-header__eyebrow">项目</div>
+                <h1>打开文件夹以开始</h1>
+                <p>添加项目文件夹，在其下将会话分组，并从侧边栏在会话之间跳转。</p>
               </div>
             </section>
           )}

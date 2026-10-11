@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { SessionRef } from "@pi-gui/session-driver";
+import type { SessionRef } from "@rsi-agent-pi/session-driver";
 import type { SessionRecord, WorkspaceRecord } from "../../contracts/desktop-state";
 import {
   runExtensionAction as runChecked,
@@ -118,9 +118,9 @@ test("open thread reaches only threads beside the card's own", async () => {
     { workspaceId: "worktree", sessionId: "in-worktree" },
     { workspaceId: "workspace", sessionId: "session" },
   ]);
-  await expect(open(target, "other-folder")).rejects.toThrow(/isn't open in this folder/);
-  await expect(open(target, "old")).rejects.toThrow(/isn't open in this folder/);
-  await expect(open(target, "missing")).rejects.toThrow(/isn't open in this folder/);
+  await expect(open(target, "other-folder")).rejects.toThrow(/未在此文件夹中打开/);
+  await expect(open(target, "old")).rejects.toThrow(/未在此文件夹中打开/);
+  await expect(open(target, "missing")).rejects.toThrow(/未在此文件夹中打开/);
   await expect(open({ workspaceId: "gone", sessionId: "s" }, "sibling")).rejects.toThrow();
   await expect(open(target, "../session")).rejects.toThrow();
   expect(selected).toHaveLength(3);
@@ -155,7 +155,7 @@ test("main refuses what an extension or the renderer should not be able to ask f
         path: "src/a.ts",
       },
     ),
-  ).rejects.toThrow(/unavailable/);
+  ).rejects.toThrow(/不可用/);
   expect(opened).toEqual([]);
   expect(commands).toEqual([]);
 });

@@ -4,8 +4,8 @@ import { dirname } from "node:path";
 import type { DesktopAppStore } from "../application/app-store";
 import type { NotificationPermissionService } from "./notification-permission";
 import type { DesktopAppState } from "../../contracts/desktop-state";
-import { sessionKey } from "@pi-gui/session-driver";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import { getSelectedSession } from "../../contracts/desktop-state";
 import { isSessionActivelyViewed } from "../conversation/session-visibility";
 
@@ -147,11 +147,7 @@ export class NotificationManager {
         }
         this.completedRunKeys.delete(oldest);
       }
-      await this.showNotification(
-        event.sessionRef,
-        event.snapshot.title,
-        "Agent finished responding",
-      );
+      await this.showNotification(event.sessionRef, event.snapshot.title, "智能体已完成回复");
       return;
     }
 
@@ -422,7 +418,7 @@ export class NotificationManager {
   }
 
   private titleForSession(sessionRef: SessionRef): string {
-    return this.sessionFromLatestState(sessionRef)?.title ?? "pi session";
+    return this.sessionFromLatestState(sessionRef)?.title ?? "pi 会话";
   }
 }
 
@@ -439,7 +435,7 @@ function requiresAttention(event: Extract<SessionDriverEvent, { type: "hostUiReq
 
 function hostUiBody(event: Extract<SessionDriverEvent, { type: "hostUiRequest" }>): string {
   if (event.request.kind === "notify") {
-    return `${event.request.level === "error" ? "Error" : "Warning"}: ${event.request.message}`;
+    return `${event.request.level === "error" ? "错误" : "警告"}：${event.request.message}`;
   }
   if (
     event.request.kind === "confirm" ||
@@ -448,7 +444,7 @@ function hostUiBody(event: Extract<SessionDriverEvent, { type: "hostUiRequest" }
   ) {
     return event.request.title;
   }
-  return "Needs your input";
+  return "需要你的输入";
 }
 
 function sameSessionRef(left: SessionRef | undefined, right: SessionRef | undefined): boolean {

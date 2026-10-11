@@ -87,7 +87,7 @@ function ResourceGroup({
             <SettingsSwitch
               checked={item.enabled}
               disabled={!item.onToggle}
-              label={`Enable ${item.title}`}
+              label={`启用 ${item.title}`}
               onChange={(enabled) => item.onToggle?.(enabled)}
             />
           </div>
@@ -95,7 +95,7 @@ function ResourceGroup({
       </div>
       {hiddenCount > 0 ? (
         <button className="resource-list__more" type="button" onClick={() => setShowAll(true)}>
-          Show {hiddenCount} more
+          再显示 {hiddenCount} 项
         </button>
       ) : null}
     </section>

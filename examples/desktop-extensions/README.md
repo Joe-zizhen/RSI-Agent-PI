@@ -20,7 +20,7 @@ Neither example installs dependencies, posts a GitHub review, or merges a PR.
 
 ## Build and configure locally
 
-Use this checkout's installed dependencies. `@pi-gui/extension-ui` is a **private,
+Use this checkout's installed dependencies. `@rsi-agent-pi/extension-ui` is a **private,
 local workspace package**, not a published npm package or an upstream Pi API.
 For this development workflow, keep the examples in this checkout so their
 backend imports resolve through its `node_modules`. The root links the helper
@@ -30,7 +30,7 @@ uses the host's Chord installation; only the browser code bundles its own import
 From the pi-gui repository root, after the normal repository dependency setup:
 
 ```sh
-pnpm --filter @pi-gui/extension-ui build
+pnpm --filter @rsi-agent-pi/extension-ui build
 node examples/desktop-extensions/pr-review/build.mjs
 node examples/desktop-extensions/test-runs/build.mjs
 node examples/desktop-extensions/github/build.mjs
@@ -114,8 +114,8 @@ setting for the project where you want to use them:
 ```json
 {
   "extensions": [
-    "/absolute/path/to/local-extensions/node_modules/@pi-gui/example-pr-review",
-    "/absolute/path/to/local-extensions/node_modules/@pi-gui/example-test-runs"
+    "/absolute/path/to/local-extensions/node_modules/@rsi-agent-pi/example-pr-review",
+    "/absolute/path/to/local-extensions/node_modules/@rsi-agent-pi/example-test-runs"
   ]
 }
 ```

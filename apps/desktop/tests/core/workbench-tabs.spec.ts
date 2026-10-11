@@ -147,7 +147,7 @@ test("adds singleton tool tabs, closes to a neighbor, and keeps an empty chooser
       .locator('.diff-panel__file[data-file-path="alpha.txt"] .diff-panel__file-name')
       .click();
     await expect(
-      window.getByRole("region", { name: "Diff", exact: true }).locator(".diff-inline"),
+      window.getByRole("region", { name: "差异", exact: true }).locator(".diff-inline"),
     ).toContainText("Uncommitted workspace edit");
     await captureToolWidths(harness, window, testInfo, "Review");
     await expect(
@@ -170,7 +170,7 @@ test("adds singleton tool tabs, closes to a neighbor, and keeps an empty chooser
     await window
       .getByTestId("workbench-chooser")
       .getByRole("button", {
-        name: "Files",
+        name: "文件",
         exact: true,
       })
       .click();
@@ -205,12 +205,12 @@ test("restores each task's tabs and draft through Settings, switching, and resta
     await expect(window.getByTestId("workbench")).toHaveCount(0);
     await openWorkbench(window);
     await expectActiveTool(window, "Review");
-    await expect(window.getByRole("tab", { name: "Files", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("tab", { name: "文件", exact: true })).toHaveCount(0);
     await addTool(window, "Terminal");
     await window.getByTestId("composer").fill("Draft for task B");
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expectActiveTool(window, "Terminal");
     await expect(window.getByTestId("composer")).toHaveValue("Draft for task B");
     await window.getByTestId("composer").click();
@@ -394,8 +394,8 @@ test("two windows keep independent live tool selections for the same task", asyn
     await expectActiveTool(second, "Files");
     await addTool(second, "Terminal");
     await expectActiveTool(first, "Files");
-    await expect(first.getByRole("tab", { name: "Terminal", exact: true })).toHaveCount(0);
-    await selectSidePanel(first, "Review");
+    await expect(first.getByRole("tab", { name: "终端", exact: true })).toHaveCount(0);
+    await selectSidePanel(first, "审查");
     await expectActiveTool(second, "Terminal");
     await first.getByTestId("toggle-side-panel").click();
     await expect(first.getByTestId("workbench")).toHaveCount(0);
@@ -427,7 +427,7 @@ test("keeps one resizable width across tools, chooser, tasks, and restart", asyn
     const panelWidth = async () =>
       Math.round((await window.getByTestId("workbench").boundingBox())!.width);
     await expect.poll(panelWidth).toBe(440);
-    const handle = window.getByRole("separator", { name: "Side panel width" });
+    const handle = window.getByRole("separator", { name: "侧边面板宽度" });
     const start = (await handle.boundingBox())!;
     await window.mouse.move(start.x + 3, start.y + 160);
     await window.mouse.down();
@@ -475,9 +475,7 @@ test("keeps one resizable width across tools, chooser, tasks, and restart", asyn
     await expect.poll(panelWidth).toBe(320);
     await selectSession(window, TASK_A);
     await addTool(window, "Terminal");
-    const activeTab = (await window
-      .getByRole("tab", { name: "Terminal", exact: true })
-      .boundingBox())!;
+    const activeTab = (await window.getByRole("tab", { name: "终端", exact: true }).boundingBox())!;
     const strip = (await window.getByRole("tablist", { name: "Workspace tools" }).boundingBox())!;
     expect(activeTab.x).toBeGreaterThanOrEqual(strip.x);
     expect(activeTab.x + activeTab.width).toBeLessThanOrEqual(strip.x + strip.width + 1);

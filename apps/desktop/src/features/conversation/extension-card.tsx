@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import type { ExtensionAction, ExtensionCard, ExtensionCardTone } from "@pi-gui/session-driver";
+import type {
+  ExtensionAction,
+  ExtensionCard,
+  ExtensionCardTone,
+} from "@rsi-agent-pi/session-driver";
 import { ExtensionIcon } from "../../ui/icons";
 
 /** Asks the app to run one of the fixed actions an extension's button can name. */
@@ -79,13 +83,13 @@ function actionTarget(action: ExtensionAction): string {
     case "openFile":
       return action.line ? `${action.path}:${action.line}` : action.path;
     case "composer":
-      return "Adds to message";
+      return "添加到消息";
     case "url":
       return new URL(action.url).host;
     case "command":
       return action.command;
     case "openThread":
-      return "Opens thread";
+      return "打开会话";
     default:
       return unhandledAction(action);
   }
@@ -98,11 +102,11 @@ function unhandledAction(action: never): string {
 function cardToneLabel(tone: ExtensionCardTone): string | undefined {
   switch (tone) {
     case "success":
-      return "Passed";
+      return "通过";
     case "warning":
-      return "Warning";
+      return "警告";
     case "error":
-      return "Failed";
+      return "失败";
     case "neutral":
       return undefined;
   }

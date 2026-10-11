@@ -23,12 +23,12 @@ test("runs /tree summarize flow against a real provider and surfaces the branch 
     const window = await harness.firstWindow();
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
 
     const newThreadComposer = window.getByTestId("new-thread-composer");
     await newThreadComposer.fill("Reply with exactly ROOT-ONE.");
-    await window.getByRole("button", { name: "Start thread" }).click();
+    await window.getByRole("button", { name: "开始会话" }).click();
     await expect(
       window.locator(".timeline-item--assistant .message__content").last(),
     ).toContainText("ROOT-ONE", { timeout: 150_000 });
@@ -48,13 +48,13 @@ test("runs /tree summarize flow against a real provider and surfaces the branch 
     await treeModal
       .locator(".tree-row__content", { hasText: "Reply with exactly ROOT-ONE." })
       .click();
-    await treeModal.getByRole("button", { name: "Continue" }).click();
+    await treeModal.getByRole("button", { name: "继续" }).click();
     await expect(window.getByTestId("tree-summary-step")).toBeVisible();
-    await treeModal.getByRole("button", { name: /^Summarize Generate a branch summary/ }).click();
-    await treeModal.getByRole("button", { name: "Switch branch" }).click();
+    await treeModal.getByRole("button", { name: /^总结 在切换前生成分支总结/ }).click();
+    await treeModal.getByRole("button", { name: "切换分支" }).click();
 
     await expect(treeModal).toHaveCount(0, { timeout: 150_000 });
-    await expect(window.locator(".timeline-item--summary-card")).toContainText("Branch summary", {
+    await expect(window.locator(".timeline-item--summary-card")).toContainText("分支总结", {
       timeout: 150_000,
     });
     await expect(composer).toHaveValue("Reply with exactly ROOT-ONE.");

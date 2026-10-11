@@ -1,5 +1,5 @@
 {
-  "name": "@pi-gui/website",
+  "name": "@rsi-agent-pi/website",
   "private": true,
   "version": "1.0.1",
   "scripts": {

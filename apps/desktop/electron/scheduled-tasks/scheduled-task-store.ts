@@ -19,7 +19,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function fail(field: string): never {
-  throw new Error(`Invalid scheduled-tasks field ${field}; original data was retained.`);
+  throw new Error(`计划任务字段 ${field} 无效，已保留原始数据。`);
 }
 
 function knownKeys(record: Record<string, unknown>, keys: readonly string[], path: string): void {
@@ -173,7 +173,7 @@ export function decodeScheduledTaskRecord(value: unknown, path = "tasks[]"): Sch
 
 export function decodeScheduledTasksFile(value: unknown): ScheduledTasksFile {
   if (!isRecord(value)) {
-    throw new Error("Invalid scheduled-tasks: expected an object; original data was retained.");
+    throw new Error("计划任务数据无效：应为对象，已保留原始数据。");
   }
   knownKeys(value, ["version", "tasks"], "scheduled-tasks");
   if (value.version !== SCHEDULED_TASKS_FILE_VERSION) {
@@ -198,7 +198,7 @@ export async function readScheduledTasksFile(filePath: string): Promise<{
   }
   if (result.corrupted && !result.recovered) {
     throw new Error(
-      `Invalid scheduled-tasks at ${filePath}; original data was retained. Repair or restore the file before continuing.`,
+      `${filePath} 处的计划任务数据无效，已保留原始数据。请先修复或恢复该文件再继续。`,
     );
   }
   const decoded = decodeScheduledTasksFile(result.value);

@@ -24,7 +24,7 @@ test("adds a workspace from the empty state button using a stubbed folder select
     await expect(window.getByTestId("empty-state")).toBeVisible();
 
     await stubNextOpenDialog(harness, [workspacePath]);
-    await window.getByRole("button", { name: "Open first folder" }).click();
+    await window.getByRole("button", { name: "打开第一个文件夹" }).click();
 
     await expect
       .poll(
@@ -61,9 +61,9 @@ test("exposes File > Open Folder… with Command+O and reuses the same open-fold
 
     expect(menuItem).toEqual({
       id: OPEN_FOLDER_MENU_ITEM_ID,
-      label: "Open Folder…",
+      label: "打开文件夹…",
       accelerator: "Command+O",
-      parentLabel: "File",
+      parentLabel: "文件",
     });
 
     await stubNextOpenDialog(harness, [workspacePath]);

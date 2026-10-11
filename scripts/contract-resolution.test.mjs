@@ -15,9 +15,11 @@ test("SDK driver implements canonical SessionDriver and cannot omit tree operati
   assert.equal(config.error, undefined);
   const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, directory);
   assert.deepEqual(parsed.errors, []);
-  const file = path.join(directory, "src/contract-proof.ts");
+  // TypeScript normalizes file names to forward slashes on Windows; compare in
+  // the same shape so the virtual source interceptor matches.
+  const file = path.join(directory, "src/contract-proof.ts").split(path.sep).join("/");
   const text = `
-import type { SessionDriver } from "@pi-gui/session-driver";
+import type { SessionDriver } from "@rsi-agent-pi/session-driver";
 import type { PiSdkDriver } from "./pi-sdk-driver.js";
 declare const driver: PiSdkDriver;
 const accepted: SessionDriver = driver;
@@ -46,7 +48,7 @@ const rejected: SessionDriver = incomplete;
     .declarations[0];
   assert.equal(
     declaration.getSourceFile().fileName,
-    path.join(root, "packages/session-driver/dist/types.d.ts"),
+    path.join(root, "packages/session-driver/dist/types.d.ts").split(path.sep).join("/"),
   );
 });
 
@@ -54,8 +56,8 @@ test("desktop runtime resolves its catalog backend without TypeScript aliases", 
   const root = fileURLToPath(new URL("../", import.meta.url));
   const require = createRequire(path.join(root, "apps/desktop/package.json"));
   for (const [specifier, relative] of [
-    ["@pi-gui/catalogs/node", "packages/catalogs/dist/node/index.js"],
-    ["@pi-gui/catalogs/node/atomic-write", "packages/catalogs/dist/node/atomic-write.js"],
+    ["@rsi-agent-pi/catalogs/node", "packages/catalogs/dist/node/index.js"],
+    ["@rsi-agent-pi/catalogs/node/atomic-write", "packages/catalogs/dist/node/atomic-write.js"],
   ]) {
     let resolved;
     assert.doesNotThrow(() => {

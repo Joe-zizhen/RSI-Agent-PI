@@ -22,7 +22,7 @@ import {
   DESKTOP_VIEW_REGISTER,
   type DesktopViewDeclaration,
   type DesktopViewRegistrationEvent,
-} from "@pi-gui/extension-ui";
+} from "@rsi-agent-pi/extension-ui";
 import { ENTRY_TYPE, TestRuns, type RunRecord } from "../contract.ts";
 
 await test(

@@ -56,7 +56,7 @@ test("Ctrl or Cmd+W closes the focused Files, Review, or Terminal surface", asyn
     const changes = window.locator(".diff-panel");
     const terminal = window.getByTestId("integrated-terminal");
 
-    await selectSidePanel(window, "Files");
+    await selectSidePanel(window, "文件");
     await expect(files).toBeVisible();
     await files.locator(".file-workbench__tree-row--file").first().click();
     await expectFocusWithin(window, "[data-testid='file-workbench']");
@@ -64,7 +64,7 @@ test("Ctrl or Cmd+W closes the focused Files, Review, or Terminal surface", asyn
     await expect(files).toHaveCount(0);
     await expect.poll(() => openWindowCount(harness)).toBe(1);
 
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     await expect(changes).toBeVisible();
     const refresh = changes.getByRole("button", { name: "Refresh" });
     await expect(refresh).toBeEnabled();
@@ -74,8 +74,8 @@ test("Ctrl or Cmd+W closes the focused Files, Review, or Terminal surface", asyn
     await expect(changes).toHaveCount(0);
     await expect.poll(() => openWindowCount(harness)).toBe(1);
 
-    await selectSidePanel(window, "Review");
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "审查");
+    await selectSidePanel(window, "终端");
     await expect(changes).toHaveCount(0);
     await expect(terminal).toBeVisible();
     await terminal.locator(".xterm").click();
@@ -109,7 +109,7 @@ test("Ctrl or Cmd+W in the chat leaves the side panel open", async () => {
   try {
     const window = await harness.firstWindow();
     await createNamedThread(window, "Close window thread");
-    await selectSidePanel(window, "Files");
+    await selectSidePanel(window, "文件");
     const files = window.getByTestId("file-workbench");
     await expect(files).toBeVisible();
     await window.evaluate(() => {

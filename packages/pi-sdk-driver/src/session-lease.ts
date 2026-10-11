@@ -1,8 +1,8 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { link, open, readFile, rm, stat, utimes } from "node:fs/promises";
 import { hostname } from "node:os";
-import { writeJsonFileAtomic } from "@pi-gui/catalogs/node/atomic-write";
-import { isMissingFileError } from "@pi-gui/catalogs/node";
+import { writeJsonFileAtomic } from "@rsi-agent-pi/catalogs/node/atomic-write";
+import { isMissingFileError } from "@rsi-agent-pi/catalogs/node";
 
 /**
  * Single-writer lease convention for pi session files.

@@ -62,7 +62,7 @@ export function ResourceDetail({
           <SettingsSwitch
             checked={enabled}
             disabled={!onToggle}
-            label="Enabled"
+            label="已启用"
             onChange={(next) => onToggle?.(next)}
           />
         </div>

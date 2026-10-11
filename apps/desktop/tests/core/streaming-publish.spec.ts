@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import {
   createSessionViaIpc,
   emitTestSessionEvent,

@@ -77,7 +77,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
   if (context.hasWorkspace) {
     actions.push({
       id: "new-thread",
-      title: "New thread",
+      title: "新建会话",
       icon: <PlusIcon />,
       hint: formatShortcut(platform, "N"),
       run: context.newThread,
@@ -85,7 +85,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
   }
   actions.push({
     id: "open-folder",
-    title: "Open folder…",
+    title: "打开文件夹…",
     icon: <FolderIcon />,
     run: context.openFolder,
   });
@@ -93,7 +93,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
     actions.push(
       {
         id: "go-to-file",
-        title: "Go to file…",
+        title: "转到文件…",
         icon: <FileIcon />,
         hint: formatShortcut(platform, "P"),
         keepsOpen: true,
@@ -101,7 +101,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
       },
       {
         id: "find-in-thread",
-        title: "Find in thread",
+        title: "在会话中查找",
         icon: <SearchIcon />,
         hint: formatShortcut(platform, "F"),
         run: context.findInThread,
@@ -110,7 +110,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
     if (thread.canSwitchModel) {
       actions.push({
         id: "switch-model",
-        title: "Switch model…",
+        title: "切换模型…",
         icon: <ModelIcon />,
         keepsOpen: true,
         run: () => context.openPaletteMode("models"),
@@ -119,7 +119,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
     for (const { kind, label, Icon, shortcutKey } of BUILTIN_TOOL_ENTRIES) {
       actions.push({
         id: `toggle-${kind}`,
-        title: `Toggle ${label.toLowerCase()}`,
+        title: `切换${label}面板`,
         icon: <Icon />,
         hint: shortcutKey ? formatShortcut(platform, shortcutKey) : undefined,
         run: () => context.toggleTool(kind),
@@ -127,7 +127,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
     }
     actions.push({
       id: "toggle-side-panel",
-      title: "Toggle side panel",
+      title: "切换侧边面板",
       icon: <SidePanelIcon />,
       hint: formatShortcut(platform, "B", { alt: true }),
       run: context.toggleSidePanel,
@@ -135,7 +135,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
     for (const view of context.extensionViews) {
       actions.push({
         id: `extension-view:${view.id}`,
-        title: `Open ${view.title}`,
+        title: `打开 ${view.title}`,
         icon: <ExtensionIcon />,
         run: view.open,
       });
@@ -145,7 +145,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
   if (context.canToggleSidebar) {
     actions.push({
       id: "toggle-sidebar",
-      title: "Toggle sidebar",
+      title: "切换侧边栏",
       icon: <SidebarToggleIcon />,
       hint: formatShortcut(platform, "B"),
       run: context.toggleSidebar,
@@ -153,16 +153,16 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
   }
   actions.push({
     id: "scheduled-tasks",
-    title: "Scheduled tasks",
+    title: "计划任务",
     icon: <ClockIcon />,
     run: context.openScheduledTasks,
   });
   if (context.hasWorkspace) {
     actions.push(
-      { id: "skills", title: "Skills", icon: <SkillIcon />, run: context.openSkills },
+      { id: "skills", title: "技能", icon: <SkillIcon />, run: context.openSkills },
       {
         id: "extensions",
-        title: "Extensions",
+        title: "扩展",
         icon: <ExtensionIcon />,
         run: context.openExtensions,
       },
@@ -170,7 +170,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
   }
   actions.push({
     id: "settings",
-    title: "Settings",
+    title: "设置",
     icon: <SettingsIcon />,
     hint: formatShortcut(platform, ","),
     run: () => context.openSettings("general"),
@@ -178,7 +178,7 @@ export function buildPaletteActions(context: PaletteActionContext): readonly Pal
   for (const section of SETTINGS_SECTIONS) {
     actions.push({
       id: `settings-${section}`,
-      title: `Settings: ${sectionTitle(section)}`,
+      title: `设置：${sectionTitle(section)}`,
       icon: <SettingsIcon />,
       run: () => context.openSettings(section),
     });

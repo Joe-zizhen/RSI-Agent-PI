@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SessionRef, SessionSnapshot, WorkspaceRef } from "@pi-gui/session-driver";
+import type { SessionRef, SessionSnapshot, WorkspaceRef } from "@rsi-agent-pi/session-driver";
 import type {
   DesktopAppState,
   SessionRecord,
@@ -357,7 +357,7 @@ test("past once create is rejected", async () => {
     schedule: { kind: "once", at: "2020-01-01T00:00:00.000Z" },
     target: { kind: "existing-thread", workspaceId, sessionId },
   });
-  expect(state.lastError).toMatch(/future/i);
+  expect(state.lastError).toMatch(/未来/);
   expect(host.tasks).toHaveLength(0);
 });
 

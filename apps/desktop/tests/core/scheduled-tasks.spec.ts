@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path";
 import { expect, test } from "@playwright/test";
-import type { PiSdkDriver } from "@pi-gui/pi-sdk-driver";
+import type { PiSdkDriver } from "@rsi-agent-pi/pi-sdk-driver";
 import {
   createNamedThread,
   fireDueScheduledTasks,
@@ -41,8 +41,8 @@ test("manual create, tabs, pause, and restart keep scheduled tasks", async () =>
 
     const created = await getDesktopState(window);
     expect(created.scheduledTasks).toHaveLength(1);
-    await window.getByRole("button", { name: "Actions for Standup ping" }).click();
-    await window.getByRole("button", { name: "Pause" }).click();
+    await window.getByRole("button", { name: "Standup ping 的操作" }).click();
+    await window.getByRole("button", { name: "暂停" }).click();
     await expect
       .poll(async () => (await getDesktopState(window)).scheduledTasks[0]?.status)
       .toBe("paused");
@@ -198,7 +198,9 @@ test("a scheduled run can use the scheduled-task tools while it is still running
           throw new Error("Scheduled-task test hooks are unavailable");
         }
         const { createRequire } = process.getBuiltinModule("module");
-        const { PiSdkDriver: Driver } = createRequire(input.entry)("@pi-gui/pi-sdk-driver") as {
+        const { PiSdkDriver: Driver } = createRequire(input.entry)(
+          "@rsi-agent-pi/pi-sdk-driver",
+        ) as {
           PiSdkDriver: typeof PiSdkDriver;
         };
         let listed = "";

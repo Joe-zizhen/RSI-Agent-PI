@@ -1,5 +1,5 @@
 import { BrowserWindow, type WebContents } from "electron";
-import type { SessionRef } from "@pi-gui/session-driver";
+import type { SessionRef } from "@rsi-agent-pi/session-driver";
 import type {
   AppView,
   DesktopAppState,

@@ -12,8 +12,8 @@ const runtimePackages = new Set([
 // Host-side Chord transport and host-action parsing belong to Electron main and
 // the extension frame; the renderer may only import their types.
 const hostOnlyEntrypoints = new Set([
-  "@pi-gui/extension-ui/transport",
-  "@pi-gui/extension-ui/browser",
+  "@rsi-agent-pi/extension-ui/transport",
+  "@rsi-agent-pi/extension-ui/browser",
 ]);
 const isHostOnlyEntrypointFile = (root, file) =>
   /^packages\/extension-ui\/(?:src|dist)\/(?:transport|browser)\.[cm]?[jt]sx?$/.test(
@@ -78,9 +78,10 @@ export function checkRendererBoundary(root) {
         .map((node) => node.importClause?.name?.text)
         .filter(Boolean),
     );
+    const rel = (target) => path.relative(root, target).split(path.sep).join("/");
     const fail = (node, reason) => {
       const { line } = source.getLineAndCharacterOfPosition(node.getStart(source));
-      failures.push(`${path.relative(root, file)}:${line + 1}: ${reason}`);
+      failures.push(`${rel(file)}:${line + 1}: ${reason}`);
     };
     const inspect = (expression, repair = "Use the preload API instead.") => {
       if (!expression || !ts.isStringLiteralLike(expression)) {
@@ -133,12 +134,12 @@ export function checkRendererBoundary(root) {
       if (isHostOnlyEntrypointFile(root, target)) {
         fail(
           expression,
-          `Forbidden renderer runtime import of '${path.relative(root, target)}' through '${specifier}'. Use an explicit type-only import.`,
+          `Forbidden renderer runtime import of '${rel(target)}' through '${specifier}'. Use an explicit type-only import.`,
         );
       } else if (isInside(main, target)) {
         fail(
           expression,
-          `Renderer reaches main/preload implementation '${path.relative(root, target)}'. ${repair}`,
+          `Renderer reaches main/preload implementation '${rel(target)}'. ${repair}`,
         );
       } else if (isInside(root, target) && !target.includes(`${path.sep}node_modules${path.sep}`)) {
         if (/\.d\.[cm]?ts$/.test(target)) {

@@ -1,9 +1,16 @@
 import { app, net, Notification, shell } from "electron";
 
+/**
+ * Release source for the RSI-Agent-PI fork. Replace the placeholder owner and
+ * repository with the real GitHub coordinates before publishing a release.
+ */
+export const RSI_AGENT_PI_REPO_OWNER = "Joe-zizhen";
+export const RSI_AGENT_PI_REPO = "RSI-Agent-PI";
+
 // /releases/latest skips drafts and prereleases, so stable installs are only
 // told about stable releases.
-const RELEASES_URL = "https://api.github.com/repos/minghinmatthewlam/pi-gui/releases/latest";
-const RELEASES_PAGE = "https://github.com/minghinmatthewlam/pi-gui/releases";
+const RELEASES_URL = `https://api.github.com/repos/${RSI_AGENT_PI_REPO_OWNER}/${RSI_AGENT_PI_REPO}/releases/latest`;
+const RELEASES_PAGE = `https://github.com/${RSI_AGENT_PI_REPO_OWNER}/${RSI_AGENT_PI_REPO}/releases`;
 
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000; // 4 hours
 const INITIAL_DELAY_MS = 15_000; // 15 seconds after launch
@@ -37,8 +44,8 @@ export function showUpdateNotification(
     return;
   }
   const notification = new Notification({
-    title: "pi-gui Release Available",
-    body: `Version ${latestVersion} is available (you have ${currentVersion}). Click to view the release.`,
+    title: "RSI-Agent-PI 有新版本",
+    body: `版本 ${latestVersion} 可用（你正在使用 ${currentVersion}）。点击查看发布页。`,
   });
   notification.on("click", () => {
     void openReleasesPage(releaseUrl).catch((error: unknown) => {
@@ -65,22 +72,22 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
   } catch (error) {
     const message =
       error instanceof Error && error.name === "AbortError"
-        ? "The update check timed out."
+        ? "更新检查超时。"
         : error instanceof Error
           ? error.message
-          : "The update check could not reach GitHub.";
+          : "更新检查无法连接 GitHub。";
     return { status: "error", message };
   } finally {
     clearTimeout(timeout);
   }
 
   if (res.status === 404) {
-    return { status: "error", message: "No stable pi-gui release has been published yet." };
+    return { status: "error", message: "尚未发布稳定的 RSI-Agent-PI 版本。" };
   }
   if (!res.ok) {
     return {
       status: "error",
-      message: `GitHub Releases returned ${res.status}.`,
+      message: `GitHub Releases 返回 ${res.status}。`,
     };
   }
 
@@ -88,13 +95,13 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
   try {
     release = (await res.json()) as GitHubRelease;
   } catch {
-    return { status: "error", message: "GitHub Releases returned an unreadable response." };
+    return { status: "error", message: "GitHub Releases 返回了无法读取的响应。" };
   }
 
   if (!release?.tag_name) {
     return {
       status: "error",
-      message: "GitHub Releases did not return any published versions.",
+      message: "GitHub Releases 未返回任何已发布版本。",
     };
   }
 

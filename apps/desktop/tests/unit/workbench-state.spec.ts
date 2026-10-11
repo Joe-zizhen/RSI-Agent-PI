@@ -144,7 +144,7 @@ test("the file limit preserves existing references and reports blocked appends d
   } as const;
   const blocked = applyWorkbenchActions(full, [action]);
   expect(blocked.view).toBe(full);
-  expect(blocked.error).toContain("Close a file tab");
+  expect(blocked.error).toContain("关闭一个文件标签页");
   expect(restoreWorkbenchView(initial, full, [action])).toEqual(blocked);
   expect(decodeTaskWorkbenchTemplate(blocked.view)).toEqual(full);
   const existing = applyWorkbenchActions(full, [

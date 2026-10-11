@@ -59,30 +59,30 @@ test("switches between app-global and per-repo model scope while worktrees inher
     });
 
     await openSettings(window);
-    await openSettingsSection(window, "Models");
+    await openSettingsSection(window, "模型");
     await expect(settingsWorkspacePicker(window)).toHaveCount(0);
-    await expect(window.getByLabel("Default model", { exact: true })).toHaveValue("openai:gpt-5");
+    await expect(window.getByLabel("默认模型", { exact: true })).toHaveValue("openai:gpt-5");
 
-    await openSettingsSection(window, "General");
-    await window.getByRole("button", { name: "Per repo" }).click();
+    await openSettingsSection(window, "通用");
+    await window.getByRole("button", { name: "按仓库" }).click();
     await expect
       .poll(async () => (await getDesktopState(window)).modelSettingsScopeMode)
       .toBe("per-repo");
 
-    await openSettingsSection(window, "Models");
+    await openSettingsSection(window, "模型");
     await expect(settingsWorkspacePicker(window)).toHaveCount(1);
     await expect(settingsWorkspacePicker(window).locator("option")).toHaveCount(2);
     await settingsWorkspacePicker(window).selectOption({ label: rootWorkspaceA.name });
     await expect(settingsWorkspacePicker(window)).toHaveValue(rootWorkspaceA.id);
-    await expect(window.getByLabel("Default model", { exact: true })).toHaveValue("openai:gpt-5");
+    await expect(window.getByLabel("默认模型", { exact: true })).toHaveValue("openai:gpt-5");
     await setEnabledModels(window, ["openai/gpt-4o", "openai/gpt-4-turbo"], ["openai/gpt-5"]);
-    await window.getByLabel("Default model", { exact: true }).selectOption("openai:gpt-4o");
-    await expect(window.getByLabel("Default model", { exact: true })).toHaveValue("openai:gpt-4o");
+    await window.getByLabel("默认模型", { exact: true }).selectOption("openai:gpt-4o");
+    await expect(window.getByLabel("默认模型", { exact: true })).toHaveValue("openai:gpt-4o");
 
     await settingsWorkspacePicker(window).selectOption({ label: rootWorkspaceB.name });
-    await expect(window.getByLabel("Default model", { exact: true })).toHaveValue("openai:gpt-5");
+    await expect(window.getByLabel("默认模型", { exact: true })).toHaveValue("openai:gpt-5");
 
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await selectSession(window, "Repo B global session");
     await expectComposerModelState(window, {
       activeModel: "openai:gpt-5",
@@ -97,7 +97,7 @@ test("switches between app-global and per-repo model scope while worktrees inher
       provider: "openai",
       modelId: "gpt-4o",
     });
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await expectComposerModelState(window, {
       activeModel: "openai:gpt-4o",
       visibleModelLabels: ["GPT-4o", "GPT-4 Turbo"],
@@ -118,7 +118,7 @@ test("switches between app-global and per-repo model scope while worktrees inher
     await expect(window.getByRole("button", { name: "openai:gpt-4-turbo" }).first()).toBeVisible();
 
     await openSettings(window);
-    await openSettingsSection(window, "Models");
+    await openSettingsSection(window, "模型");
     await expect(settingsWorkspacePicker(window).locator("option")).toHaveCount(2);
     expect(
       (await settingsWorkspacePicker(window).locator("option").allTextContents()).every(
@@ -126,10 +126,10 @@ test("switches between app-global and per-repo model scope while worktrees inher
       ),
     ).toBeTruthy();
     await setEnabledModels(window, ["openai/gpt-5", "openai/gpt-4-turbo"], ["openai/gpt-4o"]);
-    await window.getByLabel("Default model", { exact: true }).selectOption("openai:gpt-5");
-    await expect(window.getByLabel("Default model", { exact: true })).toHaveValue("openai:gpt-5");
+    await window.getByLabel("默认模型", { exact: true }).selectOption("openai:gpt-5");
+    await expect(window.getByLabel("默认模型", { exact: true })).toHaveValue("openai:gpt-5");
 
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expect(window.getByRole("button", { name: "openai:gpt-4-turbo" }).first()).toBeVisible();
     await expectComposerModelOptions(window, {
       visibleModelLabels: ["GPT-5", "GPT-4 Turbo"],
@@ -153,16 +153,16 @@ async function openSettings(window: Page): Promise<void> {
   await expect(window.getByTestId("settings-surface")).toBeVisible();
 }
 
-async function openSettingsSection(window: Page, section: "General" | "Models"): Promise<void> {
+async function openSettingsSection(window: Page, section: "通用" | "模型"): Promise<void> {
   await window.getByRole("button", { name: section, exact: true }).click();
   await expect(window.locator(".view-header__title")).toContainText(section);
 }
 
 async function setEnabledModel(window: Page, pattern: string, enabled: boolean): Promise<void> {
   const [, modelId = pattern] = pattern.split("/");
-  const searchInput = window.getByLabel("Search models");
+  const searchInput = window.getByLabel("搜索模型");
   await searchInput.fill(modelId);
-  const toggle = window.getByRole("switch", { name: `Enable ${pattern}`, exact: true });
+  const toggle = window.getByRole("switch", { name: `启用 ${pattern}`, exact: true });
   await expect(toggle).toBeVisible();
   if ((await toggle.isChecked()) !== enabled) {
     await toggle.click();
@@ -254,5 +254,5 @@ async function selectComposerModel(window: Page, label: string): Promise<void> {
 }
 
 function settingsWorkspacePicker(window: Page) {
-  return window.getByTestId("settings-surface").getByLabel("Workspace", { exact: true });
+  return window.getByTestId("settings-surface").getByLabel("项目", { exact: true });
 }

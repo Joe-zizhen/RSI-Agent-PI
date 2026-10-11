@@ -258,7 +258,7 @@ async function installThreadLinks(workspacePath: string): Promise<void> {
   await mkdir(join(extension, "dist"), { recursive: true });
   await writeFile(
     join(extension, "index.ts"),
-    `import { registerDesktopView } from ${JSON.stringify(require.resolve("@pi-gui/extension-ui"))};
+    `import { registerDesktopView } from ${JSON.stringify(require.resolve("@rsi-agent-pi/extension-ui"))};
 export default function extension(pi) {
   registerDesktopView(pi, {
     id: "thread-links", title: "Thread links", source: import.meta.url,

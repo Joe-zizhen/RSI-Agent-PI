@@ -1,7 +1,7 @@
 import { defineFacet } from "@earendil-works/chord";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { registerDesktopView } from "@pi-gui/extension-ui";
+import { registerDesktopView } from "@rsi-agent-pi/extension-ui";
 import { Trace, type TraceState } from "./contract.ts";
 import { outline } from "./format.ts";
 import { TraceRecorder, type TraceEvent } from "./trace.ts";

@@ -105,7 +105,7 @@ test("fails fast for unsupported handoff-like commands and learns terminal-only 
       .toBe(sessionCountBefore);
 
     await composer.fill("/handoff-g");
-    await expect(window.getByTestId("slash-menu")).toContainText("Terminal-only");
+    await expect(window.getByTestId("slash-menu")).toContainText("仅限终端");
 
     const transcriptCountBeforeSecondAttempt =
       (await getSelectedTranscript(window))?.transcript.length ?? 0;
@@ -126,14 +126,14 @@ test("fails fast for unsupported handoff-like commands and learns terminal-only 
     await expect.poll(async () => composer.inputValue()).toBe("Safe draft");
     await expect(window.getByTestId("extension-notices")).toContainText("Safe command ran");
 
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await expect(window.getByTestId("extensions-surface")).toBeVisible();
     await window
       .getByTestId("extensions-list")
       .getByRole("button", { name: /compatibility-extension/i })
       .click();
-    await expect(window.locator(".skill-detail")).toContainText("handoff-gui-test · Terminal-only");
-    await expect(window.locator(".skill-detail")).toContainText("prefill-safe · GUI-compatible");
+    await expect(window.locator(".skill-detail")).toContainText("handoff-gui-test · 仅限终端");
+    await expect(window.locator(".skill-detail")).toContainText("prefill-safe · 兼容 GUI");
   } finally {
     await harness.close();
   }
@@ -210,7 +210,7 @@ test("persists learned terminal-only command compatibility across relaunch", asy
       .toBe(true);
     const composer = secondWindow.getByTestId("composer");
     await composer.fill("/handoff-g");
-    await expect(secondWindow.getByTestId("slash-menu")).toContainText("Terminal-only");
+    await expect(secondWindow.getByTestId("slash-menu")).toContainText("仅限终端");
   } finally {
     await secondHarness.close();
   }

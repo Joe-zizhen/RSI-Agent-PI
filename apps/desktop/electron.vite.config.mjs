@@ -16,7 +16,7 @@ export default defineConfig(({ command }) => {
       plugins: [tsconfigPaths({ projects: [pathsProject] })],
       build: {
         outDir: "out/main",
-        externalizeDeps: { exclude: ["@earendil-works/chord", "@pi-gui/extension-ui"] },
+        externalizeDeps: { exclude: ["@earendil-works/chord", "@rsi-agent-pi/extension-ui"] },
         emptyOutDir: cleanOutputs,
         rollupOptions: {
           input: {

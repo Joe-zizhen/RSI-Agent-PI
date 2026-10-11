@@ -12,7 +12,7 @@ async function readSettingsLog(path: string): Promise<string> {
 }
 
 async function openNotificationSettings(window: Page): Promise<void> {
-  await window.getByRole("button", { name: "Settings", exact: true }).click();
+  await window.getByRole("button", { name: "设置", exact: true }).click();
   await window.getByRole("button", { name: "Notifications", exact: true }).click();
 }
 
@@ -41,19 +41,19 @@ test("shows not enabled yet in the packaged app and enables after Ask macOS upda
     await expect
       .poll(() => window.evaluate(() => globalThis.window.piApp.getNotificationPermissionStatus()))
       .toBe("default");
-    await expect(window.locator(".settings-view")).toContainText("Not enabled yet");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(1);
+    await expect(window.locator(".settings-view")).toContainText("尚未启用");
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(1);
     await expect(
       window.getByRole("button", { name: "Open System Settings", exact: true }),
     ).toHaveCount(0);
 
-    await window.getByRole("button", { name: "Ask macOS", exact: true }).click();
+    await window.getByRole("button", { name: "向 macOS 请求", exact: true }).click();
 
     await expect
       .poll(() => window.evaluate(() => globalThis.window.piApp.getNotificationPermissionStatus()))
       .toBe("granted");
     await expect(window.locator(".settings-view")).toContainText("Enabled");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(0);
     await expect(
       window.getByRole("button", { name: "Open System Settings", exact: true }),
     ).toHaveCount(0);
@@ -83,15 +83,15 @@ test("keeps showing not enabled yet when Ask macOS does not change packaged macO
     await expect
       .poll(() => window.evaluate(() => globalThis.window.piApp.getNotificationPermissionStatus()))
       .toBe("default");
-    await expect(window.locator(".settings-view")).toContainText("Not enabled yet");
+    await expect(window.locator(".settings-view")).toContainText("尚未启用");
 
-    await window.getByRole("button", { name: "Ask macOS", exact: true }).click();
+    await window.getByRole("button", { name: "向 macOS 请求", exact: true }).click();
 
     await expect
       .poll(() => window.evaluate(() => globalThis.window.piApp.getNotificationPermissionStatus()))
       .toBe("default");
-    await expect(window.locator(".settings-view")).toContainText("Not enabled yet");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(1);
+    await expect(window.locator(".settings-view")).toContainText("尚未启用");
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(1);
     await expect(
       window.getByRole("button", { name: "Open System Settings", exact: true }),
     ).toHaveCount(0);
@@ -127,7 +127,7 @@ test("refreshes packaged notification status after returning from System Setting
       .poll(() => window.evaluate(() => globalThis.window.piApp.getNotificationPermissionStatus()))
       .toBe("denied");
     await expect(window.locator(".settings-view")).toContainText("Turned off");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(0);
     await expect(
       window.getByRole("button", { name: "Open System Settings", exact: true }),
     ).toHaveCount(1);
@@ -146,7 +146,7 @@ test("refreshes packaged notification status after returning from System Setting
       .poll(() => window.evaluate(() => globalThis.window.piApp.getNotificationPermissionStatus()))
       .toBe("granted");
     await expect(window.locator(".settings-view")).toContainText("Enabled");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(0);
     await expect(
       window.getByRole("button", { name: "Open System Settings", exact: true }),
     ).toHaveCount(0);

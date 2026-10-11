@@ -29,19 +29,13 @@ export function TurnChangesCard({
   const firstFile = files[0];
 
   return (
-    <section
-      className="turn-changes"
-      aria-label="Files changed in this turn"
-      data-testid="turn-changes"
-    >
+    <section className="turn-changes" aria-label="本轮修改的文件" data-testid="turn-changes">
       <header className="turn-changes__header">
         <span className="turn-changes__glyph" aria-hidden="true">
           <FileDiffIcon />
         </span>
         <div className="turn-changes__summary">
-          <span className="turn-changes__title">
-            {`Edited ${files.length} ${files.length === 1 ? "file" : "files"}`}
-          </span>
+          <span className="turn-changes__title">{`已编辑 ${files.length} 个文件`}</span>
           <LineStats lines={totals} />
         </div>
         {firstFile && onOpen ? (
@@ -50,7 +44,7 @@ export function TurnChangesCard({
             className="turn-changes__review"
             onClick={() => onOpen(turn, firstFile.path)}
           >
-            Review
+            审查
           </button>
         ) : null}
       </header>
@@ -85,7 +79,7 @@ export function TurnChangesCard({
                 );
               }}
             >
-              {`Show ${hidden} more`}
+              {`再显示 ${hidden} 个`}
             </button>
           </li>
         ) : null}
@@ -108,7 +102,7 @@ function FileStats({ file }: { readonly file: TurnChangedFile }) {
   return file.lines ? (
     <LineStats lines={file.lines} />
   ) : (
-    <span className="turn-changes__stats turn-changes__binary">Binary</span>
+    <span className="turn-changes__stats turn-changes__binary">二进制</span>
   );
 }
 

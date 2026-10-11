@@ -68,7 +68,7 @@ jobs:
             $events = @()
             for ($attempt = 0; $attempt -le 15; $attempt++) {
               $events = @(Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=$started; Id=1000,1001} -ErrorAction SilentlyContinue |
-                Where-Object { $_.Message -match 'pi-gui.*setup' })
+                Where-Object { $_.Message -match 'RSI-Agent-PI.*setup' })
               if ($events.Count -gt 0) { break }
               if ($attempt -lt 15) { Start-Sleep -Seconds 2 }
             }

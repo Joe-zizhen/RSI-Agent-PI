@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SessionRef } from "@pi-gui/session-driver";
+import type { SessionRef } from "@rsi-agent-pi/session-driver";
 import { createConversationOwner } from "../../electron/conversation/app-store-composer";
 
 const sessionRef: SessionRef = { workspaceId: "ws", sessionId: "sess" };
@@ -66,7 +66,7 @@ test("an empty scheduled-task instruction does not stamp recency", async () => {
   const { host, stamps, sent } = deliveryHost("idle");
   const owner = createConversationOwner(host as never);
 
-  await expect(owner.deliverBackgroundInstruction(sessionRef, "   ")).rejects.toThrow(/empty/);
+  await expect(owner.deliverBackgroundInstruction(sessionRef, "   ")).rejects.toThrow(/为空/);
   expect(stamps).toEqual([]);
   expect(sent).toEqual([]);
 });

@@ -8,7 +8,7 @@ import type {
   SessionQueuedMessage,
   SessionRef,
   WorkspaceRef,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 import {
   TINY_PNG_BASE64,
   createNamedThread,
@@ -158,17 +158,15 @@ test("shows queued messages while running and preserves attachments through inli
     await expect(
       queuedCard.locator(".queued-composer-message__header .queued-composer-message__text"),
     ).toContainText("Inspect the queued screenshot");
-    await queuedCard.getByRole("button", { name: "Edit" }).click();
-    await expect(window.getByTestId("queued-composer-editing")).toContainText(
-      "Editing queued message",
-    );
+    await queuedCard.getByRole("button", { name: "编辑" }).click();
+    await expect(window.getByTestId("queued-composer-editing")).toContainText("正在编辑排队消息");
     await expect(composer).toHaveValue("Inspect the queued screenshot");
     await expect(window.locator(".composer-attachment__preview")).toHaveAttribute(
       "title",
       "queued-image.png",
     );
 
-    await window.getByRole("button", { name: "Cancel" }).click();
+    await window.getByRole("button", { name: "取消" }).click();
     await expect(composer).toHaveValue("local scratch draft");
     await expect(window.locator(".composer-attachment__preview")).toHaveAttribute(
       "title",
@@ -250,10 +248,10 @@ test("delineates queued follow-ups and submitted steers in the timeline", async 
     // the first queued message as the next reply instead.
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("Start a long reply");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("Start a long reply");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
     await expect.poll(() => existsSync(called)).toBe(true);
 
     const queuedSteer: SessionQueuedMessage = {
@@ -285,7 +283,7 @@ test("delineates queued follow-ups and submitted steers in the timeline", async 
     await window
       .getByTestId("queued-composer-message")
       .filter({ hasText: queuedSteer.text })
-      .getByRole("button", { name: "Steer", exact: true })
+      .getByRole("button", { name: "引导", exact: true })
       .click();
     await expect(
       window.getByTestId("queued-composer-message").filter({ hasText: queuedSteer.text }),
@@ -475,7 +473,7 @@ test("an unsaved keystroke does not overwrite a queued edit or its cancel", asyn
     // Click in the page so Edit is sent inside the 350ms draft-save debounce.
     await window
       .getByTestId("queued-composer-message")
-      .getByRole("button", { name: "Edit", exact: true })
+      .getByRole("button", { name: "编辑", exact: true })
       .evaluate((button: HTMLButtonElement) => button.click());
     await settle();
     await expect(window.getByTestId("queued-composer-editing")).toBeVisible();
@@ -486,7 +484,7 @@ test("an unsaved keystroke does not overwrite a queued edit or its cancel", asyn
     await window.keyboard.press("End");
     await window.keyboard.type(" changed");
     await window
-      .getByRole("button", { name: "Cancel" })
+      .getByRole("button", { name: "取消" })
       .evaluate((button: HTMLButtonElement) => button.click());
     await settle();
     await expect(window.getByTestId("queued-composer-editing")).toHaveCount(0);

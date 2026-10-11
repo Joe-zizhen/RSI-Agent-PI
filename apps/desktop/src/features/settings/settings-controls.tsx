@@ -85,7 +85,7 @@ export function SettingsSelect<T extends string>({
       >
         {hasValue ? null : (
           <option disabled value="">
-            Choose…
+            选择…
           </option>
         )}
         {options.map((option) => (

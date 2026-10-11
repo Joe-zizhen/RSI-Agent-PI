@@ -29,7 +29,7 @@ test("attaches an image from a stubbed picker result and shows the attachment ch
     await createNamedThread(window, "Image attach session");
 
     await stubNextOpenDialog(harness, [imagePath]);
-    await window.getByRole("button", { name: "Attach files" }).click();
+    await window.getByRole("button", { name: "添加文件" }).click();
 
     const thumb = window.getByRole("button", { name: "View screenshot.png" });
     await expect(thumb).toBeVisible();
@@ -40,7 +40,7 @@ test("attaches an image from a stubbed picker result and shows the attachment ch
     await expect(viewer).toBeVisible();
     await expect(viewer.getByRole("img", { name: "screenshot.png" })).toBeVisible();
     await window.keyboard.press("Shift+Tab");
-    await expect(viewer.getByRole("button", { name: "Close image" })).toBeFocused();
+    await expect(viewer.getByRole("button", { name: "关闭图片" })).toBeFocused();
     await window.keyboard.press("Escape");
     await expect(viewer).toHaveCount(0);
     await expect(thumb).toBeFocused();

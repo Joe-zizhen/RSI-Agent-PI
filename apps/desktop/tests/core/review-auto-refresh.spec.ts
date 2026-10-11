@@ -32,9 +32,9 @@ test("Review picks up outside edits when the window regains focus, without blank
     const window = await harness.firstWindow();
     const workspace = await waitForWorkspaceByPath(window, workspacePath);
     await createNamedThread(window, "Review auto refresh", { workspaceName: workspace.name });
-    await selectSidePanel(window, "Review");
-    const panel = window.getByRole("region", { name: "Review", exact: true });
-    const diff = panel.getByRole("region", { name: "Diff", exact: true });
+    await selectSidePanel(window, "审查");
+    const panel = window.getByRole("region", { name: "审查", exact: true });
+    const diff = panel.getByRole("region", { name: "差异", exact: true });
     await expect(diff.locator(".diff-line--added .diff-line__content")).toHaveText(["second"]);
     await expect(panel.getByTestId("review-line-totals")).toHaveText("+1-0");
 

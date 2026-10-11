@@ -4,8 +4,8 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
 import { expect, test } from "@playwright/test";
-import type { CatalogStorage, WorktreeCatalogEntry } from "@pi-gui/catalogs";
-import type { WorkspaceRef } from "@pi-gui/session-driver";
+import type { CatalogStorage, WorktreeCatalogEntry } from "@rsi-agent-pi/catalogs";
+import type { WorkspaceRef } from "@rsi-agent-pi/session-driver";
 import { appWorktreeRootMatcher } from "../../electron/platform/worktrees/app-worktree-roots";
 import { GitWorktreeManager } from "../../electron/platform/worktrees/worktree-manager";
 
@@ -237,6 +237,10 @@ test("pruneOrphanedWorktrees removes clean merged orphans and fails closed for p
 });
 
 test("app worktree paths are matched inside the profile root only, even before it exists", async () => {
+  test.skip(
+    process.platform === "win32",
+    "Creates symlink fixtures; Windows needs symlink privilege.",
+  );
   const root = await mkdtemp(join(tmpdir(), "wt-roots-"));
   try {
     const isAppWorktreePath = appWorktreeRootMatcher(join(root, "worktrees"));

@@ -6,7 +6,6 @@ import type {
 } from "../../../contracts/desktop-state";
 import {
   compareByRecency,
-  RECENCY_BUCKET_LABELS,
   RECENCY_BUCKET_ORDER,
   recencyBucketId,
   sessionLastInteractedAt,
@@ -52,6 +51,14 @@ export interface RecencyThreadSection {
   readonly threads: readonly ThreadListEntry[];
 }
 
+/** Chinese labels for the recency buckets shown in the sidebar. */
+const RECENCY_BUCKET_LABELS_ZH: Readonly<Record<RecencyBucketId, string>> = {
+  today: "今天",
+  "last-7-days": "最近 7 天",
+  "last-30-days": "最近 30 天",
+  older: "更早",
+};
+
 export interface ThreadSidebarModel {
   readonly folders: readonly WorkspaceRecord[];
   readonly workspaceGroups: readonly WorkspaceThreadGroup[];
@@ -91,7 +98,9 @@ export function buildThreadSidebarModel(
       const threads = historyThreads.filter(
         (entry) => recencyBucketId(sessionLastInteractedAt(entry.session), nowMs) === bucket,
       );
-      return threads.length > 0 ? [{ bucket, label: RECENCY_BUCKET_LABELS[bucket], threads }] : [];
+      return threads.length > 0
+        ? [{ bucket, label: RECENCY_BUCKET_LABELS_ZH[bucket], threads }]
+        : [];
     }),
     archivedThreads,
     recencyOrder,
@@ -163,7 +172,7 @@ function collectThreadEntries(state: DesktopAppState): ThreadListEntry[] {
         session,
         environment: {
           kind: "local" as const,
-          label: "Local",
+          label: "本地",
         },
         contextLabel: folder.name,
       })),

@@ -29,12 +29,12 @@ export async function assertPackagedAppCanStartThread(
 
   await window
     .getByRole("complementary")
-    .getByRole("button", { name: "New thread", exact: true })
+    .getByRole("button", { name: "新建会话", exact: true })
     .click();
-  const prompt = window.getByLabel("New thread prompt");
+  const prompt = window.getByLabel("新建会话输入");
   await expect(prompt).toBeVisible();
   await prompt.fill(options.promptText);
-  await window.getByRole("button", { name: "Start thread" }).click();
+  await window.getByRole("button", { name: "开始会话" }).click();
 
   await expect(window.locator(".chat-header__title")).toHaveText(/\S+/);
   await expect(window.getByTestId("composer")).toBeFocused();

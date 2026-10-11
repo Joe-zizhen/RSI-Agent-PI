@@ -7,8 +7,8 @@ import {
   type RefObject,
   type SetStateAction,
 } from "react";
-import type { ExtensionFlagValues, SessionUsageSnapshot } from "@pi-gui/session-driver";
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { ExtensionFlagValues, SessionUsageSnapshot } from "@rsi-agent-pi/session-driver";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
   ComposerAttachment,
   QueuedComposerMessage,
@@ -200,9 +200,9 @@ export function ComposerPanel({
           selectedMentionIndex={selectedMentionIndex}
           onSelectMention={onSelectMention}
           onEnableMentionExtension={onEnableMentionExtension}
-          textareaLabel="Composer"
+          textareaLabel="输入框"
           textareaTestId="composer"
-          textareaPlaceholder="Ask pi to inspect the repo, run a fix, or continue the current thread..."
+          textareaPlaceholder="让 pi 检查仓库、执行修复，或继续当前会话…"
           pinnedCards={pinnedCards}
           extensionDock={extensionDock}
           extensionDockExpanded={extensionDockExpanded}
@@ -231,7 +231,7 @@ export function ComposerPanel({
                 </div>
                 <div className="composer__actions">
                   <button
-                    aria-label="Attach files"
+                    aria-label="添加文件"
                     className="icon-button composer__attach"
                     type="button"
                     onClick={onPickAttachments}
@@ -239,7 +239,7 @@ export function ComposerPanel({
                     <PlusIcon />
                   </button>
                   <button
-                    aria-label={primaryActionIsStop ? "Stop run" : "Send message"}
+                    aria-label={primaryActionIsStop ? "停止运行" : "发送消息"}
                     className="button button--primary button--cta-icon"
                     data-testid="send"
                     type="button"
@@ -260,11 +260,11 @@ export function ComposerPanel({
       {preparingTaskDraft ? (
         <div className="composer__footer-row">
           <p className="composer__hint" role="status" data-testid="composer-prepare-task-status">
-            Preparing task… Your current draft is saved before opening it.
+            正在准备任务…打开前会保存你当前的草稿。
           </p>
           {selectedSession.status === "running" ? (
             <button
-              aria-label="Stop run"
+              aria-label="停止运行"
               className="button button--primary button--cta-icon"
               data-testid="stop-while-preparing-task"
               onClick={onStop}

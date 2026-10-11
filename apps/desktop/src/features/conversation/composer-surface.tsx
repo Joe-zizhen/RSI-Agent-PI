@@ -183,7 +183,7 @@ export function ComposerSurface({
     >
       {isDragActive ? (
         <div className="composer__drop-indicator" data-testid="composer-drop-indicator">
-          Drop images or files to attach
+          拖入图片或文件以添加附件
         </div>
       ) : null}
       {activeSlashCommand ? (
@@ -198,7 +198,7 @@ export function ComposerSurface({
             ) : null}
           </span>
           <button
-            aria-label={`Clear ${activeSlashCommand.title}`}
+            aria-label={`清除 ${activeSlashCommand.title}`}
             className="composer__slash-intent-clear"
             type="button"
             onClick={onClearSlashCommand}
@@ -238,7 +238,7 @@ export function ComposerSurface({
                 </>
               )}
               <button
-                aria-label={`Remove ${attachment.name}`}
+                aria-label={`移除 ${attachment.name}`}
                 className="composer-attachment__remove"
                 type="button"
                 onClick={() => onRemoveAttachment(attachment.id)}
@@ -322,7 +322,7 @@ export function ComposerSurface({
                               ) : null}
                               {command.compatibility?.status === "terminal-only" ? (
                                 <span className="slash-menu__skill-badge slash-menu__skill-badge--warning">
-                                  Terminal-only
+                                  仅终端可用
                                 </span>
                               ) : null}
                             </span>
@@ -419,7 +419,7 @@ function MentionMenuSections({
     <>
       {extensionOptions.length > 0 ? (
         <MentionMenuSection
-          title="Extensions"
+          title="扩展"
           options={extensionOptions}
           selectedIndex={selectedIndex}
           allOptions={options}
@@ -429,7 +429,7 @@ function MentionMenuSections({
       ) : null}
       {fileOptions.length > 0 ? (
         <MentionMenuSection
-          title="Files"
+          title="文件"
           options={fileOptions}
           selectedIndex={selectedIndex}
           allOptions={options}
@@ -507,9 +507,7 @@ function MentionMenuItem({
             <span className="mention-menu__line">
               <span className="mention-menu__filename">{option.displayName}</span>
               {option.enabled ? null : (
-                <span className="mention-menu__badge">
-                  {option.enabling ? "Enabling" : "Disabled"}
-                </span>
+                <span className="mention-menu__badge">{option.enabling ? "启用中" : "已禁用"}</span>
               )}
             </span>
             <span className="mention-menu__description">{option.description}</span>
@@ -517,13 +515,13 @@ function MentionMenuItem({
         </button>
         {option.enabled ? null : (
           <button
-            aria-label={`Enable ${option.displayName}`}
+            aria-label={`启用 ${option.displayName}`}
             className="mention-menu__enable"
             disabled={option.enabling}
             type="button"
             onClick={() => onEnableExtension(option)}
           >
-            {option.enabling ? "Enabling" : "Enable"}
+            {option.enabling ? "启用中" : "启用"}
           </button>
         )}
       </div>

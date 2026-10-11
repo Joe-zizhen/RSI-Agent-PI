@@ -3,7 +3,7 @@ import type {
   RuntimeExtensionRecord,
   RuntimeSkillRecord,
   RuntimeSnapshot,
-} from "@pi-gui/session-driver/runtime-types";
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
   ExtensionCommandCompatibilityRecord,
   WorkspaceRecord,
@@ -102,18 +102,17 @@ export function CustomizePage({
       <div className="conversation settings-view">
         <header className="view-header">
           <div>
-            <h1 className="view-header__title">Skills and extensions</h1>
+            <h1 className="view-header__title">技能与扩展</h1>
             <p className="view-header__body">
-              Reusable workflows and runtime add-ons pi loads for{" "}
-              {workspace?.name ?? "this workspace"}.
+              pi 为 {workspace?.name ?? "此项目"} 加载的可复用工作流和运行时附加组件。
             </p>
           </div>
           <div className="view-header__actions">
             {workspacePicker}
             <button
-              aria-label="Refresh"
+              aria-label="刷新"
               className="icon-button resource-refresh"
-              title="Refresh"
+              title="刷新"
               type="button"
               onClick={onRefresh}
             >
@@ -125,7 +124,7 @@ export function CustomizePage({
                 type="button"
                 onClick={() => onTryCommand(NEW_SKILL_PROMPT)}
               >
-                New skill
+                新建技能
               </button>
             ) : null}
           </div>
@@ -133,21 +132,21 @@ export function CustomizePage({
 
         <div className="resource-toolbar">
           <div
-            aria-label="Skills and extensions"
+            aria-label="技能与扩展"
             className="resource-tabs"
             role="tablist"
             onKeyDown={handleTabKeyDown}
           >
             <ResourceTab
               count={skills.length}
-              label="Skills"
+              label="技能"
               selected={tab === "skills"}
               tab="skills"
               onSelect={() => onSelectTab("skills")}
             />
             <ResourceTab
               count={extensions.length}
-              label="Extensions"
+              label="扩展"
               selected={tab === "extensions"}
               tab="extensions"
               onSelect={() => onSelectTab("extensions")}
@@ -156,8 +155,8 @@ export function CustomizePage({
           <label className="resource-search">
             <SearchIcon />
             <input
-              aria-label={`Search ${tab}`}
-              placeholder={`Search ${tab}`}
+              aria-label={`搜索${tab === "skills" ? "技能" : "扩展"}`}
+              placeholder={`搜索${tab === "skills" ? "技能" : "扩展"}`}
               spellCheck={false}
               type="search"
               value={query}
@@ -178,9 +177,9 @@ export function CustomizePage({
         >
           {!workspace ? (
             <div className="settings-group resource-empty">
-              <div className="resource-empty__title">Open a folder first</div>
+              <div className="resource-empty__title">请先打开一个文件夹</div>
               <p className="resource-empty__body">
-                Skills and extensions are discovered per workspace, plus your user folders.
+                技能与扩展按项目发现，此外还包括你的用户文件夹。
               </p>
             </div>
           ) : tab === "skills" ? (

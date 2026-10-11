@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { SessionDriverEvent } from "@pi-gui/session-driver";
+import type { SessionDriverEvent } from "@rsi-agent-pi/session-driver";
 import { SessionSupervisor } from "../dist/index.js";
 
 await test("requested abort emits only idle state, without completion or failure notifications", () => {

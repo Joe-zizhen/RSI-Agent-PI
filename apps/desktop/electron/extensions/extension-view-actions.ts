@@ -1,7 +1,7 @@
 import { webContents, type BrowserWindow } from "electron";
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import type { DesktopHostAction } from "@pi-gui/extension-ui/browser";
+import type { DesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";
 import { desktopIpc } from "../../contracts/ipc";
 import type { DesktopAppStore } from "../application/app-store";
 import { resolveExistingWorkspacePath } from "../platform/files/workspace-paths";
@@ -24,7 +24,7 @@ export async function performExtensionViewHostAction(
   context: DesktopExtensionConnectionContext & { readonly action: DesktopHostAction },
 ): Promise<void> {
   const contents = webContents.fromId(context.senderId);
-  if (!contents || contents.isDestroyed()) throw new Error("The requesting window is closed");
+  if (!contents || contents.isDestroyed()) throw new Error("请求方窗口已关闭");
   const window = owners.windows.windowForSender(contents);
   const requireCurrentTask = () => {
     owners.views.getConnectionContext(context.connectionId, context.senderId);
@@ -34,7 +34,7 @@ export async function performExtensionViewHostAction(
       view.selectedWorkspaceId !== context.target.workspaceId ||
       view.selectedSessionId !== context.target.sessionId
     ) {
-      throw new Error("Return to the extension's task to use this action");
+      throw new Error("请返回扩展的任务以使用此操作。");
     }
   };
   requireCurrentTask();
@@ -44,7 +44,7 @@ export async function performExtensionViewHostAction(
     const host: AppOperationHost = {
       workspacePath: (workspaceId) => owners.store.getWorkspacePath(workspaceId),
       openExternal: owners.openExternal,
-      runExtensionCommand: () => Promise.reject(new Error("Views can't run commands")),
+      runExtensionCommand: () => Promise.reject(new Error("视图不能运行命令")),
       workspaces: () => owners.store.getWorkspaceRecords(),
       // Selecting the thread closes this view, so the view's call settles once the thread is
       // found. The switch starts after that result has gone out: `setImmediate` runs only once
@@ -84,10 +84,10 @@ export async function performExtensionViewHostAction(
     return;
   }
   const workspacePath = owners.store.getWorkspacePath(context.target.workspaceId);
-  if (!workspacePath) throw new Error("The task checkout is unavailable");
+  if (!workspacePath) throw new Error("任务工作副本不可用");
   const existingFile = async (requestedPath: string) => {
     const filePath = await resolveExistingWorkspacePath(workspacePath, requestedPath);
-    if (!(await stat(filePath)).isFile()) throw new Error("The selected path is not a file");
+    if (!(await stat(filePath)).isFile()) throw new Error("所选路径不是文件");
     return filePath;
   };
   if (action.type === "openFile") {

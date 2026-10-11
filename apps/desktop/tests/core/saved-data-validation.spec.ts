@@ -114,18 +114,18 @@ test("invalid providers show an error and cannot falsely save an endpoint", asyn
     const window = await harness.firstWindow();
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "Providers", exact: true }).click();
+    await window.getByRole("button", { name: "提供商", exact: true }).click();
     const section = window.locator(".settings-section", {
-      has: window.locator(".settings-section__title", { hasText: "Custom endpoints" }),
+      has: window.locator(".settings-section__title", { hasText: "自定义端点" }),
     });
     await expect(section.locator(".settings-warning")).toContainText(/providers/i);
-    await section.getByRole("button", { name: "Add endpoint", exact: true }).click();
+    await section.getByRole("button", { name: "添加端点", exact: true }).click();
     const dialog = window.getByTestId("custom-endpoint-dialog");
-    await dialog.getByLabel("Provider ID").fill("saved-data-proof");
+    await dialog.getByLabel("提供商 ID").fill("saved-data-proof");
     await dialog.getByLabel("Base URL").fill("http://localhost:11434/v1");
-    await dialog.getByLabel("Add model ID manually").fill("test-model");
-    await dialog.getByRole("button", { name: "Add", exact: true }).click();
-    await dialog.getByRole("button", { name: "Add endpoint", exact: true }).click();
+    await dialog.getByLabel("手动添加模型 ID").fill("test-model");
+    await dialog.getByRole("button", { name: "添加", exact: true }).click();
+    await dialog.getByRole("button", { name: "添加端点", exact: true }).click();
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText(/JSON object for providers/i);
     expect(await readFile(modelsPath, "utf8")).toBe(original);

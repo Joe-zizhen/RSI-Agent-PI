@@ -32,14 +32,14 @@ test("supports workspace rename and remove from the sidebar menu", async () => {
       .getByRole("button", { name: `Workspace actions for ${basename(workspaceA)}` })
       .click();
     const workspaceMenu = window.locator(".workspace-menu").last();
-    await expect(workspaceMenu.getByRole("button", { name: "Open folder" })).toBeVisible();
-    await expect(workspaceMenu.getByRole("button", { name: "Edit name" })).toBeVisible();
-    await expect(workspaceMenu.getByRole("button", { name: "Remove" })).toBeVisible();
+    await expect(workspaceMenu.getByRole("button", { name: "打开文件夹" })).toBeVisible();
+    await expect(workspaceMenu.getByRole("button", { name: "编辑名称" })).toBeVisible();
+    await expect(workspaceMenu.getByRole("button", { name: "移除" })).toBeVisible();
 
-    await workspaceMenu.getByRole("button", { name: "Edit name" }).click();
-    const renameInput = window.getByLabel(`Rename ${basename(workspaceA)}`);
+    await workspaceMenu.getByRole("button", { name: "编辑名称" }).click();
+    const renameInput = window.getByLabel(`重命名 ${basename(workspaceA)}`);
     await renameInput.fill("Renamed workspace");
-    await window.getByRole("button", { name: "Save" }).click();
+    await window.getByRole("button", { name: "保存" }).click();
 
     await expect
       .poll(async () => {
@@ -49,8 +49,8 @@ test("supports workspace rename and remove from the sidebar menu", async () => {
       .toBe("Renamed workspace");
 
     const acceptRemoval = window.waitForEvent("dialog").then((dialog) => dialog.accept());
-    await window.getByRole("button", { name: "Workspace actions for Renamed workspace" }).click();
-    await Promise.all([window.getByRole("button", { name: "Remove" }).click(), acceptRemoval]);
+    await window.getByRole("button", { name: "Renamed workspace 的项目操作" }).click();
+    await Promise.all([window.getByRole("button", { name: "移除" }).click(), acceptRemoval]);
 
     await expect
       .poll(async () => {

@@ -1,10 +1,10 @@
 import type { SessionExtensionNoticeRecord } from "../../../contracts/desktop-state";
 
-// Same words terminal pi prints before a warning or error notify; info has none.
+// Localized severity prefixes before a warning or error notice; info has none.
 const LEVEL_PREFIX: Record<SessionExtensionNoticeRecord["level"], string | undefined> = {
   info: undefined,
-  warning: "Warning:",
-  error: "Error:",
+  warning: "警告：",
+  error: "错误：",
 };
 
 /** Draws `ctx.ui.notify` toasts above the composer. Main adds and expires them. */

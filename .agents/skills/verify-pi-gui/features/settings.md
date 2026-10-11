@@ -21,8 +21,8 @@ Settings is one shell: a sidebar with Back to app, a Search box, and grouped pag
 Preconditions: isolated built app; no provider login needed.
 
 - **Persist preference:** run `.agents/skills/verify-pi-gui/scripts/prove.sh --smoke`. It clicks the exact Settings button, visits the six App and Agent pages checking each header, toggles the switch named `Enable skill slash commands`, goes Back to app to open Skills and New thread, and asserts the opposite switch value after a complete restart. It does not drive Search, Escape, or the Customize entry.
-- **Shortcut entry:** run `pnpm --filter @pi-gui/desktop run test:e2e:runner -- apps/desktop/tests/core/composer-controls.spec.ts`; inspect the shortcut case and `settings-surface` visibility. The bundled smoke covers only the sidebar entry.
-- **Behavioral effect:** run `pnpm --filter @pi-gui/desktop run test:e2e:runner -- apps/desktop/tests/core/skills-settings.spec.ts`; disabling the preference hides `slash-menu` for `/skill`, enabling it restores the seeded skill in the menu.
+- **Shortcut entry:** run `pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner -- apps/desktop/tests/core/composer-controls.spec.ts`; inspect the shortcut case and `settings-surface` visibility. The bundled smoke covers only the sidebar entry.
+- **Behavioral effect:** run `pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner -- apps/desktop/tests/core/skills-settings.spec.ts`; disabling the preference hides `slash-menu` for `/skill`, enabling it restores the seeded skill in the menu.
 - **Per-page regressions:** `settings-appearance.spec.ts`, `settings-general.spec.ts`, `provider-settings.spec.ts`, `model-scope-toggle.spec.ts`, `notification-settings.spec.ts` under `apps/desktop/tests/core`. `extensions.spec.ts` covers the Thread orchestration switch surviving restart; no spec turns off Enable Scheduled tasks or proves its tools disappear.
 - **Proof:** inspect before/change/restart screenshots, action traces, restart ARIA snapshot, identity and cleanup JSON. The second process must read the changed switch value.
 

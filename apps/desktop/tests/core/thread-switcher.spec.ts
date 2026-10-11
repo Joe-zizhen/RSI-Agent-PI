@@ -89,7 +89,7 @@ test("Ctrl-Tab switches threads in most-recently-used order and keeps it across 
     }
 
     // The terminal does not swallow the chord.
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     const terminal = window.getByTestId("integrated-terminal");
     await terminal.locator(".xterm").click();
     await quickSwitch(window);
@@ -101,7 +101,7 @@ test("Ctrl-Tab switches threads in most-recently-used order and keeps it across 
       .filter({ hasText: "Thread two" })
       .first();
     await threadTwoRow.hover();
-    await threadTwoRow.getByLabel("Archive Thread two").click();
+    await threadTwoRow.getByLabel("归档 Thread two").click();
     await expect(
       window.locator(".session-list > .session-row").filter({ hasText: "Thread two" }),
     ).toHaveCount(0);

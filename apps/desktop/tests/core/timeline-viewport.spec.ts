@@ -97,7 +97,7 @@ test("clicks and downward wheel at the bottom do not stop following; search uses
       fire();
       fire();
     });
-    const search = p.getByPlaceholder("Search thread...");
+    const search = p.getByPlaceholder("搜索会话…");
     await expect(search).toBeVisible();
     await search.press("Escape");
     await expect(search).toHaveCount(0);

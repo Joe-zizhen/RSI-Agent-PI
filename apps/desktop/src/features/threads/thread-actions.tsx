@@ -69,7 +69,7 @@ export function buildThreadActions(
   const actions: ThreadAction[] = [
     {
       id: "rename-thread",
-      title: "Rename thread",
+      title: "重命名会话",
       icon: <PencilIcon />,
       hint: renameThreadShortcut(handlers.platform),
       run: () => handlers.startRename(subject),
@@ -78,7 +78,7 @@ export function buildThreadActions(
   if (archived) {
     actions.push({
       id: "restore-thread",
-      title: "Restore thread",
+      title: "恢复会话",
       icon: <RestoreIcon />,
       run: () => handlers.restore(subject),
     });
@@ -86,13 +86,13 @@ export function buildThreadActions(
     actions.push(
       {
         id: "pin-thread",
-        title: pinned ? "Unpin thread" : "Pin thread",
+        title: pinned ? "取消置顶会话" : "置顶会话",
         icon: <PinIcon filled={pinned} />,
         run: () => handlers.setPinned(subject, !pinned),
       },
       {
         id: "archive-thread",
-        title: "Archive thread",
+        title: "归档会话",
         icon: <ArchiveIcon />,
         hint: archiveThreadShortcut(handlers.platform),
         run: () => handlers.archive(subject),
@@ -102,7 +102,7 @@ export function buildThreadActions(
   if (session.hasUnseenUpdate) {
     actions.push({
       id: "mark-read",
-      title: "Mark as read",
+      title: "标为已读",
       icon: <CheckIcon />,
       run: () => handlers.markRead(subject),
     });
@@ -110,13 +110,13 @@ export function buildThreadActions(
   actions.push(
     {
       id: "scheduled-task",
-      title: handlers.hasScheduledTask(subject) ? "Edit scheduled task…" : "Add scheduled task…",
+      title: handlers.hasScheduledTask(subject) ? "编辑计划任务…" : "添加计划任务…",
       icon: <ClockIcon />,
       run: () => handlers.openScheduledTask(subject),
     },
     {
       id: "copy-session-id",
-      title: "Copy session ID",
+      title: "复制会话记录 ID",
       icon: <CopyIcon />,
       run: () => handlers.copySessionId(subject),
     },

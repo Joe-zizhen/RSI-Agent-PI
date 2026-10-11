@@ -210,7 +210,7 @@ test("labels local package extensions by package root instead of index entrypoin
 
   try {
     const window = await harness.firstWindow();
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await expect(window.getByTestId("extensions-surface")).toBeVisible();
 
     const extensionCard = window.getByTestId("extensions-list").getByRole("button", {
@@ -324,7 +324,7 @@ test("shows extensions above files in @ mentions and enables disabled extensions
     // "READ" also matches the built-in Thread orchestration extension.
     await composer.fill("@README");
     await expect(mentionMenu).toBeVisible();
-    await expect(mentionMenu.locator(".mention-menu__section-title")).toHaveText(["Files"]);
+    await expect(mentionMenu.locator(".mention-menu__section-title")).toHaveText(["文件"]);
     await expect(mentionMenu.locator(".mention-menu__filename")).toContainText("README.md");
     await composer.press("Tab");
     await expect(composer).toHaveValue("@README.md ");
@@ -498,7 +498,7 @@ test("manages extensions and prefers runtime commands over colliding host action
     await expect(dockBody).toContainText("demo-widget-below:");
     await expect(dockBody).toContainText("Below widget line");
 
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await expect(window.getByTestId("extensions-surface")).toBeVisible();
     const extensionsList = window.getByTestId("extensions-list");
     const extensionCard = extensionsList.getByRole("button", { name: /demo-extension/i });
@@ -507,24 +507,24 @@ test("manages extensions and prefers runtime commands over colliding host action
     await expect(window.locator(".skill-detail")).toContainText("settings");
     await expect(window.locator(".skill-detail")).toContainText("prefill-demo");
 
-    const enabledSwitch = window.getByRole("switch", { name: "Enabled", exact: true });
+    const enabledSwitch = window.getByRole("switch", { name: "已启用", exact: true });
     await expect(enabledSwitch).toBeChecked();
     await enabledSwitch.click();
     await expect(enabledSwitch).not.toBeChecked();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expect(window.locator(".chat-header__title")).toHaveText("Inspect extension surface");
     await expect(window.getByTestId("extension-dock")).toHaveCount(0);
     const composer = window.getByTestId("composer");
-    await window.getByRole("button", { name: "Settings", exact: true }).click();
+    await window.getByRole("button", { name: "设置", exact: true }).click();
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await extensionCard.click();
     await expect(enabledSwitch).not.toBeChecked();
     await enabledSwitch.click();
     await expect(enabledSwitch).toBeChecked();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expect(window.locator(".chat-header__title")).toHaveText("Extension Surface");
     await expect(window.getByTestId("extension-dock-summary")).toHaveText("Demo ready");
     await expect(window.getByTestId("extension-dock-body")).toHaveCount(0);
@@ -560,8 +560,8 @@ test("manages extensions and prefers runtime commands over colliding host action
 
     await composer.fill("/se");
     const slashMenu = window.getByTestId("slash-menu");
-    await expect(slashMenu).toContainText("Runtime Commands");
-    await expect(slashMenu).toContainText("Host Actions");
+    await expect(slashMenu).toContainText("运行时命令");
+    await expect(slashMenu).toContainText("宿主操作");
 
     await composer.fill("/settings ");
     await composer.press("Enter");
@@ -663,7 +663,7 @@ test("switches pi-gui tools off app-wide and keeps them off after a restart", as
   };
   const openPiGuiTools = async (window: Page) => {
     const list = window.getByTestId("extensions-list");
-    const openButton = window.getByRole("button", { name: "Extensions", exact: true });
+    const openButton = window.getByRole("button", { name: "扩展", exact: true });
     // A restart restores the last open view, so Settings may already show the list.
     await expect(list.or(openButton)).toBeVisible();
     if (!(await list.isVisible())) {
@@ -698,7 +698,7 @@ test("switches pi-gui tools off app-wide and keeps them off after a restart", as
     const toggle = await openPiGuiTools(window);
     await expect(toggle).not.toBeChecked();
     await expect(
-      window.getByTestId("extensions-list").getByRole("switch", { name: "Enable Scheduled tasks" }),
+      window.getByTestId("extensions-list").getByRole("switch", { name: "启用 计划任务" }),
     ).toBeChecked();
     await toggle.click();
     await expect.poll(() => orchestrationEnabled(window)).toBe(true);
@@ -721,7 +721,7 @@ test("lists pi's add-ons as Built into pi and switches them in pi's extensions s
   });
   try {
     const window = await harness.firstWindow();
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     const list = window.getByTestId("extensions-list");
     const addons = list.locator("section", {
       has: window.getByRole("heading", { name: /Built into pi/ }),

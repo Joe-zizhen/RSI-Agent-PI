@@ -274,7 +274,7 @@ function createCreateScheduledTaskTool(
 ): ToolDefinition<any, ScheduledToolDetails> {
   return {
     name: createScheduledTaskToolName,
-    label: "Create scheduled task",
+    label: "创建计划任务",
     description:
       "Create a local pi-gui scheduled task that runs on this device while the app is open.",
     promptSnippet:
@@ -340,7 +340,7 @@ function createListScheduledTasksTool(
 ): ToolDefinition<any, ScheduledToolDetails> {
   return {
     name: listScheduledTasksToolName,
-    label: "List scheduled tasks",
+    label: "列出计划任务",
     description: "List local pi-gui scheduled tasks on this device.",
     promptSnippet: "list_scheduled_tasks: list saved local pi-gui schedules.",
     promptGuidelines: ["Use list_scheduled_tasks before updating a task if you need the task id."],
@@ -356,7 +356,7 @@ function createUpdateScheduledTaskTool(
 ): ToolDefinition<any, ScheduledToolDetails> {
   return {
     name: updateScheduledTaskToolName,
-    label: "Update scheduled task",
+    label: "更新计划任务",
     description: "Update, pause, resume, or complete a local pi-gui scheduled task.",
     promptSnippet: "update_scheduled_task: change a saved local schedule by task id.",
     promptGuidelines: [

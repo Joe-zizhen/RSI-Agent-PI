@@ -39,7 +39,7 @@ const FILE_MARKDOWN_COMPONENTS = {
     </div>
   ),
   img: ({ alt }: { alt?: string }) => (
-    <span className="file-editor__blocked-image">{alt ? `[image: ${alt}]` : "[image]"}</span>
+    <span className="file-editor__blocked-image">{alt ? `[图片: ${alt}]` : "[图片]"}</span>
   ),
 };
 
@@ -107,7 +107,7 @@ export function FileEditorPane({
   const showSource = !markdown || sourceMode;
 
   return (
-    <section className="file-editor" data-testid="file-editor" aria-label="Open file">
+    <section className="file-editor" data-testid="file-editor" aria-label="打开文件">
       <div className="file-editor__tab-strip">
         {worktreeLabel ? (
           <span className="file-editor__worktree-chip" data-testid="file-editor-worktree-chip">
@@ -133,7 +133,7 @@ export function FileEditorPane({
                   {fileNameFromPath(path)}
                 </button>
                 <button
-                  aria-label={`Close ${fileNameFromPath(path)}`}
+                  aria-label={`关闭 ${fileNameFromPath(path)}`}
                   className="file-editor__tab-close"
                   type="button"
                   onClick={() => onClose(path)}
@@ -157,11 +157,11 @@ export function FileEditorPane({
                 type="button"
                 onClick={() => setSourceMode((current) => !current)}
               >
-                View source
+                查看源码
               </button>
             ) : null}
             <button
-              aria-label="Copy file"
+              aria-label="复制文件"
               className="icon-button"
               disabled={!preview || preview.binary || Boolean(viewerError)}
               type="button"
@@ -185,14 +185,14 @@ export function FileEditorPane({
                 });
               }}
             >
-              Open
+              打开
             </button>
           </div>
         ) : null}
       </div>
       {activePath ? (
         <nav
-          aria-label="File path"
+          aria-label="文件路径"
           className="file-editor__breadcrumb"
           data-testid="file-editor-breadcrumb"
         >
@@ -239,19 +239,19 @@ function renderEditorBody({
   readonly viewerLoading: boolean;
 }): ReactNode {
   if (!activePath) {
-    return <div className="diff-panel__empty">Select a file from the explorer.</div>;
+    return <div className="diff-panel__empty">请从文件浏览器中选择一个文件。</div>;
   }
   if (viewerLoading) {
-    return <div className="diff-panel__empty">Loading file...</div>;
+    return <div className="diff-panel__empty">正在加载文件...</div>;
   }
   if (viewerError) {
     return <div className="diff-panel__empty">{viewerError}</div>;
   }
   if (!preview) {
-    return <div className="diff-panel__empty">No preview available.</div>;
+    return <div className="diff-panel__empty">没有可用的预览。</div>;
   }
   if (preview.binary) {
-    return <div className="diff-panel__empty">Binary or directory preview is not available.</div>;
+    return <div className="diff-panel__empty">二进制文件或目录的预览不可用。</div>;
   }
   return (
     <>
@@ -262,7 +262,7 @@ function renderEditorBody({
       )}
       {preview.truncated ? (
         <div className="file-editor__truncated" role="status">
-          Preview truncated
+          预览已截断
         </div>
       ) : null}
     </>

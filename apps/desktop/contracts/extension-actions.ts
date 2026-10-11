@@ -1,4 +1,4 @@
-import type { ExtensionAction, SessionRef } from "@pi-gui/session-driver";
+import type { ExtensionAction, SessionRef } from "@rsi-agent-pi/session-driver";
 
 /** A card button's click: the card's thread and the action it names. */
 export interface ExtensionActionRequest {

@@ -55,14 +55,14 @@ export function SecondarySurface({
       <aside className="secondary-surface__sidebar">
         <button className="secondary-surface__back" type="button" onClick={onBack}>
           <span aria-hidden="true">←</span>
-          <span>Back to app</span>
+          <span>返回应用</span>
         </button>
         {navItems.length > 0 ? (
           <SecondarySurfaceNav
             activeNavId={activeNavId}
             items={navItems}
-            label={`${title} sections`}
-            searchLabel={`Search ${title.toLowerCase()}`}
+            label={`${title}分区`}
+            searchLabel={`搜索${title}`}
             onSelect={(id) => onSelectNav?.(id)}
           />
         ) : (
@@ -99,7 +99,7 @@ function SecondarySurfaceNav({
         <SearchIcon />
         <input
           aria-label={searchLabel}
-          placeholder="Search"
+          placeholder="搜索"
           spellCheck={false}
           type="search"
           value={query}

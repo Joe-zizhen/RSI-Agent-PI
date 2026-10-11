@@ -4,7 +4,7 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { SessionDriverEvent } from "@pi-gui/session-driver";
+import type { SessionDriverEvent } from "@rsi-agent-pi/session-driver";
 import type { BuiltinExtension } from "../dist/builtin-extensions.js";
 import { PiSdkDriver } from "../dist/pi-sdk-driver.js";
 

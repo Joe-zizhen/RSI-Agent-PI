@@ -38,19 +38,19 @@ test("releaseUrlFor keeps the selected repository release URL", () => {
   expect(
     releaseUrlFor({
       tag_name: "v0.1.0-beta.34",
-      html_url: "https://github.com/minghinmatthewlam/pi-gui/releases/tag/v0.1.0-beta.34",
+      html_url: "https://github.com/Joe-zizhen/RSI-Agent-PI/releases/tag/v0.1.0-beta.34",
     }),
-  ).toBe("https://github.com/minghinmatthewlam/pi-gui/releases/tag/v0.1.0-beta.34");
+  ).toBe("https://github.com/Joe-zizhen/RSI-Agent-PI/releases/tag/v0.1.0-beta.34");
 });
 
 test("releaseUrlFor falls back to the exact tag instead of the generic latest route", () => {
   expect(releaseUrlFor({ tag_name: "v0.1.0-beta.34" })).toBe(
-    "https://github.com/minghinmatthewlam/pi-gui/releases/tag/v0.1.0-beta.34",
+    "https://github.com/Joe-zizhen/RSI-Agent-PI/releases/tag/v0.1.0-beta.34",
   );
   expect(
     releaseUrlFor({
       tag_name: "v0.1.0-beta.34",
       html_url: "https://example.com/releases/tag/v0.1.0-beta.34",
     }),
-  ).toBe("https://github.com/minghinmatthewlam/pi-gui/releases/tag/v0.1.0-beta.34");
+  ).toBe("https://github.com/Joe-zizhen/RSI-Agent-PI/releases/tag/v0.1.0-beta.34");
 });

@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { sessionKey } from "@pi-gui/session-driver";
-import type { RuntimeExtensionRecord, RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
+import type {
+  RuntimeExtensionRecord,
+  RuntimeSnapshot,
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import type { TranscriptMessage } from "../../contracts/timeline-types";
 import { extensionToolLabels, extensionToolRowLabel } from "../../contracts/tool-labels";
 import {
@@ -110,7 +113,7 @@ test("a live extension tool call uses its label and counts as a tool, not a file
   const rows = transcript.get(key)!.filter((item) => item.kind === "tool");
   expect(rows.map((row) => row.label)).toEqual([
     "Read GitHub issue or PR: issue 7",
-    "Read src/app.ts",
+    "已读取 src/app.ts",
   ]);
   expect(state.runMetricsBySession.get(key)).toMatchObject({
     toolCount: 2,

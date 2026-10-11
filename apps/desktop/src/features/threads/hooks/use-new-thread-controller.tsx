@@ -10,7 +10,7 @@ import {
   type KeyboardEvent,
   type SetStateAction,
 } from "react";
-import type { ExtensionFlagValues } from "@pi-gui/session-driver";
+import type { ExtensionFlagValues } from "@rsi-agent-pi/session-driver";
 import {
   type AppView,
   type ComposerAttachment,
@@ -301,7 +301,7 @@ export function useNewThreadController(params: UseNewThreadControllerParams) {
       return;
     }
     if (treeCommand?.type === "tree") {
-      setComposerError("/tree is only available inside an existing session.");
+      setComposerError("/tree 只能在已有会话记录内使用。");
       return;
     }
     const input: StartThreadInput = {

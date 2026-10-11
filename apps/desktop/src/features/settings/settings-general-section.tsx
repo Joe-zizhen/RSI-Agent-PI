@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import type { ModelSettingsScopeMode } from "../../../contracts/desktop-state";
 import { SettingsSegmented, SettingsSwitch } from "./settings-controls";
 import { SettingsGroup, SettingsRow } from "./settings-utils";
@@ -35,40 +35,34 @@ export function SettingsGeneralSection({
 
   return (
     <>
-      <SettingsGroup title="Agent">
+      <SettingsGroup title="智能体">
         <SettingsRow
-          title="Model settings scope"
-          description="Apply the default model and enabled models everywhere, or set them per repo."
+          title="模型设置范围"
+          description="在全局应用默认模型与启用的模型，或按仓库单独设置。"
         >
           <SettingsSegmented
-            label="Model settings scope"
+            label="模型设置范围"
             options={[
-              { value: "app-global", label: "App global" },
-              { value: "per-repo", label: "Per repo" },
+              { value: "app-global", label: "应用全局" },
+              { value: "per-repo", label: "按仓库" },
             ]}
             value={modelSettingsScopeMode}
             onChange={onSetModelSettingsScopeMode}
           />
         </SettingsRow>
-        <SettingsRow
-          title="Skill slash commands"
-          description="Offer each skill as a slash command in the composer."
-        >
+        <SettingsRow title="技能斜杠命令" description="在输入框中把每个技能作为斜杠命令提供。">
           <SettingsSwitch
             checked={runtime?.settings.enableSkillCommands ?? true}
-            label="Enable skill slash commands"
+            label="启用技能斜杠命令"
             onChange={onToggleSkillCommands}
           />
         </SettingsRow>
       </SettingsGroup>
 
-      <SettingsGroup title="Terminal">
-        <SettingsRow
-          title="Shell"
-          description="The shell the integrated terminal starts. Leave blank to use your login shell."
-        >
+      <SettingsGroup title="终端">
+        <SettingsRow title="Shell" description="集成终端启动的 Shell。留空则使用登录 Shell。">
           <input
-            aria-label="Shell of integrated terminal"
+            aria-label="集成终端的 Shell"
             className="settings-text-input"
             placeholder="/bin/zsh"
             spellCheck={false}

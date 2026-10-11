@@ -12,8 +12,8 @@ import type {
   ThreadGrouping,
 } from "../../contracts/desktop-state";
 import { isThemeMode, isThemePresetId, isThreadGrouping } from "../../contracts/desktop-state";
-import type { ExtensionFlagValues } from "@pi-gui/session-driver";
-import type { ModelSettingsSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { ExtensionFlagValues } from "@rsi-agent-pi/session-driver";
+import type { ModelSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import { readJsonWithBackup, writeFileAtomicQueued } from "./atomic-file-write";
 import { decodeAttachments } from "./attachment-store";
 import { randomUUID } from "node:crypto";

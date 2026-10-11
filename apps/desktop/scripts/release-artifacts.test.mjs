@@ -22,20 +22,20 @@ function updateManifestName(platform) {
 
 function primaryUpdateAsset(platform) {
   if (platform === "macos") {
-    return `pi-gui-${VERSION}-arm64.zip`;
+    return `RSI-Agent-PI-${VERSION}-arm64.zip`;
   }
   if (platform === "linux") {
-    return `pi-gui-${VERSION}-x86_64.AppImage`;
+    return `RSI-Agent-PI-${VERSION}-x86_64.AppImage`;
   }
-  return `pi-gui-${VERSION}-x64-setup.exe`;
+  return `RSI-Agent-PI-${VERSION}-x64-setup.exe`;
 }
 
 function updateAssets(platform) {
   if (platform === "macos") {
-    return [`pi-gui-${VERSION}-arm64.zip`, `pi-gui-${VERSION}-arm64.dmg`];
+    return [`RSI-Agent-PI-${VERSION}-arm64.zip`, `RSI-Agent-PI-${VERSION}-arm64.dmg`];
   }
   if (platform === "linux") {
-    return [`pi-gui-${VERSION}-x86_64.AppImage`, `pi-gui_${VERSION}_amd64.deb`];
+    return [`RSI-Agent-PI-${VERSION}-x86_64.AppImage`, `RSI-Agent-PI_${VERSION}_amd64.deb`];
   }
   return [primaryUpdateAsset(platform)];
 }
@@ -110,7 +110,7 @@ test("rejects bytes changed after the platform manifest was written", async () =
   const root = await mkdtemp(path.join(os.tmpdir(), "pi-gui-release-tamper-"));
   const staged = await stageFixture(root, "windows");
   await writeFile(
-    path.join(staged, `pi-gui-${VERSION}-x64-setup.exe`),
+    path.join(staged, `RSI-Agent-PI-${VERSION}-x64-setup.exe`),
     "changed after staging\n",
     "utf8",
   );
@@ -129,7 +129,7 @@ test("rejects bytes changed after the platform manifest was written", async () =
 test("requires the Debian package when staging Linux artifacts", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pi-gui-release-linux-missing-deb-"));
   const source = await createFixture(root, "linux");
-  await unlink(path.join(source, `pi-gui_${VERSION}_amd64.deb`));
+  await unlink(path.join(source, `RSI-Agent-PI_${VERSION}_amd64.deb`));
 
   await assert.rejects(
     stageArtifacts({
@@ -167,7 +167,7 @@ test("rejects Debian package bytes changed after Linux staging", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pi-gui-release-linux-tamper-"));
   const staged = await stageFixture(root, "linux");
   await writeFile(
-    path.join(staged, `pi-gui_${VERSION}_amd64.deb`),
+    path.join(staged, `RSI-Agent-PI_${VERSION}_amd64.deb`),
     "changed after staging\n",
     "utf8",
   );
@@ -185,7 +185,7 @@ test("rejects Debian package bytes changed after Linux staging", async () => {
 
 test("rejects latest.yml when it selects the portable executable", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pi-gui-release-portable-"));
-  const portable = `pi-gui-${VERSION}-x64-portable.exe`;
+  const portable = `RSI-Agent-PI-${VERSION}-x64-portable.exe`;
   const source = await createFixture(root, "windows");
   const manifestPath = path.join(source, "latest.yml");
   const parsed = parse(await readFile(manifestPath, "utf8"));

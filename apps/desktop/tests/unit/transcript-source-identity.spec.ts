@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { sessionKey, type SessionDriverEvent } from "@pi-gui/session-driver";
+import { sessionKey, type SessionDriverEvent } from "@rsi-agent-pi/session-driver";
 import type { TranscriptMessage } from "../../contracts/timeline-types";
 import { createConversationOwner } from "../../electron/conversation/app-store-composer";
 import {

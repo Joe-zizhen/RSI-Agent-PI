@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createFacetHost, type FacetHost } from "@earendil-works/chord";
-import type { DesktopViewDeclaration } from "@pi-gui/extension-ui";
-import type { DesktopHostAction } from "@pi-gui/extension-ui/browser";
-import { createChordServerConnection } from "@pi-gui/extension-ui/transport";
-import { sessionKey, type SessionRef } from "@pi-gui/session-driver";
+import type { DesktopViewDeclaration } from "@rsi-agent-pi/extension-ui";
+import type { DesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";
+import { createChordServerConnection } from "@rsi-agent-pi/extension-ui/transport";
+import { sessionKey, type SessionRef } from "@rsi-agent-pi/session-driver";
 import type { DesktopExtensionViewInfo } from "../../contracts/extension-views";
 import {
   resolveDesktopExtensionAsset,

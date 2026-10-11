@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { promisify } from "node:util";
 import { expect, type Page } from "@playwright/test";
 import { _electron as electron, type ElectronApplication } from "playwright";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import type { PiDesktopApi } from "../../contracts/ipc";
 import type {
   DesktopAppState,
@@ -429,6 +429,9 @@ function buildDesktopLaunchEnv(
     PI_APP_INITIAL_WORKSPACES: (options.initialWorkspaces ?? []).join(delimiter),
     PI_APP_TEST_MODE: options.testMode ?? process.env.PI_APP_TEST_MODE ?? "foreground",
     PI_CODING_AGENT_DIR: agentDir,
+    // Fixture launches get a throwaway agent dir; skip the bundled plugin copy
+    // (it moves a large payload) unless a spec opts in via envOverrides.
+    PI_APP_SKIP_PLUGIN_SEEDING: "1",
     ...(options.notificationLogPath
       ? { PI_APP_NOTIFICATION_LOG_PATH: options.notificationLogPath }
       : {}),
@@ -1772,7 +1775,7 @@ export async function waitForTimelineLayout(window: Page): Promise<void> {
 
 export async function selectSidePanel(
   window: Page,
-  choice: "Files" | "Review" | "Terminal",
+  choice: "文件" | "审查" | "终端",
 ): Promise<void> {
   const workbench = window.getByTestId("workbench");
   if (!(await workbench.isVisible())) {
@@ -1791,14 +1794,13 @@ export async function selectSidePanel(
   await expect(existing).toHaveAttribute("aria-selected", "true");
 }
 
-export type ReviewScopeLabel =
-  "Last Turn" | "Selected Turn" | "Uncommitted" | "Unstaged" | "Staged" | "Branch";
+export type ReviewScopeLabel = "上一轮" | "所选轮次" | "未提交" | "未暂存" | "已暂存" | "分支";
 
 /** Chooses a comparison from the Review panel's scope menu. */
 export async function chooseReviewScope(window: Page, scope: ReviewScopeLabel): Promise<void> {
-  await window.getByRole("button", { name: "Review scope", exact: true }).click();
+  await window.getByRole("button", { name: "审查范围", exact: true }).click();
   await window
-    .getByRole("menu", { name: "Review scope", exact: true })
+    .getByRole("menu", { name: "审查范围", exact: true })
     .getByRole("menuitemradio", { name: scope, exact: true })
     .click();
   await expect(reviewScopeButton(window)).toHaveText(scope);
@@ -1806,8 +1808,8 @@ export async function chooseReviewScope(window: Page, scope: ReviewScopeLabel): 
 
 /** Opens the Review "…" menu, which lists checkouts and the resolved comparison. */
 export async function openReviewOptions(window: Page) {
-  await window.getByRole("button", { name: "Review options", exact: true }).click();
-  return window.getByRole("menu", { name: "Review options", exact: true });
+  await window.getByRole("button", { name: "审查选项", exact: true }).click();
+  return window.getByRole("menu", { name: "审查选项", exact: true });
 }
 
 export async function chooseReviewCheckout(window: Page, checkoutId: string): Promise<void> {
@@ -1821,7 +1823,7 @@ export async function reviewComparisonIdentity(window: Page) {
 }
 
 export function reviewScopeButton(window: Page) {
-  return window.getByRole("button", { name: "Review scope", exact: true });
+  return window.getByRole("button", { name: "审查范围", exact: true });
 }
 
 export async function clickSession(window: Page, sessionTitle: string): Promise<void> {
@@ -1833,9 +1835,7 @@ export async function openNewThread(window: Page): Promise<void> {
   if (await composer.isVisible().catch(() => false)) {
     return;
   }
-  const button = window
-    .locator(".sidebar")
-    .getByRole("button", { name: "New thread", exact: true });
+  const button = window.locator(".sidebar").getByRole("button", { name: "新建会话", exact: true });
   await expect(button).toBeVisible({ timeout: 15_000 });
   await expect(button).toBeEnabled({ timeout: 15_000 });
   await button.click();
@@ -1863,13 +1863,13 @@ export async function startThreadFromSurface(
     await window.locator(".new-thread__workspace").selectOption({ label: workspaceName });
   }
   if (environment === "worktree") {
-    await window.getByRole("button", { name: "Worktree", exact: true }).click();
+    await window.getByRole("button", { name: "工作树", exact: true }).click();
   } else {
-    await window.getByRole("button", { name: "Local", exact: true }).click();
+    await window.getByRole("button", { name: "本地", exact: true }).click();
   }
-  const startButton = window.getByRole("button", { name: "Start thread" });
+  const startButton = window.getByRole("button", { name: "开始会话" });
   if (prompt) {
-    await window.getByLabel("New thread prompt").fill(prompt);
+    await window.getByLabel("新建会话输入").fill(prompt);
   }
   await expect(startButton).toBeEnabled({ timeout: 15_000 });
   await startButton.click();
@@ -2011,9 +2011,9 @@ export async function chooseThreadGrouping(
   window: Page,
   grouping: "time" | "workspace",
 ): Promise<void> {
-  const label = grouping === "time" ? "Time" : "Workspace";
-  await window.getByRole("button", { name: "Customize Sidebar" }).click();
-  await window.getByRole("menuitem", { name: "Grouping" }).click();
+  const label = grouping === "time" ? "按时间" : "按项目";
+  await window.getByRole("button", { name: "自定义侧边栏" }).click();
+  await window.getByRole("menuitem", { name: "分组" }).click();
   await window.getByRole("menuitemradio", { name: label, exact: true }).click();
   await expectThreadGrouping(window, grouping);
 }
@@ -2022,24 +2022,24 @@ export async function expectThreadGrouping(
   window: Page,
   grouping: "time" | "workspace",
 ): Promise<void> {
-  const label = grouping === "time" ? "Time" : "Workspace";
-  await window.getByRole("button", { name: "Customize Sidebar" }).click();
-  await window.getByRole("menuitem", { name: "Grouping" }).click();
+  const label = grouping === "time" ? "按时间" : "按项目";
+  await window.getByRole("button", { name: "自定义侧边栏" }).click();
+  await window.getByRole("menuitem", { name: "分组" }).click();
   await expect(window.getByRole("menuitemradio", { name: label, exact: true })).toHaveAttribute(
     "aria-checked",
     "true",
   );
   await expectCompactGroupingMenu(window);
   await window.keyboard.press("Escape");
-  await expect(window.getByRole("menu", { name: "Customize Sidebar" })).toBeHidden();
+  await expect(window.getByRole("menu", { name: "自定义侧边栏" })).toBeHidden();
 }
 
 async function expectCompactGroupingMenu(window: Page): Promise<void> {
   const viewportWidth = await window.evaluate(() => document.documentElement.clientWidth);
-  const submenu = window.getByRole("menu", { name: "Grouping" });
+  const submenu = window.getByRole("menu", { name: "分组" });
   const submenuBox = await submenu.boundingBox();
   const timeBox = await window
-    .getByRole("menuitemradio", { name: "Time", exact: true })
+    .getByRole("menuitemradio", { name: "按时间", exact: true })
     .boundingBox();
   expect(submenuBox, "Grouping submenu should be visible").not.toBeNull();
   expect(timeBox, "Time option should be visible").not.toBeNull();

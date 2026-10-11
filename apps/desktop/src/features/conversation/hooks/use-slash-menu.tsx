@@ -1,5 +1,8 @@
 import { useEffect, useState, type Dispatch, type KeyboardEvent, type SetStateAction } from "react";
-import type { RuntimeCommandRecord, RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type {
+  RuntimeCommandRecord,
+  RuntimeSnapshot,
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
   DesktopAppState,
   ExtensionCommandCompatibilityRecord,

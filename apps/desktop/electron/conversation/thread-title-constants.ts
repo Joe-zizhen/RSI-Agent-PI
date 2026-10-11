@@ -1,1 +1,1 @@
-export const NEW_THREAD_PLACEHOLDER_TITLE = "New thread";
+export const NEW_THREAD_PLACEHOLDER_TITLE = "新会话";

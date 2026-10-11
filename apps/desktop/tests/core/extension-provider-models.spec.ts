@@ -66,7 +66,7 @@ async function searchAllModels(window: Page, query: string) {
   await window.getByRole("button", { name: "Models", exact: true }).click();
   await expect(window.locator(".view-header__title")).toHaveText("Models");
 
-  await window.getByLabel("Search models").fill(query);
+  await window.getByLabel("搜索模型").fill(query);
   return window.getByTestId("settings-surface").locator(".model-row");
 }
 
@@ -93,7 +93,7 @@ test("models registered by an extension appear in settings", async () => {
     await window.getByRole("button", { name: "Models", exact: true }).click();
     await expect(window.locator(".view-header__title")).toHaveText("Models");
 
-    await window.getByLabel("Search models").fill(PROVIDER_ID);
+    await window.getByLabel("搜索模型").fill(PROVIDER_ID);
 
     // Connected models are listed with a switch; models needing sign-in are not.
     const modelRow = window.getByTestId("settings-model-list").locator(".model-row", {

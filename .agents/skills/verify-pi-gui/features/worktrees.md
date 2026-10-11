@@ -22,7 +22,7 @@ Users create a separate Git workspace or choose a worktree environment for a new
 Preconditions: isolated profile and disposable Git repository with an initial commit; working Git executable. Never use the user's checkout as the worktree fixture.
 
 - **Visible maintenance:** `.agents/skills/verify-pi-gui/scripts/prove.sh --maintenance` uses a disposable Git repository (never the user's checkout). Time grouping hides the folder row once that folder has threads, so the recipe opens Customize Sidebar, chooses Grouping → Workspace, then clicks `Workspace actions for ${name}` and `Create permanent worktree`. It requires the selected workspace path in `git worktree list --porcelain`, opens New thread, and requires exact Local and Worktree buttons.
-- **Core regression:** `pnpm --filter @pi-gui/desktop run test:e2e:runner -- apps/desktop/tests/core/worktrees.spec.ts`.
+- **Core regression:** `pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner -- apps/desktop/tests/core/worktrees.spec.ts`.
 - **Create:** click the button named `Workspace actions for ${rootWorkspace.name}`, then `Create permanent worktree`. Assert the selected workspace represents the created worktree and inspect its actual Git worktree record on disk.
 - **Environment:** click the sidebar's top New thread button (`.sidebar__new`); a thread still waiting for its title is also named New thread. Require `new-thread-composer` plus exact Local and Worktree buttons.
 - **Proof:** capture menu action, selected workspace, filesystem/Git result, and environment choices. Run the profile-isolation case when changing discovery or ownership.

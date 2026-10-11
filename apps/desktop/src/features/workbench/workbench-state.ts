@@ -59,14 +59,14 @@ function actionLimitError(view: TaskWorkbenchTemplate, action: WorkbenchAction):
       view.files.tabs.tabs.length >= MAX_WORKBENCH_FILE_TABS &&
       !view.files.tabs.tabs.includes(action.file.path))
   ) {
-    return `You have ${MAX_WORKBENCH_FILE_TABS} file tabs open. Close a file tab before opening another.`;
+    return `已打开 ${MAX_WORKBENCH_FILE_TABS} 个文件标签页。请先关闭一个文件标签页再打开新的。`;
   }
   if (
     action.type === "open-tool" &&
     view.tools.length >= MAX_WORKBENCH_TOOLS &&
     !view.tools.some((tool) => toolRefId(tool) === toolRefId(action.tool))
   ) {
-    return "Close a tool tab before opening another.";
+    return "请先关闭一个工具标签页再打开新的。";
   }
   return "";
 }

@@ -112,10 +112,10 @@ test("keeps no-tool continuation replies separate and completes only after settl
     await waitForWorkspaceByPath(window, workspacePath);
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
-    await window.getByLabel("New thread prompt", { exact: true }).fill("Exercise a continuation.");
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.getByLabel("新建会话输入", { exact: true }).fill("Exercise a continuation.");
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
 
     const confirmation = window.getByRole("dialog", { name: "Continue the response?" });
     await expect(confirmation).toBeVisible();
@@ -125,7 +125,7 @@ test("keeps no-tool continuation replies separate and completes only after settl
       "data-sidebar-indicator",
       "running",
     );
-    await expect(window.getByTestId("send")).toHaveAttribute("aria-label", "Stop run");
+    await expect(window.getByTestId("send")).toHaveAttribute("aria-label", "停止运行");
     expect(
       (await getSelectedTranscript(window))?.transcript.filter((item) => item.kind === "summary"),
     ).toHaveLength(0);
@@ -135,7 +135,7 @@ test("keeps no-tool continuation replies separate and completes only after settl
     const settlement = window.getByRole("dialog", { name: "Finish the run?" });
     await expect(settlement).toBeVisible();
     await expect(assistantRows).toHaveText(["First response", "Continued response"]);
-    await expect(window.getByTestId("send")).toHaveAttribute("aria-label", "Stop run");
+    await expect(window.getByTestId("send")).toHaveAttribute("aria-label", "停止运行");
     expect(
       (await getSelectedTranscript(window))?.transcript.filter((item) => item.kind === "summary"),
     ).toHaveLength(0);
@@ -147,7 +147,7 @@ test("keeps no-tool continuation replies separate and completes only after settl
       "data-sidebar-indicator",
       "none",
     );
-    await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", "Stop run");
+    await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", "停止运行");
     await expect(window.getByTestId("composer-error-banner")).toHaveCount(0);
     // A no-tool run that completes cleanly adds no summary row: no failure or
     // "Completed" divider, and "Worked for" is derived by the renderer.

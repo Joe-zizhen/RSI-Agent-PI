@@ -9,8 +9,8 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@pi-gui/extension-ui": ["../../../packages/extension-ui/src/index.ts"],
-      "@pi-gui/extension-ui/browser": ["../../../packages/extension-ui/src/browser.ts"]
+      "@rsi-agent-pi/extension-ui": ["../../../packages/extension-ui/src/index.ts"],
+      "@rsi-agent-pi/extension-ui/browser": ["../../../packages/extension-ui/src/browser.ts"]
     }
   },
   "include": ["*.ts", "test/*.mts"]

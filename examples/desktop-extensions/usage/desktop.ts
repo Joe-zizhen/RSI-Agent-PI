@@ -1,5 +1,5 @@
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { DesktopViewContext } from "@pi-gui/extension-ui/browser";
+import type { DesktopViewContext } from "@rsi-agent-pi/extension-ui/browser";
 import { Usage, type ContextKind, type UsageState } from "./contract.ts";
 import {
   CONTEXT_ITEM_LABELS,

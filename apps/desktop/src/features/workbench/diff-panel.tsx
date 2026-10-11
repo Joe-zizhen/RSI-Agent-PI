@@ -109,7 +109,7 @@ export function DiffPanel({
         result: {
           state: "unavailable",
           code: "checkout-unavailable",
-          message: "The selected checkout is unavailable.",
+          message: "所选工作副本不可用。",
         },
       });
       setLoading(false);
@@ -420,15 +420,15 @@ export function DiffPanel({
       ? [
           review.baseLabel,
           ...(review.headOid ? [`HEAD ${review.headOid.slice(0, 8)}`] : []),
-          ...(review.capturedAt ? [`Captured ${formatCaptureTime(review.capturedAt)}`] : []),
+          ...(review.capturedAt ? [`捕获于 ${formatCaptureTime(review.capturedAt)}`] : []),
         ]
       : [];
 
   return (
-    <section className="side-panel diff-panel review-panel" aria-label="Review">
+    <section className="side-panel diff-panel review-panel" aria-label="审查">
       <div className="review-panel__toolbar">
         <ReviewMenu
-          label="Review scope"
+          label="审查范围"
           value={SCOPE_LABELS[selectedScope]}
           buttonClassName="review-panel__scope"
           buttonContent={<ChevronDownIcon />}
@@ -449,25 +449,25 @@ export function DiffPanel({
           className="icon-button review-panel__tool"
           type="button"
           onClick={refresh}
-          aria-label="Refresh"
-          title="Refresh comparison"
+          aria-label="刷新"
+          title="刷新对比"
           disabled={loading}
         >
           <RefreshIcon />
         </button>
         <ReviewMenu
-          label="Review options"
+          label="审查选项"
           buttonClassName="icon-button review-panel__tool"
           buttonContent={<MoreIcon />}
           align="end"
           details={comparisonDetails}
           options={[
             ...(!selectedCheckout
-              ? [{ id: selection.workspaceId, label: "Unavailable checkout", checked: true }]
+              ? [{ id: selection.workspaceId, label: "不可用的工作副本", checked: true }]
               : []),
             ...contexts.map((context) => ({
               id: context.workspace.id,
-              label: `${context.role === "thread" ? "Current task · " : ""}${
+              label: `${context.role === "thread" ? "当前任务 · " : ""}${
                 context.worktree?.branchName ??
                 context.workspace.branchName ??
                 context.workspace.name
@@ -488,9 +488,9 @@ export function DiffPanel({
           className={`icon-button review-panel__tool${treeVisible ? " review-panel__tool--active" : ""}`}
           type="button"
           onClick={() => setTreeVisible(!treeVisible)}
-          aria-label={treeVisible ? "Hide file tree" : "Show file tree"}
+          aria-label={treeVisible ? "隐藏文件树" : "显示文件树"}
           aria-pressed={treeVisible}
-          title={treeVisible ? "Hide file tree" : "Show file tree"}
+          title={treeVisible ? "隐藏文件树" : "显示文件树"}
         >
           <SidePanelIcon />
         </button>
@@ -510,20 +510,18 @@ export function DiffPanel({
               });
           }}
         >
-          <label htmlFor="review-base-ref">Base</label>
+          <label htmlFor="review-base-ref">基础</label>
           <input
             id="review-base-ref"
-            aria-label="Base branch"
+            aria-label="基础分支"
             value={baseDraft}
             onChange={(event) => setBaseDraft(event.target.value)}
             placeholder={
-              review?.scope.kind === "branch"
-                ? (review.scope.baseRef ?? "Repository default")
-                : "Repository default"
+              review?.scope.kind === "branch" ? (review.scope.baseRef ?? "仓库默认") : "仓库默认"
             }
           />
           <button type="submit" className="button" disabled={loading}>
-            Compare
+            对比
           </button>
         </form>
       ) : null}
@@ -533,7 +531,7 @@ export function DiffPanel({
         <div className="diff-panel__viewer review-panel__viewer">
           {loading || !result ? (
             <div className="diff-panel__empty" role="status">
-              Loading comparison…
+              正在加载对比…
             </div>
           ) : result.state !== "available" ? (
             <div
@@ -543,19 +541,15 @@ export function DiffPanel({
             >
               <p>{result.message}</p>
               <button className="button" type="button" onClick={refresh}>
-                Retry
+                重试
               </button>
             </div>
           ) : result.files.length === 0 ? (
             <div className="diff-panel__empty">
-              {result.coverage.state === "partial"
-                ? "No changes in the captured files."
-                : "No changes"}
+              {result.coverage.state === "partial" ? "捕获的文件中没有变更。" : "无变更"}
             </div>
           ) : !selectedFile ? (
-            <div className="diff-panel__empty">
-              This file is not part of the selected comparison.
-            </div>
+            <div className="diff-panel__empty">该文件不属于所选对比。</div>
           ) : (
             <>
               <div className="review-panel__file-header">
@@ -576,8 +570,8 @@ export function DiffPanel({
                   <button
                     className="icon-button review-panel__open-file"
                     type="button"
-                    aria-label="Open in Files"
-                    title="Open in Files"
+                    aria-label="在文件中打开"
+                    title="在文件中打开"
                     onClick={() => openCurrentFile(result, selectedFile)}
                   >
                     <FileIcon />
@@ -586,12 +580,12 @@ export function DiffPanel({
               </div>
               {selectedFile.previousPath ? (
                 <div className="review-panel__rename">
-                  Renamed from {formatPathForDisplay(selectedFile.previousPath)}
+                  重命名自 {formatPathForDisplay(selectedFile.previousPath)}
                 </div>
               ) : null}
               <div className="review-panel__patches">
                 {fileLoading ? (
-                  <div className="diff-panel__empty">Loading diff…</div>
+                  <div className="diff-panel__empty">正在加载差异…</div>
                 ) : displayedFileResult?.state === "available" ? (
                   <>
                     <CoverageNotice coverage={displayedFileResult.coverage} />
@@ -599,7 +593,7 @@ export function DiffPanel({
                       <p className="review-panel__summary">{displayedFileResult.summary}</p>
                     ) : null}
                     {displayedFileResult.patch ? (
-                      <section className="review-panel__patch-section" aria-label="Diff">
+                      <section className="review-panel__patch-section" aria-label="差异">
                         <InlineDiff
                           diff={displayedFileResult.patch}
                           language={extensionToLanguage(selectedFile.path)}
@@ -607,13 +601,13 @@ export function DiffPanel({
                         />
                       </section>
                     ) : displayedFileResult.summary ? null : (
-                      <p className="diff-panel__empty">No text diff is available for this file.</p>
+                      <p className="diff-panel__empty">该文件没有可用的文本差异。</p>
                     )}
                   </>
                 ) : displayedFileResult ? (
                   <ReviewIssueBanner issue={displayedFileResult} onRefresh={refresh} />
                 ) : (
-                  <div className="diff-panel__empty">Loading diff…</div>
+                  <div className="diff-panel__empty">正在加载差异…</div>
                 )}
               </div>
             </>
@@ -657,12 +651,12 @@ function fileKey(reviewId: string, fileId: string, requestNonce: number | undefi
 type ScopeOptionId = "turn" | "selected-turn" | "uncommitted" | "unstaged" | "staged" | "branch";
 
 const SCOPE_LABELS: Record<ScopeOptionId, string> = {
-  turn: "Last Turn",
-  "selected-turn": "Selected Turn",
-  uncommitted: "Uncommitted",
-  unstaged: "Unstaged",
-  staged: "Staged",
-  branch: "Branch",
+  turn: "上一轮",
+  "selected-turn": "所选轮次",
+  uncommitted: "未提交",
+  unstaged: "未暂存",
+  staged: "已暂存",
+  branch: "分支",
 };
 
 const SCOPE_OPTIONS: readonly {
@@ -718,7 +712,7 @@ function ReviewIssueBanner({
     >
       <p>{issue.message}</p>
       <button className="button" type="button" onClick={onRefresh}>
-        {issue.state === "stale" ? "Refresh comparison" : "Retry"}
+        {issue.state === "stale" ? "刷新对比" : "重试"}
       </button>
     </div>
   );
@@ -728,9 +722,7 @@ function CoverageNotice({ coverage }: { readonly coverage: ReviewCoverage }) {
   if (coverage.state === "complete" && coverage.notes.length === 0) return null;
   return (
     <details className="review-panel__coverage" data-testid="review-coverage">
-      <summary>
-        {coverage.state === "partial" ? "Comparison has limits" : "Comparison details"}
-      </summary>
+      <summary>{coverage.state === "partial" ? "对比存在限制" : "对比详情"}</summary>
       {coverage.notes.length ? (
         <ul>
           {coverage.notes.map((note, index) => (
@@ -738,7 +730,7 @@ function CoverageNotice({ coverage }: { readonly coverage: ReviewCoverage }) {
           ))}
         </ul>
       ) : (
-        <p>Some changes could not be included.</p>
+        <p>部分变更未能包含。</p>
       )}
     </details>
   );

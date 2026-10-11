@@ -7,6 +7,29 @@ export const TMP_SUFFIX = ".tmp";
 
 let tmpCounter = 0;
 
+/** Windows reports EPERM/EACCES/EBUSY when a rename races another replace of the same target. */
+const TRANSIENT_RENAME_ERRORS = new Set(["EPERM", "EACCES", "EBUSY"]);
+const RENAME_ATTEMPTS = 20;
+
+async function renameReplacing(source: string, target: string): Promise<void> {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await rename(source, target);
+      return;
+    } catch (error) {
+      const code = (error as { code?: unknown }).code;
+      if (
+        attempt >= RENAME_ATTEMPTS ||
+        typeof code !== "string" ||
+        !TRANSIENT_RENAME_ERRORS.has(code)
+      ) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 5 + attempt * 2));
+    }
+  }
+}
+
 /**
  * Write `data` to `filePath` durably. A concurrent reader or a crash at any
  * point always observes either the previous file contents or the fully-written
@@ -38,7 +61,7 @@ export async function writeFileAtomic(filePath: string, data: string | Uint8Arra
   }
 
   try {
-    await rename(tmpPath, filePath);
+    await renameReplacing(tmpPath, filePath);
   } catch (error) {
     await rm(tmpPath, { force: true }).catch(() => {});
     throw error;

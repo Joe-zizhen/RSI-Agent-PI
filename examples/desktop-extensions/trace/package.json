@@ -1,5 +1,5 @@
 {
-  "name": "@pi-gui/example-trace",
+  "name": "@rsi-agent-pi/example-trace",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,6 +17,6 @@
   "peerDependencies": {
     "@earendil-works/chord": "^1.0.0",
     "@earendil-works/pi-coding-agent": "^1.0.0",
-    "@pi-gui/extension-ui": "*"
+    "@rsi-agent-pi/extension-ui": "*"
   }
 }

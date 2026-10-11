@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import type { RuntimeProviderRecord, RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type {
+  RuntimeProviderRecord,
+  RuntimeSnapshot,
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import { SearchIcon } from "../../ui/icons";
 import type { CustomProviderConfig } from "../../../contracts/ipc";
 import { SettingsCustomEndpointsSection } from "./settings-custom-endpoints-section";
@@ -111,10 +114,7 @@ export function SettingsProvidersSection({
   return (
     <>
       {attentionProviders.length > 0 ? (
-        <SettingsGroup
-          title="Needs attention"
-          description="Your default model uses this provider, but it is not connected."
-        >
+        <SettingsGroup title="需要处理" description="你的默认模型使用该提供商，但它尚未连接。">
           {attentionProviders.map((provider) => (
             <ProviderRow key={provider.id} provider={provider} {...rowHandlers} />
           ))}
@@ -123,11 +123,9 @@ export function SettingsProvidersSection({
 
       <section className="settings-section">
         <h3 className="settings-section__title">
-          Connected <span className="resource-list__count">{connectedProviders.length}</span>
+          已连接 <span className="resource-list__count">{connectedProviders.length}</span>
         </h3>
-        <p className="settings-section__description">
-          pi picks models from connected providers first.
-        </p>
+        <p className="settings-section__description">pi 会优先从已连接的提供商中选择模型。</p>
         <div className="settings-group">
           {connectedProviders.length > 0 ? (
             connectedProviders.map((provider) => (
@@ -136,7 +134,7 @@ export function SettingsProvidersSection({
           ) : (
             <div className="settings-row">
               <span className="settings-row__description">
-                No providers connected yet. Sign in or add an API key below.
+                尚未连接任何提供商。请在下方登录或添加 API key。
               </span>
             </div>
           )}
@@ -152,13 +150,13 @@ export function SettingsProvidersSection({
       <section className="settings-section">
         <div className="settings-section__header">
           <h3 className="settings-section__title">
-            Available <span className="resource-list__count">{availableProviders.length}</span>
+            可用 <span className="resource-list__count">{availableProviders.length}</span>
           </h3>
           <label className="resource-search">
             <SearchIcon />
             <input
-              aria-label="Search providers"
-              placeholder="Search providers"
+              aria-label="搜索提供商"
+              placeholder="搜索提供商"
               spellCheck={false}
               type="search"
               value={providerQuery}
@@ -167,7 +165,7 @@ export function SettingsProvidersSection({
           </label>
         </div>
         <p className="settings-section__description">
-          Sign in with OAuth or save an API key to connect a provider.
+          使用 OAuth 登录或保存 API key 以连接提供商。
         </p>
         <div className="settings-group" data-testid="settings-available-providers">
           {shownAvailable.length > 0 ? (
@@ -178,8 +176,8 @@ export function SettingsProvidersSection({
             <div className="settings-row">
               <span className="settings-row__description">
                 {providerQuery.trim()
-                  ? `No providers match “${providerQuery.trim()}”.`
-                  : "Every provider is connected."}
+                  ? `没有提供商匹配“${providerQuery.trim()}”。`
+                  : "所有提供商均已连接。"}
               </span>
             </div>
           )}
@@ -190,7 +188,7 @@ export function SettingsProvidersSection({
             type="button"
             onClick={() => setShowAllAvailable(true)}
           >
-            Show {hiddenAvailableCount} more
+            再显示 {hiddenAvailableCount} 个
           </button>
         ) : null}
       </section>
@@ -230,11 +228,11 @@ function ProviderApiKeyDialog({
   readonly onRemove?: () => Promise<void>;
   readonly onSave: () => Promise<void>;
 }) {
-  const title = provider.authSource === "auth_file" ? "Manage API key" : "Set API key";
+  const title = provider.authSource === "auth_file" ? "管理 API key" : "设置 API key";
   const body =
     provider.authSource === "auth_file"
-      ? `Replace or remove the saved API key for ${provider.name}.`
-      : `Save an API key locally for ${provider.name}.`;
+      ? `替换或移除为 ${provider.name} 保存的 API key。`
+      : `为 ${provider.name} 在本地保存一个 API key。`;
 
   return (
     <div className="extension-dialog-backdrop">
@@ -246,7 +244,7 @@ function ProviderApiKeyDialog({
           autoFocus
           className="settings-search"
           disabled={pending}
-          placeholder="Enter API key"
+          placeholder="输入 API key"
           type="password"
           value={draft}
           onChange={(event) => onChangeDraft(event.target.value)}
@@ -272,7 +270,7 @@ function ProviderApiKeyDialog({
             type="button"
             onClick={onClose}
           >
-            Cancel
+            取消
           </button>
           {onRemove ? (
             <button
@@ -285,7 +283,7 @@ function ProviderApiKeyDialog({
                 })
               }
             >
-              Remove saved key
+              移除已保存的 API key
             </button>
           ) : null}
           <button
@@ -298,7 +296,7 @@ function ProviderApiKeyDialog({
               })
             }
           >
-            {provider.authSource === "auth_file" ? "Save key" : "Set API key"}
+            {provider.authSource === "auth_file" ? "保存 API key" : "设置 API key"}
           </button>
         </div>
       </div>

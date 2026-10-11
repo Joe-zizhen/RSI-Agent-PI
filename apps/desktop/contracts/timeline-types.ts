@@ -4,7 +4,7 @@ import type {
   SessionTranscriptMessage,
   SessionTranscriptPin,
   SessionTranscriptRole,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 import type { TurnChangeSummary } from "./review";
 
 export type SessionRole = SessionTranscriptRole;

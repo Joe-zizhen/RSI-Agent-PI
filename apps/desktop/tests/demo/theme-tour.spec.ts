@@ -71,10 +71,10 @@ test("tours every theme preset", async () => {
             : 'Here is a block:\n\n```ts\nconst preset = { id: "gruvbox", accent: "#458588" };\n```\n\nBorders, icons and buttons all come from the same seed.',
     });
     await window.getByTestId("composer").fill("Check the composer in this theme.");
-    await selectSidePanel(window, "Review");
-    await chooseReviewScope(window, "Uncommitted");
+    await selectSidePanel(window, "审查");
+    await chooseReviewScope(window, "未提交");
     await expect(window.locator(".diff-panel")).toContainText("preset.ts");
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     await expect(window.getByTestId("integrated-terminal")).toBeVisible();
     await window.waitForTimeout(1_000);
     await window.keyboard.type(
@@ -85,7 +85,7 @@ test("tours every theme preset", async () => {
     for (const variant of ["light", "dark"] as const) {
       for (const preset of themePresets) {
         await setTheme(window, preset.name, variant);
-        await selectSidePanel(window, "Review");
+        await selectSidePanel(window, "审查");
         await window
           .locator(".diff-panel")
           .getByText("preset.ts")
@@ -94,7 +94,7 @@ test("tours every theme preset", async () => {
           .catch(() => {});
         await window.locator(".sidebar").hover();
         await shot(window, `${preset.id}-${variant}-review.png`);
-        await selectSidePanel(window, "Terminal");
+        await selectSidePanel(window, "终端");
         await shot(window, `${preset.id}-${variant}-terminal.png`);
       }
     }
@@ -116,15 +116,15 @@ async function setTheme(window: Page, presetName: string, variant: ResolvedTheme
   await expect(window.getByTestId("settings-surface")).toBeVisible();
   await window.getByRole("button", { name: "Appearance", exact: true }).click();
   await window
-    .getByRole("radio", { name: variant === "light" ? "Light" : "Dark", exact: true })
+    .getByRole("radio", { name: variant === "light" ? "浅色" : "深色", exact: true })
     .click();
-  await window.getByLabel("Color preset").selectOption({ label: presetName });
+  await window.getByLabel("颜色预设").selectOption({ label: presetName });
   await expect
     .poll(() => window.evaluate(() => document.documentElement.classList.contains("dark")))
     .toBe(variant === "dark");
   await window.waitForTimeout(pace);
   await shot(window, `${presetName.toLowerCase().replace(/\s+/g, "-")}-${variant}-settings.png`);
-  await window.getByRole("button", { name: "Back to app" }).click();
+  await window.getByRole("button", { name: "返回应用" }).click();
   await expect(window.locator(".main")).toBeVisible();
 }
 

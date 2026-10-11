@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { realpath } from "node:fs/promises";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type {
   ChangeReviewFileStageInput,
   ChangeReviewFileStageResult,
@@ -88,7 +88,7 @@ export class ReviewOwner {
   async getTurnChanges(input: TurnChangesInput): Promise<TurnChangesResult> {
     try {
       if (!this.options.validateTask(input.target)) {
-        return unavailable("task-unavailable", "This task is unavailable.");
+        return unavailable("task-unavailable", "此任务不可用。");
       }
       const turns = (await this.options.checkpoints?.listTurns?.(input.target)) ?? [];
       const summaries = await Promise.all(
@@ -134,7 +134,7 @@ export class ReviewOwner {
   async getReview(input: GetReviewInput): Promise<ReviewResult> {
     try {
       if (!this.options.validateTask(input.target)) {
-        return unavailable("task-unavailable", "This task is unavailable.");
+        return unavailable("task-unavailable", "此任务不可用。");
       }
       let checkoutPath: string | null = null;
       let gitPath: string;
@@ -142,10 +142,7 @@ export class ReviewOwner {
       let capturedAt: string | undefined;
       if (input.scope.kind === "turn") {
         if (!this.options.checkpoints) {
-          return unavailable(
-            "checkpoint-unavailable",
-            "No captured turn is available for this task.",
-          );
+          return unavailable("checkpoint-unavailable", "此任务没有可用的已捕获轮次。");
         }
         const checkpoint = await this.options.checkpoints.resolve({
           target: input.target,
@@ -154,10 +151,7 @@ export class ReviewOwner {
         });
         if (checkpoint.state !== "available") return checkpoint;
         if (checkpoint.checkoutId !== input.checkoutId) {
-          return unavailable(
-            "checkpoint-checkout-mismatch",
-            "The captured turn belongs to another checkout.",
-          );
+          return unavailable("checkpoint-checkout-mismatch", "已捕获的轮次属于另一个工作副本。");
         }
         gitPath = checkpoint.repositoryPath;
         capturedAt = checkpoint.capturedAt;
@@ -261,7 +255,7 @@ export class ReviewOwner {
       ) {
         return unavailable(
           "read-only-comparison",
-          "Staging is available only for Uncommitted, Staged and Unstaged changes.",
+          "仅在未提交、已暂存和未暂存的变更中支持暂存操作。",
         );
       }
       return await this.withMutation(resolved.review.checkoutPath, async () => {
@@ -278,13 +272,9 @@ export class ReviewOwner {
     input: ReviewFileInput,
   ): Promise<{ readonly review: OwnedReview; readonly file: GitReviewFile } | ReviewIssue> {
     const review = this.reviews.get(input.reviewId);
-    if (!review)
-      return unavailable(
-        "review-expired",
-        "This comparison expired. Refresh to review current changes.",
-      );
+    if (!review) return unavailable("review-expired", "此对比已过期。刷新以审查当前更改。");
     if (!this.options.validateTask(review.target)) {
-      return unavailable("task-unavailable", "This task is unavailable.");
+      return unavailable("task-unavailable", "此任务不可用。");
     }
     if (review.snapshot.scope.kind !== "turn") {
       const currentPath = await this.checkoutPath(review.target, review.checkoutId);
@@ -293,14 +283,14 @@ export class ReviewOwner {
         return {
           state: "stale",
           code: "checkout-changed",
-          message: "The checkout moved. Refresh this comparison.",
+          message: "工作副本已移动。请刷新此对比。",
         };
       }
     }
     const file = review.snapshot.files.find((entry) => entry.id === input.fileId);
     return file
       ? { review, file }
-      : unavailable("review-file-unavailable", "This file is not part of the selected comparison.");
+      : unavailable("review-file-unavailable", "该文件不属于所选对比。");
   }
 
   private async checkoutPath(
@@ -308,7 +298,7 @@ export class ReviewOwner {
     checkoutId: string,
   ): Promise<string | ReviewIssue> {
     if (!this.options.validateTask(target))
-      return unavailable("task-unavailable", "This task is unavailable.");
+      return unavailable("task-unavailable", "此任务不可用。");
     const path = this.options.resolveCheckoutPath(checkoutId);
     if (!path) return unavailable("checkout-unavailable", "This checkout is unavailable.");
     try {

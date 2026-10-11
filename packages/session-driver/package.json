@@ -1,10 +1,10 @@
 {
-  "name": "@pi-gui/session-driver",
+  "name": "@rsi-agent-pi/session-driver",
   "private": true,
   "type": "module",
   "version": "0.0.0",
   "license": "MIT",
-  "description": "Durable session driver contract for pi-gui.",
+  "description": "Durable session driver contract for RSI-Agent-PI.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

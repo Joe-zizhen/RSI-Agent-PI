@@ -165,43 +165,43 @@ test("toggles and persists the primary sidebar from the button and keyboard shor
     await window.keyboard.press(desktopShortcut(","));
     await expectSecondaryTakeover(window, "settings-surface");
     await window.getByRole("button", { name: "Appearance", exact: true }).click();
-    await window.getByRole("radio", { name: "Light", exact: true }).click();
+    await window.getByRole("radio", { name: "浅色", exact: true }).click();
     await writeTakeoverProof(window, "settings-light.png");
     await window.keyboard.press(desktopShortcut("B"));
     await expect.poll(async () => (await getDesktopState(window)).sidebarCollapsed).toBe(false);
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
     await restoreSidebarIfNeeded(window);
-    await window.getByRole("button", { name: "Skills", exact: true }).click();
+    await window.getByRole("button", { name: "技能", exact: true }).click();
     await expectSecondaryTakeover(window, "skills-surface");
     await writeTakeoverProof(window, "skills-light.png");
     await window.keyboard.press(desktopShortcut("B"));
     await expect.poll(async () => (await getDesktopState(window)).sidebarCollapsed).toBe(false);
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
     await restoreSidebarIfNeeded(window);
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await expectSecondaryTakeover(window, "extensions-surface");
     await writeTakeoverProof(window, "extensions-light.png");
     await window.keyboard.press(desktopShortcut("B"));
     await expect.poll(async () => (await getDesktopState(window)).sidebarCollapsed).toBe(false);
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
     await window.keyboard.press(desktopShortcut(","));
     await expectSecondaryTakeover(window, "settings-surface");
-    await window.getByRole("radio", { name: "Dark", exact: true }).click();
+    await window.getByRole("radio", { name: "深色", exact: true }).click();
     await writeTakeoverProof(window, "settings-dark.png");
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
-    await window.getByRole("button", { name: "Skills", exact: true }).click();
+    await window.getByRole("button", { name: "技能", exact: true }).click();
     await expectSecondaryTakeover(window, "skills-surface");
     await writeTakeoverProof(window, "skills-dark.png");
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await expectSecondaryTakeover(window, "extensions-surface");
     await writeTakeoverProof(window, "extensions-dark.png");
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
     await restoreSidebarIfNeeded(window);
     await window.getByTestId("sidebar-toggle").click();

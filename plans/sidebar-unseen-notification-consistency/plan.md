@@ -39,10 +39,10 @@ Use one shared "actively viewed session" rule for both desktop notification supp
 Real surface: the running Electron desktop app in Playwright, with both deterministic session-event coverage and a real provider-backed existing-session completion regression.
 
 Commands run:
-- `pnpm --filter @pi-gui/desktop typecheck`
-- `pnpm --filter @pi-gui/desktop run test:live:notifications`
-- `pnpm --filter @pi-gui/desktop run test:live:parallel`
-- `pnpm --filter @pi-gui/desktop run test:e2e:live`
+- `pnpm --filter @rsi-agent-pi/desktop typecheck`
+- `pnpm --filter @rsi-agent-pi/desktop run test:live:notifications`
+- `pnpm --filter @rsi-agent-pi/desktop run test:live:parallel`
+- `pnpm --filter @rsi-agent-pi/desktop run test:e2e:live`
 
 ## Risks
 - Focus-sensitive assertions still require either a foreground window or the deterministic visibility override; hidden background windows alone are not a valid stand-in for "previously viewed but now inactive."

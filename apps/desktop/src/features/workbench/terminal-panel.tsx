@@ -325,7 +325,7 @@ export function TerminalPanel({ workspace, sessionId, onHide }: TerminalPanelPro
       data-testid="integrated-terminal"
     >
       <div className="terminal-panel__toolbar">
-        <div className="terminal-panel__tabs" role="tablist" aria-label="Terminal sessions">
+        <div className="terminal-panel__tabs" role="tablist" aria-label="终端会话">
           {(panel?.sessions ?? []).map((session) => (
             <div
               key={session.id}
@@ -351,7 +351,7 @@ export function TerminalPanel({ workspace, sessionId, onHide }: TerminalPanelPro
               <button
                 type="button"
                 className="terminal-panel__tab-close"
-                aria-label={`Close ${session.title}`}
+                aria-label={`关闭 ${session.title}`}
                 onClick={(event) => {
                   event.stopPropagation();
                   void closeTerminal(session.id).catch((error: unknown) => {
@@ -368,8 +368,8 @@ export function TerminalPanel({ workspace, sessionId, onHide }: TerminalPanelPro
           <button
             type="button"
             className="icon-button terminal-panel__action"
-            title="New terminal"
-            aria-label="New terminal"
+            title="新建终端"
+            aria-label="新建终端"
             onClick={() =>
               void createTerminal().catch((error: unknown) => {
                 setError(error instanceof Error ? error.message : String(error));
@@ -381,8 +381,8 @@ export function TerminalPanel({ workspace, sessionId, onHide }: TerminalPanelPro
           <button
             type="button"
             className="icon-button terminal-panel__action"
-            title="Restart terminal"
-            aria-label="Restart terminal"
+            title="重启终端"
+            aria-label="重启终端"
             onClick={() =>
               void restartTerminal().catch((error: unknown) => {
                 setError(error instanceof Error ? error.message : String(error));

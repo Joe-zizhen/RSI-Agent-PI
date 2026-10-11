@@ -35,7 +35,7 @@ test("packaged extension frame loads its bundled bridge and exchanges live Chord
     await installDesktopExtensionFixture(
       workspace,
       "http://127.0.0.1:9/unused",
-      join(artifact.appPath, "node_modules", "@pi-gui", "extension-ui", "dist", "index.js"),
+      join(artifact.appPath, "node_modules", "@rsi-agent-pi", "extension-ui", "dist", "index.js"),
     );
     const window = await harness.firstWindow();
     await waitForWorkspaceByPath(window, workspace);
@@ -59,7 +59,7 @@ test("packaged extension frame loads its bundled bridge and exchanges live Chord
     // A fresh connection must hydrate the same live backend state from the packaged bridge.
     const firstFrameUrl = await frameElement.getAttribute("src");
     if (!firstFrameUrl) throw new Error("Missing packaged extension frame URL");
-    await window.getByRole("button", { name: "Reload view", exact: true }).click();
+    await window.getByRole("button", { name: "重新加载视图", exact: true }).click();
     await expect(frameElement).not.toHaveAttribute("src", firstFrameUrl);
     await expect(frameElement).toHaveAttribute("src", /^pi-extension:\/\/[^/]+\/$/);
     await expect(frame.locator("#counter")).toHaveText("Count 1 · activations 1");

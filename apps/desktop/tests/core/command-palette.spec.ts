@@ -45,14 +45,12 @@ test("Cmd/Ctrl+K finds chats and actions, Cmd/Ctrl+P opens files", async () => {
 
     // Recents list every workspace's threads, most recent first, then actions.
     await openPalette(window, "K");
-    const recents = palette(window).getByRole("group", { name: "Recents" });
+    const recents = palette(window).getByRole("group", { name: "最近" });
     await expect(recents.getByRole("option")).toHaveText([
-      /Beta review thread.*Current/,
+      /Beta review thread.*当前/,
       /Alpha planning thread/,
     ]);
-    await expect(palette(window).getByRole("group", { name: "Actions" })).toContainText(
-      "New thread",
-    );
+    await expect(palette(window).getByRole("group", { name: "操作" })).toContainText("新建会话");
 
     // Typing ranks chat titles; Enter opens the highlighted one.
     await window.keyboard.type("alpha plan");
@@ -67,7 +65,7 @@ test("Cmd/Ctrl+K finds chats and actions, Cmd/Ctrl+P opens files", async () => {
     await openPalette(window, "K");
     await window.keyboard.press("Tab");
     await window.keyboard.press("Tab");
-    await expect(palette(window).getByRole("tab", { name: "Workspaces" })).toHaveAttribute(
+    await expect(palette(window).getByRole("tab", { name: "项目" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
@@ -87,25 +85,22 @@ test("Cmd/Ctrl+K finds chats and actions, Cmd/Ctrl+P opens files", async () => {
     await window.getByTestId("composer").click();
 
     // Side panel tools open from the palette; the same action hides the panel again.
-    const tools = window.getByRole("tablist", { name: "Workspace tools" });
+    const tools = window.getByRole("tablist", { name: "工作台工具" });
     await openPalette(window, "K");
-    await window.keyboard.type("toggle review");
+    await window.keyboard.type("切换审查");
     await window.keyboard.press("Enter");
-    await expect(tools.getByRole("tab", { name: "Review" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    await expect(tools.getByRole("tab", { name: "审查" })).toHaveAttribute("aria-selected", "true");
     await openPalette(window, "K");
-    await window.keyboard.type("toggle review");
+    await window.keyboard.type("切换审查");
     await window.keyboard.press("Enter");
     await expect(tools).toHaveCount(0);
 
     // Actions run from the palette, and the palette also works over Settings.
     await openPalette(window, "K");
-    await window.keyboard.type("appearance");
+    await window.keyboard.type("外观");
     await window.keyboard.press("Enter");
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await expect(window.locator(".view-header__title")).toHaveText("Appearance");
+    await expect(window.locator(".view-header__title")).toHaveText("外观");
     await openPalette(window, "K");
     await window.keyboard.type("beta review");
     await window.keyboard.press("Enter");
@@ -126,10 +121,10 @@ test("Cmd/Ctrl+K finds chats and actions, Cmd/Ctrl+P opens files", async () => {
 
     // With no query, Cmd/Ctrl+P lists the open tabs. "Go to file" switches K to P.
     await openPalette(window, "K");
-    await window.keyboard.type("go to file");
+    await window.keyboard.type("转到文件");
     await window.keyboard.press("Enter");
-    await expect(palette(window)).toHaveAttribute("aria-label", "Go to file");
-    await expect(palette(window).getByRole("group", { name: "Open files" })).toContainText(
+    await expect(palette(window)).toHaveAttribute("aria-label", "转到文件");
+    await expect(palette(window).getByRole("group", { name: "打开的文件" })).toContainText(
       "beta-notes.md",
     );
     await window.keyboard.type("alpha");

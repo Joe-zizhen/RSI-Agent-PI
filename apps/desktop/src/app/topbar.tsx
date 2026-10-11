@@ -47,7 +47,7 @@ export function Topbar({
           className="topbar__workspace"
           title={checkoutLabel ? `${rootWorkspace?.name ?? ""} · ${checkoutLabel}` : undefined}
         >
-          {rootWorkspace ? rootWorkspace.name : "Open a folder to begin"}
+          {rootWorkspace ? rootWorkspace.name : "打开文件夹以开始"}
         </span>
         {sessionTitle ? (
           <>
@@ -64,7 +64,7 @@ export function Topbar({
         ) : activeView === "new-thread" && rootWorkspace ? (
           <>
             <span className="topbar__separator">/</span>
-            <span className="topbar__session">New thread</span>
+            <span className="topbar__session">新建会话</span>
           </>
         ) : null}
       </div>
@@ -74,7 +74,7 @@ export function Topbar({
           <div className="shortcut-tooltip-wrap topbar__tooltip-wrap">
             <button
               type="button"
-              aria-label="Toggle side panel"
+              aria-label="切换侧边面板"
               aria-pressed={panelVisible}
               aria-controls="task-workbench"
               data-testid="toggle-side-panel"
@@ -85,7 +85,7 @@ export function Topbar({
               <SidePanelIcon />
             </button>
             <span className="shortcut-tooltip topbar__tooltip" role="tooltip">
-              <span>{panelVisible ? "Hide side panel" : "Show side panel"}</span>
+              <span>{panelVisible ? "隐藏侧边面板" : "显示侧边面板"}</span>
               <kbd>{getSidePanelToggleShortcutLabel(api.platform)}</kbd>
             </span>
           </div>

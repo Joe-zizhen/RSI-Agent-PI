@@ -120,7 +120,7 @@ export function AnnotationMarkers({
     <div className="annotation-markers">
       {placed.map((marker) => (
         <button
-          aria-label={`Edit annotation ${marker.number}`}
+          aria-label={`编辑批注 ${marker.number}`}
           className="annotation-marker"
           data-annotation-id={marker.id}
           data-testid="annotation-marker"

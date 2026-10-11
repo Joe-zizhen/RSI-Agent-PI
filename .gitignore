@@ -36,3 +36,6 @@ index.html
 
 # Local verification evidence (verify-pi-gui runs, proof workspaces)
 /.artifacts/
+
+# Generated bundled Python runtime and memloop package (scripts/fetch-python-runtime.mjs)
+/apps/desktop/runtime/

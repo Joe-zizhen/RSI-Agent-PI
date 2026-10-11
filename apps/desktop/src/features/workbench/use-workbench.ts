@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { PiDesktopApi } from "../../../contracts/ipc";
 import type { TaskWorkbenchTemplate, ToolRef } from "../../../contracts/workbench";
 import type { FileWorkbenchTabs } from "./file-workbench-state";
@@ -124,7 +124,7 @@ export function useWorkbench({ api, target }: UseWorkbenchOptions) {
         },
         () => {
           entry.restore = "failed";
-          entry.error = "Couldn't restore saved tool tabs. Your current tabs are still available.";
+          entry.error = "无法恢复已保存的工具标签页。当前标签页仍可用。";
           pendingRestores.current.delete(key);
           publish();
         },

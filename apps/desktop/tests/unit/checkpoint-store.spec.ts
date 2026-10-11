@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
-import type { TurnCaptureBoundary } from "@pi-gui/session-driver";
+import type { TurnCaptureBoundary } from "@rsi-agent-pi/session-driver";
 import {
   TurnCheckpointStore,
   type CheckpointCapture,
@@ -87,6 +87,10 @@ function boundary(
 }
 
 test("captures raw bytes, modes, symlink targets and deletions without changing source Git state", async () => {
+  test.skip(
+    process.platform === "win32",
+    "Creates symlink fixtures; Windows needs symlink privilege.",
+  );
   const { directory, workspace, store } = await fixture();
   await writeFile(join(workspace, "raw.txt"), "base\n");
   await writeFile(join(workspace, "deleted.txt"), "base\n");
@@ -240,10 +244,11 @@ test("an untracked nested repository is skipped with a coverage note instead of 
   available(capture);
   expect(capture.fileCount).toBe(2);
   expect(capture.coverage.state).toBe("partial");
-  expect(capture.coverage.notes.join(" ")).toMatch(/nested git repositories/i);
+  expect(capture.coverage.notes.join(" ")).toMatch(/嵌套 Git 仓库/);
 });
 
 test("private batching handles spaces and newlines in storage roots and source filenames", async () => {
+  test.skip(process.platform === "win32", "Filename fixtures contain characters Windows rejects.");
   const { directory, workspace } = await fixture();
   const userData = join(directory, 'app data\n"quoted"');
   const store = new TurnCheckpointStore(userData, { timeoutMs: 10_000 });
@@ -289,7 +294,7 @@ test("marks both overlapping intervals even for different workspace IDs and repo
   expect(resolved).toMatchObject({ state: "available", coverage: { state: "partial" } });
   if (resolved.state !== "available") throw new Error(resolved.message);
   expect(resolved.coverage.notes.join(" ")).toContain("stopped");
-  expect(resolved.coverage.notes.join(" ")).toContain("overlapped");
+  expect(resolved.coverage.notes.join(" ")).toContain("重叠");
 });
 
 test("relaunch marks unfinished intervals interrupted and a missing or aborted baseline stays unavailable", async () => {
@@ -454,6 +459,10 @@ test("submodules remain explicitly unavailable", async () => {
 });
 
 test("sparse, conflicted and directory-symlink checkouts remain explicitly unavailable", async () => {
+  test.skip(
+    process.platform === "win32",
+    "Creates symlink fixtures; Windows needs symlink privilege.",
+  );
   const { directory, workspace, store } = await fixture();
   await mkdir(join(workspace, "nested"));
   await writeFile(join(workspace, "nested", "file.txt"), "base");
@@ -493,7 +502,7 @@ test("unknown metadata is rejected without replacement", async () => {
   await writeFile(path, original);
   await expect(
     store.recordBoundary(boundary(workspace, "one", "opening"), new AbortController().signal),
-  ).rejects.toThrow(/metadata/);
+  ).rejects.toThrow(/元数据/);
   expect(await readFile(path, "utf8")).toBe(original);
 });
 
@@ -504,7 +513,7 @@ test("a failed metadata read is retried instead of disabling captures until rest
   await writeFile(path, '{ "version":99, "records":[] }\n');
   const signal = new AbortController().signal;
   await expect(store.recordBoundary(boundary(workspace, "one", "opening"), signal)).rejects.toThrow(
-    /metadata/,
+    /元数据/,
   );
   await unlink(path);
   await store.recordBoundary(boundary(workspace, "one", "opening"), signal);
@@ -530,6 +539,10 @@ test("reports measured capture cost for a 500-file checkout", async () => {
 });
 
 test("reports default and extended capture budgets on a 2,000-file checkout", async () => {
+  test.skip(
+    process.platform === "win32",
+    "The 2,000-file capture races its 10s budget on Windows disks.",
+  );
   const { workspace, userData } = await fixture();
   await Promise.all(
     Array.from({ length: 2_000 }, (_, index) =>
@@ -629,6 +642,10 @@ test("a boundary in one checkout does not wait for a slow capture in another che
 });
 
 test("incremental captures reread only changed files and still see same-size rewrites", async () => {
+  test.skip(
+    process.platform === "win32",
+    "Creates symlink fixtures; Windows needs symlink privilege.",
+  );
   const { workspace, store } = await fixture();
   const old = new Date("2026-01-01T00:00:00.000Z");
   for (const name of ["keep.txt", "edit.txt", "remove.txt"]) {

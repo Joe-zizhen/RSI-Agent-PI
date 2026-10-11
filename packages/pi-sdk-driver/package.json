@@ -1,10 +1,10 @@
 {
-  "name": "@pi-gui/pi-sdk-driver",
+  "name": "@rsi-agent-pi/pi-sdk-driver",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
   "type": "module",
-  "description": "SDK-first session driver spike for pi-gui.",
+  "description": "SDK-first session driver spike for RSI-Agent-PI.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,12 +24,12 @@
     "test": "tsc -p tsconfig.json && node --test \"test/**/*.test.mts\""
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "^1.0.0",
-    "@pi-gui/catalogs": "workspace:*",
-    "@pi-gui/extension-ui": "workspace:*",
-    "@pi-gui/session-driver": "workspace:*"
+    "@earendil-works/pi-coding-agent": "1.0.0",
+    "@rsi-agent-pi/catalogs": "workspace:*",
+    "@rsi-agent-pi/extension-ui": "workspace:*",
+    "@rsi-agent-pi/session-driver": "workspace:*"
   },
   "devDependencies": {
-    "@earendil-works/pi-ai": "^1.0.0"
+    "@earendil-works/pi-ai": "1.0.0"
   }
 }

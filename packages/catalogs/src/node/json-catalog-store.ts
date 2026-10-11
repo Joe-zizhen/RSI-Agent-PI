@@ -23,7 +23,7 @@ import type {
   WorktreeCatalogSnapshot,
   WorktreeId,
 } from "../index.js";
-import { sessionKey } from "@pi-gui/session-driver";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
 
 interface CatalogFileCoordinator {
   mutationQueue: Promise<void>;

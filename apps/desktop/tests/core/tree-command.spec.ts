@@ -36,7 +36,7 @@ test("opens /tree from the composer, navigates branches, and blocks it on the ne
 
     const composer = window.getByTestId("composer");
     await composer.fill("/tre");
-    await expect(window.getByTestId("slash-menu")).toContainText("Tree");
+    await expect(window.getByTestId("slash-menu")).toContainText("树");
     await composer.press("Enter");
 
     const treeModal = window.getByTestId("tree-modal");
@@ -73,10 +73,10 @@ test("opens /tree from the composer, navigates branches, and blocks it on the ne
     );
 
     await treeModal.locator(".tree-row__content", { hasText: "Branch alpha" }).click();
-    await treeModal.getByRole("button", { name: "Continue" }).click();
+    await treeModal.getByRole("button", { name: "继续" }).click();
     await expect(window.getByTestId("tree-summary-step")).toBeVisible();
-    await treeModal.getByRole("button", { name: "No summary" }).click();
-    await treeModal.getByRole("button", { name: "Switch branch" }).click();
+    await treeModal.getByRole("button", { name: "不总结" }).click();
+    await treeModal.getByRole("button", { name: "切换分支" }).click();
 
     await expect(treeModal).toHaveCount(0);
     await expect(composer).toHaveValue("Branch alpha");
@@ -87,9 +87,9 @@ test("opens /tree from the composer, navigates branches, and blocks it on the ne
     await composer.press("Enter");
     await expect(treeModal).toBeVisible();
     await treeModal.locator(".tree-row__content", { hasText: "Beta answer" }).click();
-    await treeModal.getByRole("button", { name: "Continue" }).click();
-    await treeModal.getByRole("button", { name: "No summary" }).click();
-    await treeModal.getByRole("button", { name: "Switch branch" }).click();
+    await treeModal.getByRole("button", { name: "继续" }).click();
+    await treeModal.getByRole("button", { name: "不总结" }).click();
+    await treeModal.getByRole("button", { name: "切换分支" }).click();
 
     await expect(treeModal).toHaveCount(0);
     await expect(composer).toHaveValue("");
@@ -159,7 +159,7 @@ test("restores focus to a remaining extension dialog after the tree modal closes
     await expect(extensionDialog).toBeVisible();
     await expect(window.getByTestId("tree-modal-search")).toBeFocused();
 
-    await treeModal.getByRole("button", { name: "Close tree modal" }).click();
+    await treeModal.getByRole("button", { name: "关闭会话树对话框" }).click();
     await expect(treeModal).toHaveCount(0);
     await expect(extensionDialog).toBeVisible();
     await expect(extensionCancel).toBeFocused();
@@ -189,13 +189,13 @@ test("renders tool results with compact previews in the tree modal", async () =>
 
     const composer = window.getByTestId("composer");
     await composer.fill("/tree");
-    await expect(window.getByTestId("slash-menu")).toContainText("Tree");
+    await expect(window.getByTestId("slash-menu")).toContainText("树");
     await composer.press("Enter");
 
     const treeModal = window.getByTestId("tree-modal");
     await expect(treeModal).toBeVisible();
     await expect(treeModal).toContainText("[read:");
-    await expect(treeModal).toContainText("assistant: README inspected.");
+    await expect(treeModal).toContainText("助手: README inspected.");
     await expect(treeModal.getByRole("button", { name: "No tools" })).toHaveCount(0);
   } finally {
     await harness.close();
@@ -235,9 +235,9 @@ test("opens /tree on a long branched session whose deepest path passes 500 entri
     await expect(treeModal.locator("[data-testid^='tree-row-']")).toHaveCount(fixture.entryCount);
 
     await treeModal.locator(".tree-row__content", { hasText: "Step 517 on branch 518" }).click();
-    await treeModal.getByRole("button", { name: "Continue" }).click();
-    await treeModal.getByRole("button", { name: "No summary" }).click();
-    await treeModal.getByRole("button", { name: "Switch branch" }).click();
+    await treeModal.getByRole("button", { name: "继续" }).click();
+    await treeModal.getByRole("button", { name: "不总结" }).click();
+    await treeModal.getByRole("button", { name: "切换分支" }).click();
     await expect(treeModal).toHaveCount(0);
     await expect(window.getByTestId("transcript")).toContainText("Step 517 on branch 518");
   } finally {

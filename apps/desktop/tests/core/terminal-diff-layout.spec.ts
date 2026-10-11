@@ -18,12 +18,12 @@ test("Review and Terminal share one side workspace while the composer stays avai
   try {
     const window = await harness.firstWindow();
     await createNamedThread(window, "Terminal and Review layout");
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     const changes = window.locator(".diff-panel");
     await expect(changes).toBeVisible();
     const changesBox = await changes.boundingBox();
 
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     const terminal = window.getByTestId("integrated-terminal");
     await expect(terminal).toBeVisible();
     await expect(changes).toHaveCount(0);
@@ -37,10 +37,10 @@ test("Review and Terminal share one side workspace while the composer stays avai
     expect(terminalBox.width).toBeGreaterThanOrEqual(300);
     expect(composerBox.x + composerBox.width).toBeLessThanOrEqual(terminalBox.x + 1);
 
-    await window.getByRole("tab", { name: "Review", exact: true }).click();
+    await window.getByRole("tab", { name: "审查", exact: true }).click();
     await expect(changes).toBeVisible();
     await expect(terminal).toHaveCount(0);
-    await expect(window.getByRole("tab", { name: "Terminal", exact: true })).toHaveCount(1);
+    await expect(window.getByRole("tab", { name: "终端", exact: true })).toHaveCount(1);
     await expect(window.getByTestId("composer")).toBeVisible();
   } finally {
     await harness.close();

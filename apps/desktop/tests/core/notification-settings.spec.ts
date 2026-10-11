@@ -25,22 +25,18 @@ test("shows not enabled yet and enables via Ask macOS", async () => {
 
   try {
     const window = await harness.firstWindow();
-    await window.getByRole("button", { name: "Settings", exact: true }).click();
-    await window.getByRole("button", { name: "Notifications", exact: true }).click();
+    await window.getByRole("button", { name: "设置", exact: true }).click();
+    await window.getByRole("button", { name: "通知", exact: true }).click();
 
-    await expect(window.locator(".settings-view")).toContainText("Not enabled yet");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(1);
-    await expect(
-      window.getByRole("button", { name: "Open System Settings", exact: true }),
-    ).toHaveCount(0);
+    await expect(window.locator(".settings-view")).toContainText("尚未启用");
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(1);
+    await expect(window.getByRole("button", { name: "打开系统设置", exact: true })).toHaveCount(0);
 
-    await window.getByRole("button", { name: "Ask macOS", exact: true }).click();
+    await window.getByRole("button", { name: "向 macOS 请求", exact: true }).click();
 
-    await expect(window.locator(".settings-view")).toContainText("Enabled");
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(0);
-    await expect(
-      window.getByRole("button", { name: "Open System Settings", exact: true }),
-    ).toHaveCount(0);
+    await expect(window.locator(".settings-view")).toContainText("已启用");
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "打开系统设置", exact: true })).toHaveCount(0);
   } finally {
     await harness.close();
   }
@@ -61,19 +57,17 @@ test("shows turned off and opens System Settings when macOS notifications are de
 
   try {
     const window = await harness.firstWindow();
-    await window.getByRole("button", { name: "Settings", exact: true }).click();
-    await window.getByRole("button", { name: "Notifications", exact: true }).click();
+    await window.getByRole("button", { name: "设置", exact: true }).click();
+    await window.getByRole("button", { name: "通知", exact: true }).click();
 
-    await expect(window.locator(".settings-view")).toContainText("Turned off");
+    await expect(window.locator(".settings-view")).toContainText("已关闭");
     await expect(window.locator(".settings-view")).toContainText(
       "macOS notifications are turned off for pi-gui",
     );
-    await expect(window.getByRole("button", { name: "Ask macOS", exact: true })).toHaveCount(0);
-    await expect(
-      window.getByRole("button", { name: "Open System Settings", exact: true }),
-    ).toHaveCount(1);
+    await expect(window.getByRole("button", { name: "向 macOS 请求", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "打开系统设置", exact: true })).toHaveCount(1);
 
-    await window.getByRole("button", { name: "Open System Settings", exact: true }).click();
+    await window.getByRole("button", { name: "打开系统设置", exact: true }).click();
     await expect.poll(() => readSettingsLog(settingsLogPath), { timeout: 5_000 }).not.toBe("");
   } finally {
     await harness.close();

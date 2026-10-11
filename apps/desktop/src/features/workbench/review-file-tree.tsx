@@ -107,8 +107,8 @@ export function ReviewFileTree({
               <button
                 className="icon-button review-tree__stage"
                 type="button"
-                aria-label="Unstage"
-                title="Unstage file"
+                aria-label="取消暂存"
+                title="取消暂存文件"
                 disabled={busy || stale || file.conflicted}
                 onClick={() => onStage(file, "unstage")}
               >
@@ -119,8 +119,8 @@ export function ReviewFileTree({
               <button
                 className="icon-button review-tree__stage"
                 type="button"
-                aria-label="Stage"
-                title="Stage file"
+                aria-label="暂存"
+                title="暂存文件"
                 disabled={busy || stale || file.conflicted}
                 onClick={() => onStage(file, "stage")}
               >
@@ -130,7 +130,7 @@ export function ReviewFileTree({
           </span>
         ) : null}
         <input
-          aria-label={`Mark ${file.path} reviewed`}
+          aria-label={`将 ${file.path} 标记为已审查`}
           className="diff-panel__reviewed-checkbox"
           data-testid={`diff-panel-reviewed-${file.path}`}
           type="checkbox"
@@ -140,7 +140,7 @@ export function ReviewFileTree({
         />
         <span
           className={`review-tree__status review-tree__status--${file.conflicted ? "conflicted" : file.status}`}
-          title={file.conflicted ? "Conflicted" : file.status}
+          title={file.conflicted ? "冲突" : file.status}
         >
           {statusLetter(file.conflicted ? "conflicted" : file.status)}
         </span>
@@ -149,26 +149,26 @@ export function ReviewFileTree({
   };
 
   return (
-    <section className="review-tree" aria-label="Changed files">
+    <section className="review-tree" aria-label="变更的文件">
       <div className="review-tree__header">
         <label className="review-tree__filter">
           <SearchIcon />
           <input
-            aria-label="Filter changed files"
-            placeholder="Filter files…"
+            aria-label="筛选变更的文件"
+            placeholder="筛选文件…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
         <span className="review-tree__counter" data-testid="diff-panel-counter">
-          Reviewed {reviewedCount} of {files.length}
+          已审查 {reviewedCount} / {files.length}
         </span>
       </div>
       <div className="review-tree__list diff-panel__file-list" ref={listRef}>
         {tree.length ? (
           tree.map((node) => renderNode(node, 0))
         ) : (
-          <div className="diff-panel__empty">No files match.</div>
+          <div className="diff-panel__empty">没有匹配的文件。</div>
         )}
       </div>
     </section>

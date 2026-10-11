@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import {
   decodeTaskWorkbenchTemplate,
   toolRefId,

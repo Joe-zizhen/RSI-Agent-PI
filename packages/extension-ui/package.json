@@ -1,5 +1,5 @@
 {
-  "name": "@pi-gui/extension-ui",
+  "name": "@rsi-agent-pi/extension-ui",
   "private": true,
   "type": "module",
   "version": "0.0.0",
@@ -30,7 +30,7 @@
     "test": "pnpm run build && node --test \"test/**/*.test.mts\""
   },
   "dependencies": {
-    "@earendil-works/chord": "^1.0.0"
+    "@earendil-works/chord": "1.0.0"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

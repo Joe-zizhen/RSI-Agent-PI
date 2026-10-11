@@ -6,15 +6,15 @@ import type {
   ExtensionViewMessage,
   ExtensionViewCatalogChange,
 } from "./extension-views";
-import type { RuntimeSettingsSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import type { ExtensionActionEffect, ExtensionActionRequest } from "./extension-actions";
 import type {
   NavigateSessionTreeOptions,
   NavigateSessionTreeResult,
   SessionTreeSnapshot,
-} from "@pi-gui/session-driver/types";
+} from "@rsi-agent-pi/session-driver/types";
 import type { ClipboardImageRead } from "./composer-attachments";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { SaveTaskWorkbenchTemplateInput, TaskWorkbenchTemplate } from "./workbench";
 import type {
   TurnChangesInput,
@@ -104,6 +104,18 @@ export type NewMcpServerInput = { readonly name: string; readonly description?: 
   { readonly command: string; readonly args: readonly string[] } | { readonly url: string }
 );
 
+/** Stable id of the built-in memloop memory extension; Settings → 记忆 switches it. */
+export const MEMLOOP_BUILTIN_EXTENSION_NAME = "memloop";
+/** Path pi reports for the built-in memloop memory extension. */
+export const MEMLOOP_BUILTIN_EXTENSION_PATH = "<inline:memloop>";
+/** Pinned @earendil-works/pi-coding-agent version; keep in sync with apps/desktop/package.json. */
+export const PI_RUNTIME_PINNED_VERSION = "1.0.0";
+
+export interface MemloopSettingsSnapshot {
+  /** World verdict command stored in the `memloop` section of ~/.pi/agent/settings.json. */
+  readonly verdictCmd: string;
+}
+
 export const desktopIpc = {
   extensionViewOpenFile: "pi-gui:extension-view-open-file",
   listExtensionViews: "pi-gui:list-extension-views",
@@ -177,6 +189,9 @@ export const desktopIpc = {
   removeMcpServer: "pi-gui:remove-mcp-server",
   setMcpServerEnabled: "pi-gui:set-mcp-server-enabled",
   setCodemodeAlwaysOn: "pi-gui:set-codemode-always-on",
+  getMemloopSettings: "pi-gui:get-memloop-settings",
+  setMemloopSettings: "pi-gui:set-memloop-settings",
+  checkForUpdates: "pi-gui:check-for-updates",
   respondToHostUiRequest: "pi-gui:respond-to-host-ui-request",
   setNotificationPreferences: "pi-gui:set-notification-preferences",
   setIntegratedTerminalShell: "pi-gui:set-integrated-terminal-shell",
@@ -791,6 +806,9 @@ export interface PiDesktopApi {
     enabled: boolean,
   ): Promise<DesktopAppState>;
   setCodemodeAlwaysOn(workspaceId: string, alwaysOn: boolean): Promise<DesktopAppState>;
+  getMemloopSettings(workspaceId: string): Promise<MemloopSettingsSnapshot>;
+  setMemloopSettings(workspaceId: string, verdictCmd: string): Promise<DesktopAppState>;
+  checkForUpdates(): Promise<void>;
   respondToHostUiRequest(
     workspaceId: string,
     sessionId: string,

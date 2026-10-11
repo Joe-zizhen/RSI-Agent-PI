@@ -213,11 +213,11 @@ test("checks unused contracts and permits pure contract reuse", () => {
 });
 
 for (const source of [
-  'import { createChordServerConnection } from "@pi-gui/extension-ui/transport";',
-  'import { parseDesktopHostAction } from "@pi-gui/extension-ui/browser";',
-  'export * from "@pi-gui/extension-ui/browser";',
-  'void import("@pi-gui/extension-ui/transport");',
-  'import { type DesktopHostAction } from "@pi-gui/extension-ui/browser";',
+  'import { createChordServerConnection } from "@rsi-agent-pi/extension-ui/transport";',
+  'import { parseDesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";',
+  'export * from "@rsi-agent-pi/extension-ui/browser";',
+  'void import("@rsi-agent-pi/extension-ui/transport");',
+  'import { type DesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";',
   'import "../../../packages/extension-ui/src/transport.ts";',
 ]) {
   test(`rejects host-only extension-ui runtime import: ${source}`, () => {
@@ -231,9 +231,9 @@ for (const source of [
 
 test("allows type-only imports from host-only extension-ui entry points", () => {
   const result = fixture(`
-    import type { DesktopHostAction } from "@pi-gui/extension-ui/browser";
-    export type { ChordServerConnection } from "@pi-gui/extension-ui/transport";
-    type Parsed = import("@pi-gui/extension-ui/browser").DesktopHostAction;
+    import type { DesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";
+    export type { ChordServerConnection } from "@rsi-agent-pi/extension-ui/transport";
+    type Parsed = import("@rsi-agent-pi/extension-ui/browser").DesktopHostAction;
   `);
   assert.deepEqual(result.failures, []);
 });

@@ -63,12 +63,9 @@ test("turn timing markers render without a prompt rail", async () => {
     await waitForSelectedSessionReady(window, { workspaceId, sessionId });
     await expect(window.getByTestId("transcript")).toBeVisible({ timeout: 15_000 });
 
-    await expect(window.getByTestId("timeline-turn-marker").first()).toContainText(
-      "Worked for 8s",
-      {
-        timeout: 10_000,
-      },
-    );
+    await expect(window.getByTestId("timeline-turn-marker").first()).toContainText("已运行 8s", {
+      timeout: 10_000,
+    });
     await expect(window.getByTestId("timeline-context-rail")).toHaveCount(0);
     await expect(window.getByRole("button", { name: /prompt navigation/i })).toHaveCount(0);
   } finally {

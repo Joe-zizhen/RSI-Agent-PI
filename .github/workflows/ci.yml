@@ -81,7 +81,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build website
-        run: pnpm --filter @pi-gui/website run build
+        run: pnpm --filter @rsi-agent-pi/website run build
 
   desktop-core:
     name: desktop-core
@@ -126,7 +126,7 @@ jobs:
         if: ${{ runner.os == 'macOS' }}
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/desktop/test-results/core-report.json
-        run: pnpm --filter @pi-gui/desktop run test:e2e:ci:mac --shard=${{ matrix.shard }}/4 --reporter=line,json
+        run: pnpm --filter @rsi-agent-pi/desktop run test:e2e:ci:mac --shard=${{ matrix.shard }}/4 --reporter=line,json
 
       - name: Install Linux display dependencies
         if: ${{ runner.os == 'Linux' }}
@@ -147,7 +147,7 @@ jobs:
         run: >-
           xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24"
           sh -c 'openbox >/dev/null 2>&1 & exec "$@"' sh
-          pnpm --filter @pi-gui/desktop run test:e2e:core --shard=${{ matrix.shard }}/4 --reporter=line,json
+          pnpm --filter @rsi-agent-pi/desktop run test:e2e:core --shard=${{ matrix.shard }}/4 --reporter=line,json
 
       - name: Summarize Core timing
         if: ${{ !cancelled() }}
@@ -182,7 +182,7 @@ jobs:
         run: pnpm verify:release-config
 
       - name: Package Linux AppImage and deb
-        run: pnpm --filter @pi-gui/desktop run package:linux
+        run: pnpm --filter @rsi-agent-pi/desktop run package:linux
 
       - name: Verify packaged runtime dependencies
         run: pnpm --dir apps/desktop run verify:packaged-runtime-deps:linux
@@ -244,10 +244,10 @@ jobs:
         run: pnpm --dir apps/desktop run verify:launcher-contract
 
       - name: Changed-file adapter tests
-        run: pnpm --filter @pi-gui/desktop run test:changed-files
+        run: pnpm --filter @rsi-agent-pi/desktop run test:changed-files
 
       - name: Package Windows directory
-        run: pnpm --filter @pi-gui/desktop run package:win:dir
+        run: pnpm --filter @rsi-agent-pi/desktop run package:win:dir
 
       - name: Verify packaged runtime dependencies
         run: pnpm --dir apps/desktop run verify:packaged-runtime-deps:windows

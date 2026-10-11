@@ -1,5 +1,5 @@
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
-import type { DesktopViewContext } from "@pi-gui/extension-ui/browser";
+import type { DesktopViewContext } from "@rsi-agent-pi/extension-ui/browser";
 import {
   GH_INSTALL_URL,
   GH_MISSING,

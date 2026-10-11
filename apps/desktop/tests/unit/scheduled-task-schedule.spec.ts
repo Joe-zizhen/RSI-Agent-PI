@@ -62,13 +62,13 @@ test("recurrence and next-run copy match the list format", () => {
       minute: 0,
       timeZone: "UTC",
     }),
-  ).toBe("Mon, Wed, and Fri at 10:00 PM");
+  ).toBe("周一、周三、周五 10:00 PM");
   expect(formatScheduledTaskRecurrence({ kind: "interval", everyMs: 10 * 60_000 })).toBe(
-    "Every 10 minutes",
+    "每 10 分钟",
   );
   expect(
     formatScheduledTaskNextRun("2026-09-22T12:00:00.000Z", new Date("2026-09-21T12:00:00.000Z")),
-  ).toBe("Next run in 1 day");
+  ).toBe("1 天后运行");
 });
 
 test("overlay matches unmatched runs by instruction and firedAt window", () => {

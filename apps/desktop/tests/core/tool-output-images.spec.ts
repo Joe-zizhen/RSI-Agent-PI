@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import {
   createNamedThread,
   emitTestSessionEvent,
@@ -77,7 +77,7 @@ test("shows images a tool returned in its row, not their base64 text", async () 
 
     await tool.locator(".timeline-tool__header").click();
     const body = tool.locator(".timeline-tool__pre");
-    await expect(body).toContainText("[image/png image]");
+    await expect(body).toContainText("[image/png 图片]");
     await expect(body).not.toContainText(PNG_BASE64.slice(0, 24));
 
     await thumb.click();

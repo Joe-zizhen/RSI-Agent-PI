@@ -17,26 +17,26 @@ export interface DesktopStartupCopy {
 }
 
 const LOADING_COPY: DesktopStartupCopy = {
-  title: "Loading sessions",
-  body: "The desktop shell is restoring folder and thread state from the main process.",
+  title: "正在加载会话记录",
+  body: "桌面外壳正在从主进程恢复文件夹和会话状态。",
   status: "loading",
 };
 
 const STATE_FAILED_COPY: DesktopStartupCopy = {
-  title: "Couldn't restore sessions",
-  body: "The desktop shell couldn't read folder and thread state. Retry, or relaunch the app.",
+  title: "无法恢复会话记录",
+  body: "桌面外壳无法读取文件夹和会话状态。请重试，或重新启动应用。",
   status: "failed",
 };
 
 const BRIDGE_FAILED_COPY: DesktopStartupCopy = {
-  title: "Couldn't restore sessions",
-  body: "The desktop shell isn't connected. Quit pi-gui and reopen it.",
+  title: "无法恢复会话记录",
+  body: "桌面外壳未连接。请退出 RSI-Agent-PI 并重新打开。",
   status: "failed",
 };
 
 const CRASHED_COPY: DesktopStartupCopy = {
-  title: "Something went wrong",
-  body: "The desktop window hit an unexpected error. Retry to remount, or relaunch the app.",
+  title: "出现问题",
+  body: "桌面窗口遇到意外错误。请重试以重新挂载，或重新启动应用。",
   status: "crashed",
 };
 
@@ -81,7 +81,7 @@ export function DesktopStartupSurface({ state, onRetry, onRelaunch }: DesktopSta
         data-retrying={retrying ? "true" : "false"}
         data-failure={state.kind === "failed" ? state.failure.code : undefined}
       >
-        <div className="loading-card__eyebrow">pi-gui</div>
+        <div className="loading-card__eyebrow">RSI-Agent-PI</div>
         <h1>{copy.title}</h1>
         <p>{copy.body}</p>
         {showActions ? (
@@ -93,7 +93,7 @@ export function DesktopStartupSurface({ state, onRetry, onRelaunch }: DesktopSta
               disabled={retrying}
               onClick={onRetry}
             >
-              {retrying ? "Retrying…" : "Retry"}
+              {retrying ? "正在重试…" : "重试"}
             </button>
             {showRelaunch ? (
               <button
@@ -102,7 +102,7 @@ export function DesktopStartupSurface({ state, onRetry, onRelaunch }: DesktopSta
                 type="button"
                 onClick={onRelaunch}
               >
-                Relaunch pi-gui
+                重新启动 RSI-Agent-PI
               </button>
             ) : null}
           </div>

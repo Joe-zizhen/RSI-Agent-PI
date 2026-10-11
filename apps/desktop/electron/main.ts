@@ -12,7 +12,7 @@ import {
   type MenuItemConstructorOptions,
   type MessageBoxOptions,
 } from "electron";
-import { isValidHttpBaseUrl } from "@pi-gui/pi-sdk-driver";
+import { isValidHttpBaseUrl } from "@rsi-agent-pi/pi-sdk-driver";
 import { createRequire } from "node:module";
 import { randomUUID } from "node:crypto";
 import type {
@@ -25,6 +25,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { augmentPosixPath } from "../scripts/augment-path.cjs";
 import { DesktopAppStore } from "./application/app-store";
+import { resolveAgentDir, seedBundledPlugins } from "./persistence/plugin-seeding";
 import { WindowOwner } from "./windows/window-owner";
 import { PendingComposerDraftFlusher } from "./windows/pending-draft-flush";
 import { TurnCheckpointStore } from "./workbench/checkpoint-store";
@@ -52,9 +53,11 @@ import { resolveExistingWorkspacePath } from "./platform/files/workspace-paths";
 import { MAIN_DEV_RELOAD_MARKER } from "./dev-reload-main-probe";
 import { NotificationManager } from "./platform/notification-manager";
 import { NotificationPermissionService } from "./platform/notification-permission";
-import { checkForUpdate, initUpdateChecker, openReleasesPage } from "./platform/update-checker";
+import { initUpdateChecker } from "./platform/update-checker";
+import { runManualUpdateCheck } from "./platform/manual-update-check";
 import { ThemeManager } from "./platform/theme-manager";
 import { windowBackgroundFor } from "../contracts/theme";
+import { memloopExtensionFactory } from "@rsi-agent-pi/memloop-bridge";
 import { TerminalService } from "./platform/terminal-service";
 import type { DesktopAppState, DesktopAppViewState } from "../contracts/desktop-state";
 import {
@@ -65,6 +68,7 @@ import {
   isCloseFocusedSurfaceShortcut,
   getSidePanelTabCommand,
   platformShortcutModifier,
+  MEMLOOP_BUILTIN_EXTENSION_NAME,
   type CustomProviderProbeInput,
   type CustomProviderProbeResult,
 } from "../contracts/ipc";
@@ -80,9 +84,9 @@ import type {
   ComposerFileAttachment,
   ComposerImageAttachment,
 } from "../contracts/desktop-state";
-import type { SessionDriverEvent } from "@pi-gui/session-driver";
-import type { GenerateThreadTitleOptions } from "@pi-gui/pi-sdk-driver";
-import type { SessionRef, WorkspaceRef } from "@pi-gui/session-driver";
+import type { SessionDriverEvent } from "@rsi-agent-pi/session-driver";
+import type { GenerateThreadTitleOptions } from "@rsi-agent-pi/pi-sdk-driver";
+import type { SessionRef, WorkspaceRef } from "@rsi-agent-pi/session-driver";
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -302,6 +306,13 @@ const appIconPath = app.isPackaged
   : path.join(__dirname, "..", "..", "resources", "icon.png");
 const appIcon = nativeImage.createFromPath(appIconPath);
 
+// Bundled pi plugins and safety extensions (`vendor/`). In dev the repo root sits
+// four levels up from `out/main`; in a packaged build electron-builder copies
+// `vendor/` to `process.resourcesPath` via `extraResources`.
+const bundledVendorDir = app.isPackaged
+  ? path.join(process.resourcesPath, "vendor")
+  : path.join(__dirname, "..", "..", "..", "..", "vendor");
+
 function parseExternalWebUrl(url: string): URL | null {
   try {
     const parsed = new URL(url);
@@ -351,12 +362,12 @@ function openMcpSignInUrl(url: string): void {
     console.error(
       `Refusing to open an MCP sign-in URL${parsed ? ` on ${parsed.origin}` : " that is not http or https"}`,
     );
-    showMcpSignInUrl(url, "pi-gui opens only https links, or http links on this computer.");
+    showMcpSignInUrl(url, "RSI-Agent-PI 仅打开 https 链接，或本机上的 http 链接。");
     return;
   }
   shell.openExternal(parsed.toString()).catch((error: unknown) => {
     console.error(`Failed to open an MCP sign-in URL on ${parsed.origin}`, error);
-    showMcpSignInUrl(parsed.toString(), "pi-gui could not open your browser.");
+    showMcpSignInUrl(parsed.toString(), "RSI-Agent-PI 无法打开你的浏览器。");
   });
 }
 
@@ -365,10 +376,10 @@ function showMcpSignInUrl(url: string, reason: string): void {
   const window = mainWindow && canPublishToWindow(mainWindow) ? mainWindow : undefined;
   const options: MessageBoxOptions = {
     type: "warning",
-    title: "pi-gui",
-    message: "Open this MCP sign-in link yourself",
-    detail: `${reason} Check the link before you open it:\n\n${url}`,
-    buttons: ["Copy link", "Close"],
+    title: "RSI-Agent-PI",
+    message: "请自行打开此 MCP 登录链接",
+    detail: `${reason} 打开前请检查链接：\n\n${url}`,
+    buttons: ["复制链接", "关闭"],
     defaultId: 0,
     cancelId: 1,
   };
@@ -721,11 +732,11 @@ async function pickWorkspacePathViaDialog(
   const result = window
     ? await dialog.showOpenDialog(window, {
         properties: ["openDirectory"],
-        title: "Open workspace folder",
+        title: "打开项目文件夹",
       })
     : await dialog.showOpenDialog({
         properties: ["openDirectory"],
-        title: "Open workspace folder",
+        title: "打开项目文件夹",
       });
   if (result.canceled || result.filePaths.length === 0) {
     return undefined;
@@ -760,61 +771,6 @@ async function pickWorkspaceViaDialog(
   return runWindowScopedForWindow(window, () => addPickedWorkspace(window, workspacePath));
 }
 
-async function runManualUpdateCheck(): Promise<void> {
-  const window = mainWindow && canPublishToWindow(mainWindow) ? mainWindow : undefined;
-  const showDialog = (options: MessageBoxOptions) =>
-    window ? dialog.showMessageBox(window, options) : dialog.showMessageBox(options);
-
-  try {
-    const result = await checkForUpdate();
-
-    if (result.status === "update-available") {
-      // The manual menu path always confirms with a dialog — a notification may
-      // be silently suppressed if the OS permission is denied.
-      const choice = await showDialog({
-        type: "info",
-        title: "pi-gui",
-        message: `Version ${result.latestVersion} is available.`,
-        detail: `You have ${result.currentVersion}.`,
-        buttons: ["Download", "Later"],
-        defaultId: 0,
-        cancelId: 1,
-      });
-      if (choice.response === 0) {
-        await openReleasesPage(result.releaseUrl);
-      }
-      return;
-    }
-
-    if (result.status === "up-to-date") {
-      await showDialog({
-        type: "info",
-        title: "pi-gui",
-        message: `You're up to date on version ${result.currentVersion}.`,
-        buttons: ["OK"],
-      });
-      return;
-    }
-
-    await showDialog({
-      type: "warning",
-      title: "pi-gui",
-      message: "Could not check for updates right now.",
-      detail: result.message,
-      buttons: ["OK"],
-    });
-  } catch (error) {
-    console.error("pi-gui: manual update check failed:", error);
-    await showDialog({
-      type: "warning",
-      title: "pi-gui",
-      message: "Could not check for updates right now.",
-      detail: error instanceof Error ? error.message : String(error),
-      buttons: ["OK"],
-    }).catch(() => undefined);
-  }
-}
-
 function installApplicationMenu(): void {
   if (process.platform !== "darwin") {
     return;
@@ -828,9 +784,11 @@ function installApplicationMenu(): void {
         { type: "separator" },
         {
           id: CHECK_FOR_UPDATES_MENU_ITEM_ID,
-          label: "Check for Updates…",
+          label: "检查更新…",
           click: () => {
-            void runManualUpdateCheck().catch((error: unknown) => {
+            void runManualUpdateCheck(
+              mainWindow && canPublishToWindow(mainWindow) ? mainWindow : undefined,
+            ).catch((error: unknown) => {
               console.error("[main] runManualUpdateCheck failed", error);
             });
           },
@@ -846,10 +804,10 @@ function installApplicationMenu(): void {
       ],
     },
     {
-      label: "File",
+      label: "文件",
       submenu: [
         {
-          label: "New Thread",
+          label: "新建会话",
           accelerator: "CommandOrControl+N",
           click: () => {
             const window = BrowserWindow.getFocusedWindow() ?? mainWindow;
@@ -858,7 +816,7 @@ function installApplicationMenu(): void {
         },
         {
           id: NEW_WINDOW_MENU_ITEM_ID,
-          label: "New Window",
+          label: "新建窗口",
           accelerator: "CommandOrControl+Shift+N",
           click: () => {
             createAppWindow(windowOwner.foregroundView());
@@ -867,7 +825,7 @@ function installApplicationMenu(): void {
         { type: "separator" },
         {
           id: OPEN_FOLDER_MENU_ITEM_ID,
-          label: "Open Folder…",
+          label: "打开文件夹…",
           accelerator: "Command+O",
           click: () => {
             void pickWorkspaceViaDialog(mainWindow).catch((error: unknown) => {
@@ -881,16 +839,16 @@ function installApplicationMenu(): void {
     },
     { role: "editMenu" },
     {
-      label: "View",
+      label: "视图",
       submenu: [
         // Cmd+R toggles Review and Shift+Cmd+R renames the thread, so neither
         // reload has a shortcut.
         {
-          label: "Reload",
+          label: "重新加载",
           click: () => BrowserWindow.getFocusedWindow()?.webContents.reload(),
         },
         {
-          label: "Force Reload",
+          label: "强制重新加载",
           click: () => BrowserWindow.getFocusedWindow()?.webContents.reloadIgnoringCache(),
         },
         { role: "toggleDevTools" },
@@ -955,6 +913,30 @@ app
       app.dock?.setIcon(appIcon);
     }
 
+    // Seed bundled pi plugins before any workspace runtime reads settings, so the
+    // first launch already loads them and later launches are a no-op. Seeding must
+    // never keep the app from starting; a failure is logged and the app runs with
+    // whatever the user already has.
+    try {
+      const seeded = await seedBundledPlugins({
+        vendorDir: bundledVendorDir,
+        agentDir: resolveAgentDir(),
+      });
+      if (
+        seeded.seededPackageDirs.length > 0 ||
+        seeded.seededExtensionFiles.length > 0 ||
+        seeded.settingsWritten
+      ) {
+        console.log(
+          `[plugin-seeding] seeded ${seeded.seededPackageDirs.length} packages and ` +
+            `${seeded.seededExtensionFiles.length} extensions; ` +
+            `settings ${seeded.settingsWritten ? "updated" : "unchanged"}`,
+        );
+      }
+    } catch (error) {
+      console.error("[plugin-seeding] bundled plugin seeding failed:", error);
+    }
+
     let generateThreadTitleOverride:
       | ((
           workspace: WorkspaceRef,
@@ -975,7 +957,7 @@ app
       hostAssets: {
         "frame-bridge.js": {
           body: await readFile(
-            createRequire(__filename).resolve("@pi-gui/extension-ui/frame-bridge"),
+            createRequire(__filename).resolve("@rsi-agent-pi/extension-ui/frame-bridge"),
             "utf8",
           ),
           contentType: "text/javascript; charset=utf-8",
@@ -1015,14 +997,14 @@ app
       builtinExtensions: [
         {
           name: "pi-gui-thread-orchestration",
-          displayName: "Thread orchestration",
-          description: "Lets pi start, read and message other pi-gui threads",
+          displayName: "会话编排",
+          description: "让 pi 启动、读取并向其他 RSI-Agent-PI 会话发消息",
           factory: createOrchestrationRuntimeExtension(orchestrationRuntimeBridge),
         },
         {
           name: "pi-gui-scheduled-tasks",
-          displayName: "Scheduled tasks",
-          description: "Lets pi create and update local pi-gui scheduled tasks",
+          displayName: "计划任务",
+          description: "让 pi 创建和更新本地 RSI-Agent-PI 计划任务",
           factory: createScheduledTaskRuntimeExtension(scheduledTaskRuntimeBridge, (ctx) => {
             try {
               return sessionRefFromExtensionContext(ctx).workspaceId;
@@ -1030,6 +1012,13 @@ app
               return undefined;
             }
           }),
+        },
+        {
+          name: MEMLOOP_BUILTIN_EXTENSION_NAME,
+          displayName: "memloop 长期记忆",
+          description:
+            "自动捕获会话经验，在任务开始时注入相关记忆，并对已验证的失败模式提醒或拦截。",
+          factory: memloopExtensionFactory,
         },
       ],
     };
@@ -1169,6 +1158,7 @@ app
             : "pi desktop ready",
         theme: themeManager,
         openExternal: openExternalLink,
+        checkForUpdates: (window) => runManualUpdateCheck(window),
         pickWorkspace: (window) => pickWorkspaceViaDialog(window),
         createLoginCallbacks: (window) => createRuntimeLoginCallbacks(window),
         probeCustomProviderModels,
@@ -1204,11 +1194,11 @@ app
           const result = parent
             ? await dialog.showOpenDialog(parent, {
                 properties: ["openFile", "multiSelections"],
-                title: "Attach files",
+                title: "添加文件",
               })
             : await dialog.showOpenDialog({
                 properties: ["openFile", "multiSelections"],
-                title: "Attach files",
+                title: "添加文件",
               });
           if (result.canceled || result.filePaths.length === 0) {
             return undefined;
@@ -1464,7 +1454,7 @@ async function showLoginInstructions(
 ): Promise<void> {
   const window = resolveDialogWindow(parentWindow);
   if (!window) {
-    throw new Error("Main window is not available for login instructions.");
+    throw new Error("主窗口不可用，无法显示登录说明。");
   }
   window.show();
   window.focus();
@@ -1481,7 +1471,7 @@ async function promptForText(
 ): Promise<string> {
   const parent = resolveDialogWindow(parentWindow);
   if (!parent) {
-    throw new Error("Main window is not available for login.");
+    throw new Error("主窗口不可用，无法登录。");
   }
   parent.show();
   parent.focus();
@@ -1497,7 +1487,7 @@ async function promptForText(
     maximizable: false,
     fullscreenable: false,
     autoHideMenuBar: process.platform !== "darwin",
-    title: "pi-gui",
+    title: "RSI-Agent-PI",
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false },
   });
 
@@ -1525,11 +1515,11 @@ async function promptForText(
     });
 
     if (result === null) {
-      throw new Error("Login cancelled.");
+      throw new Error("登录已取消。");
     }
     const trimmedResult = result.trim();
     if (!allowEmpty && trimmedResult.length === 0) {
-      throw new Error("Login cancelled.");
+      throw new Error("登录已取消。");
     }
     return trimmedResult;
   } finally {
@@ -1560,8 +1550,8 @@ function promptDataUrl(message: string, placeholder: string): string {
   <div class="msg">${escapeHtml(message)}</div>
   <input id="pi-prompt-input" type="text" placeholder="${escapeHtml(placeholder)}" autofocus />
   <div class="row">
-    <button id="pi-prompt-cancel" type="button">Cancel</button>
-    <button id="pi-prompt-ok" type="button">OK</button>
+    <button id="pi-prompt-cancel" type="button">取消</button>
+    <button id="pi-prompt-ok" type="button">确定</button>
   </div>
   <script>
     (function () {
@@ -1606,7 +1596,7 @@ async function probeCustomProviderModels(
 ): Promise<CustomProviderProbeResult> {
   const baseUrl = input.baseUrl?.trim();
   if (!baseUrl || !isValidHttpBaseUrl(baseUrl)) {
-    return { ok: false, error: "Base URL must start with http:// or https://" };
+    return { ok: false, error: "Base URL 必须以 http:// 或 https:// 开头" };
   }
   const target = `${baseUrl.replace(/\/+$/, "")}/models`;
   const apiKey = input.apiKey?.trim();
@@ -1622,7 +1612,7 @@ async function probeCustomProviderModels(
     const payload = (await response.json()) as unknown;
     const data = (payload as { data?: unknown }).data;
     if (!Array.isArray(data)) {
-      return { ok: false, error: `Response from ${target} is missing a "data" array` };
+      return { ok: false, error: `来自 ${target} 的响应缺少 "data" 数组` };
     }
     const models = data
       .map((entry) => {
@@ -1644,7 +1634,7 @@ async function probeCustomProviderModels(
 
 function describeProbeError(error: unknown, target: string): string {
   if (error instanceof Error && error.name === "TimeoutError") {
-    return `Timed out after 5s contacting ${target}`;
+    return `连接 ${target} 超时（5 秒）`;
   }
   if (error instanceof Error) {
     return error.message;

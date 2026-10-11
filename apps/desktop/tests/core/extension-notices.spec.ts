@@ -51,15 +51,15 @@ test("extension notify shows toasts above the composer that expire, and only err
     const notices = window.getByTestId("extension-notice");
     await expect(notices).toHaveText([
       "Build started",
-      "Warning:Cache is stale",
-      "Error:Deploy failed",
+      "警告：Cache is stale",
+      "错误：Deploy failed",
     ]);
 
     // Main owns the lifetime: a renderer reload redraws live notices, then they expire.
     // Reload straight away so the redraw check runs well inside the 6 s lifetime.
     await reloadDesktopRenderer(window);
     await expect(notices).toHaveCount(3);
-    await expect(notices.nth(2).locator(".extension-notice__level")).toHaveText("Error:");
+    await expect(notices.nth(2).locator(".extension-notice__level")).toHaveText("错误：");
 
     const timeline = window.locator(".timeline");
     await expect(timeline).toContainText("Deploy failed");
@@ -95,9 +95,9 @@ test("warning and error notices raise an OS notification when the thread is not 
 
     await expect
       .poll(() => readOptionalLog(notificationLogPath), { timeout: 30_000 })
-      .toContain('"body":"Error: Deploy failed"');
+      .toContain('"body":"错误：Deploy failed"');
     const log = await readOptionalLog(notificationLogPath);
-    expect(log).toContain('"body":"Warning: Cache is stale"');
+    expect(log).toContain('"body":"警告：Cache is stale"');
     expect(log).not.toContain("Build started");
   } finally {
     await harness.close();

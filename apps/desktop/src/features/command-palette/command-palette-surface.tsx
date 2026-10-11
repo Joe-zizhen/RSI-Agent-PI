@@ -118,7 +118,7 @@ export function CommandPaletteSurface({
         .filter(Boolean)
         .join(" · "),
       icon: <ChatIcon />,
-      hint: isCurrent ? "Current" : thread.session.status === "running" ? "Running" : undefined,
+      hint: isCurrent ? "当前" : thread.session.status === "running" ? "运行中" : undefined,
       run: () => {
         onClose();
         onOpenThread(target);
@@ -153,8 +153,8 @@ export function CommandPaletteSurface({
   let sections: readonly PaletteSection[];
   let emptyText: string;
   if (mode === "files") {
-    label = "Go to file";
-    placeholder = fileScope ? `Search files in ${fileScope.label}` : "Search files";
+    label = "转到文件";
+    placeholder = fileScope ? `在 ${fileScope.label} 中搜索文件` : "搜索文件";
     sections =
       fileScope && files
         ? buildFileSections({
@@ -177,22 +177,22 @@ export function CommandPaletteSurface({
           })
         : [];
     emptyText = !fileScope
-      ? "Open a thread to search its files."
+      ? "打开一个会话以搜索其文件。"
       : listing.status === "loading"
-        ? "Loading files…"
+        ? "正在加载文件…"
         : listing.status === "error"
-          ? "Couldn't load files."
+          ? "无法加载文件。"
           : query !== fileQuery
-            ? "Searching…"
+            ? "正在搜索…"
             : query.trim()
-              ? "No matching files."
-              : `Type to search ${(files?.length ?? 0).toLocaleString()} files.`;
+              ? "没有匹配的文件。"
+              : `输入内容以搜索 ${(files?.length ?? 0).toLocaleString()} 个文件。`;
   } else if (mode === "models") {
-    label = "Switch model";
-    placeholder = "Switch model";
+    label = "切换模型";
+    placeholder = "切换模型";
     sections = buildListSection({
       id: "models",
-      label: "Models",
+      label: "模型",
       query,
       candidates: (modelScope?.options ?? []).map((option) => ({
         id: `model:${option.providerId}/${option.modelId}`,
@@ -201,7 +201,7 @@ export function CommandPaletteSurface({
         hint:
           option.providerId === modelScope?.currentProvider &&
           option.modelId === modelScope.currentModelId
-            ? "Current"
+            ? "当前"
             : undefined,
         run: () => {
           onClose();
@@ -209,10 +209,10 @@ export function CommandPaletteSurface({
         },
       })),
     });
-    emptyText = modelScope?.options.length ? "No matching models." : "No models available.";
+    emptyText = modelScope?.options.length ? "没有匹配的模型。" : "没有可用的模型。";
   } else {
-    label = "Command palette";
-    placeholder = "Search chats, workspaces and actions";
+    label = "命令面板";
+    placeholder = "搜索会话、项目和操作";
     sections = buildCommandSections({
       query,
       filter,
@@ -220,7 +220,7 @@ export function CommandPaletteSurface({
       workspaces: workspaceCandidates,
       actions: actionCandidates,
     });
-    emptyText = query.trim() ? "No matches." : "Nothing here yet.";
+    emptyText = query.trim() ? "没有匹配项。" : "这里还没有内容。";
   }
 
   return (

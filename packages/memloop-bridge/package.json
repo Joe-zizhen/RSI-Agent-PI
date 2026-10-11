@@ -1,0 +1,27 @@
+{
+  "name": "@rsi-agent-pi/memloop-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "memloop long-term memory bridge for RSI-Agent-PI: spawns the memloop Python sidecar (serve.py) over stdio JSONL for L0 injection, L1 reminders, L2 hard blocks, event capture, and dream replay.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node test/protocol-smoke.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "1.0.0",
+    "@earendil-works/pi-coding-agent": "1.0.0",
+    "@earendil-works/pi-tui": "1.0.0"
+  }
+}

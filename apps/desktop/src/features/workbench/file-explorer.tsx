@@ -55,27 +55,27 @@ export function FileExplorer({
   const emptyCopy = error
     ? error
     : files === null
-      ? "Loading files..."
+      ? "正在加载文件..."
       : files.length === 0
-        ? "No indexed files"
+        ? "没有已索引的文件"
         : visibleFiles.length === 0
-          ? "No matching files"
+          ? "没有匹配的文件"
           : null;
 
   return (
-    <section className="file-explorer" data-testid="file-explorer" aria-label="File explorer">
+    <section className="file-explorer" data-testid="file-explorer" aria-label="文件浏览器">
       <div className="file-explorer__toolbar">
         <input
-          aria-label="Filter files"
+          aria-label="筛选文件"
           className="file-explorer__filter"
           data-testid="file-workbench-filter"
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="Filter files…"
+          placeholder="筛选文件…"
           type="search"
           value={filter}
         />
         <button
-          aria-label="Refresh"
+          aria-label="刷新"
           className="icon-button"
           disabled={loading}
           onClick={onRefresh}

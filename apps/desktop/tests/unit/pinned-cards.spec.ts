@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { SessionTranscriptPin } from "@pi-gui/session-driver";
+import type { SessionTranscriptPin } from "@rsi-agent-pi/session-driver";
 import { visiblePinnedCards } from "../../src/features/extensions/pinned-cards-model";
 
 const pin = (key: string, removed = false): SessionTranscriptPin => ({

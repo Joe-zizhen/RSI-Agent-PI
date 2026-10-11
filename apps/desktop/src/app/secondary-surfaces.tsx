@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import type { AppView, DesktopAppState, WorkspaceRecord } from "../../contracts/desktop-state";
 import { updateSnapshot } from "./desktop-app-state";
 import { getEffectiveModelRuntime } from "../features/settings/model-settings";
 import {
   type CustomProviderConfig,
   type DesktopNotificationPermissionStatus,
+  MEMLOOP_BUILTIN_EXTENSION_PATH,
 } from "../../contracts/ipc";
 import { CustomizePage } from "../features/extensions/customize-page";
 import { SettingsView, type SettingsSection } from "../features/settings/settings-view";
@@ -193,7 +194,7 @@ export function SecondarySurfaces({
     apiKey: string,
   ): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "Select a workspace first.";
+      return "请先选择一个项目。";
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.setProviderApiKey(settingsWorkspace.id, providerId, apiKey),
@@ -203,7 +204,7 @@ export function SecondarySurfaces({
 
   const handleRemoveProviderApiKey = async (providerId: string): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "Select a workspace first.";
+      return "请先选择一个项目。";
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.logoutProvider(settingsWorkspace.id, providerId),
@@ -215,7 +216,7 @@ export function SecondarySurfaces({
     config: CustomProviderConfig,
   ): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "Select a workspace first.";
+      return "请先选择一个项目。";
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.setCustomProvider(settingsWorkspace.id, config),
@@ -225,7 +226,7 @@ export function SecondarySurfaces({
 
   const handleDeleteCustomProvider = async (providerId: string): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "Select a workspace first.";
+      return "请先选择一个项目。";
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.deleteCustomProvider(settingsWorkspace.id, providerId),
@@ -237,7 +238,7 @@ export function SecondarySurfaces({
     update: (workspaceId: string) => Promise<DesktopAppState>,
   ): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "Select a workspace first.";
+      return "请先选择一个项目。";
     }
     const state = await updateSnapshot(setSnapshot, () => update(settingsWorkspace.id));
     return state.lastError;
@@ -284,6 +285,22 @@ export function SecondarySurfaces({
       api.setExtensionEnabled(extensionsWorkspace.id, filePath, enabled),
     ).catch((error: unknown) => {
       console.error("[renderer] setExtensionEnabled failed", error);
+    });
+  };
+
+  const memoryExtension = settingsRuntime?.extensions.find(
+    (extension) => extension.path === MEMLOOP_BUILTIN_EXTENSION_PATH,
+  );
+  const memoryEnabled = memoryExtension?.enabled ?? true;
+
+  const handleToggleMemory = (enabled: boolean) => {
+    if (!settingsWorkspace) {
+      return;
+    }
+    void updateSnapshot(setSnapshot, () =>
+      api.setExtensionEnabled(settingsWorkspace.id, MEMLOOP_BUILTIN_EXTENSION_PATH, enabled),
+    ).catch((error: unknown) => {
+      console.error("[renderer] setExtensionEnabled(memory) failed", error);
     });
   };
 
@@ -369,7 +386,7 @@ export function SecondarySurfaces({
   ) =>
     rootWorkspaceOptions.length > 0 ? (
       <SettingsSelect
-        label="Workspace"
+        label="项目"
         options={rootWorkspaceOptions.map((workspace) => ({
           value: workspace.id,
           label: workspace.name,
@@ -395,7 +412,7 @@ export function SecondarySurfaces({
         if (customizeTab) onSelectView("settings");
       }}
       testId={customizeTab ? `${customizeTab}-surface` : "settings-surface"}
-      title="Settings"
+      title="设置"
     >
       {customizeTab ? (
         <CustomizePage
@@ -469,6 +486,8 @@ export function SecondarySurfaces({
           onSetThemePresetId={handleSetThemePresetId}
           onSetThinkingLevel={handleSetThinkingLevel}
           onToggleSkillCommands={handleToggleSkillCommands}
+          memoryEnabled={memoryEnabled}
+          onToggleMemory={handleToggleMemory}
           mcpActions={mcpActions}
           onSetEnableTransparency={(enabled) => {
             void updateSnapshot(setSnapshot, () => api.setEnableTransparency(enabled)).catch(

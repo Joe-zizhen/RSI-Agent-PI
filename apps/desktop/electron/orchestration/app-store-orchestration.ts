@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import type { AgentToolResult } from "@earendil-works/pi-coding-agent";
-import { sessionKey } from "@pi-gui/session-driver";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
 import type {
   CreateSessionOptions,
   SessionConfig,
@@ -10,8 +10,8 @@ import type {
   SessionRef,
   SessionSnapshot,
   WorkspaceRef,
-} from "@pi-gui/session-driver";
-import type { PiSdkDriver } from "@pi-gui/pi-sdk-driver";
+} from "@rsi-agent-pi/session-driver";
+import type { PiSdkDriver } from "@rsi-agent-pi/pi-sdk-driver";
 import type {
   DesktopAppState,
   OrchestrationEvidenceRecord,

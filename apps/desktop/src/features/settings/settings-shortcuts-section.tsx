@@ -20,41 +20,41 @@ const SHORTCUT_GROUPS: readonly {
   readonly shortcuts: readonly Shortcut[];
 }[] = [
   {
-    title: "App",
+    title: "应用",
     shortcuts: [
-      { title: "Command palette", modifiers: ["Mod"], key: "K" },
-      { title: "Go to file", modifiers: ["Mod"], key: "P" },
-      { title: "Open settings", modifiers: ["Mod"], key: "," },
-      { title: "Toggle sidebar", modifiers: ["Mod"], key: "B" },
-      { title: "Toggle side panel", modifiers: ["Mod", "Alt"], key: "B" },
-      { title: "New window", modifiers: ["Mod", "Shift"], key: "N" },
+      { title: "命令面板", modifiers: ["Mod"], key: "K" },
+      { title: "跳转到文件", modifiers: ["Mod"], key: "P" },
+      { title: "打开设置", modifiers: ["Mod"], key: "," },
+      { title: "切换侧边栏", modifiers: ["Mod"], key: "B" },
+      { title: "切换侧边面板", modifiers: ["Mod", "Alt"], key: "B" },
+      { title: "新建窗口", modifiers: ["Mod", "Shift"], key: "N" },
     ],
   },
   {
-    title: "Threads",
+    title: "会话",
     shortcuts: [
-      { title: "New thread", modifiers: ["Mod"], key: "N" },
-      { title: "Switch to recent thread", modifiers: ["Mod"], key: "1–9" },
-      { title: "Cycle through threads", modifiers: ["Ctrl"], key: "Tab" },
-      { title: "Find in thread", modifiers: ["Mod"], key: "F" },
+      { title: "新建会话", modifiers: ["Mod"], key: "N" },
+      { title: "切换到最近会话", modifiers: ["Mod"], key: "1–9" },
+      { title: "在会话间循环切换", modifiers: ["Ctrl"], key: "Tab" },
+      { title: "在会话中查找", modifiers: ["Mod"], key: "F" },
     ],
   },
   {
-    title: "Composer",
+    title: "输入框",
     shortcuts: [
-      { title: "Send message, or queue it during a run", modifiers: [], key: "Enter" },
-      { title: "Steer the running agent", modifiers: ["Mod"], key: "Enter" },
-      { title: "New line", modifiers: ["Shift"], key: "Enter" },
+      { title: "发送消息，运行期间则排队", modifiers: [], key: "Enter" },
+      { title: "引导运行中的智能体", modifiers: ["Mod"], key: "Enter" },
+      { title: "换行", modifiers: ["Shift"], key: "Enter" },
     ],
   },
   {
-    title: "Workbench",
+    title: "工作台",
     shortcuts: [
-      { title: "Toggle terminal", modifiers: ["Mod"], key: "J" },
-      { title: "New terminal tab", modifiers: ["Mod"], key: "T" },
-      { title: "Toggle review", modifiers: ["Mod"], key: "R" },
-      { title: "Switch to side panel tab", modifiers: ["TabMod"], key: "1–9" },
-      { title: "Close workbench tab", modifiers: ["Mod"], key: "W" },
+      { title: "切换终端", modifiers: ["Mod"], key: "J" },
+      { title: "新建终端标签页", modifiers: ["Mod"], key: "T" },
+      { title: "切换审查面板", modifiers: ["Mod"], key: "R" },
+      { title: "切换到侧边面板标签页", modifiers: ["TabMod"], key: "1–9" },
+      { title: "关闭工作台标签页", modifiers: ["Mod"], key: "W" },
     ],
   },
 ];

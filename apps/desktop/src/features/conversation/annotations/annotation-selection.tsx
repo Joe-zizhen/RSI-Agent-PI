@@ -285,7 +285,7 @@ function AddToChatButton({
         onMouseDown={(event) => event.preventDefault()}
         onClick={onAdd}
       >
-        <span>Add to Chat</span>
+        <span>添加到对话</span>
         <span className="annotation-add__keys" aria-hidden="true">
           {addToChatShortcutKeys(platform).map((key) => (
             <kbd key={key}>{key}</kbd>
@@ -337,9 +337,9 @@ function AnnotationEditor({
       style={{ top: popoverTop(anchor, 44), left: Math.max(POPOVER_GAP, anchor.left - 24) }}
     >
       <input
-        aria-label="Annotation comment"
+        aria-label="批注评论"
         className="annotation-editor__input"
-        placeholder="Add an optional comment…"
+        placeholder="可选，添加评论…"
         ref={inputRef}
         value={value}
         onBlur={() => finish(true)}
@@ -356,10 +356,10 @@ function AnnotationEditor({
         }}
       />
       <button
-        aria-label="Remove annotation"
+        aria-label="移除批注"
         className="annotation-editor__remove"
         data-testid="annotation-remove"
-        title="Remove annotation"
+        title="移除批注"
         type="button"
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => {

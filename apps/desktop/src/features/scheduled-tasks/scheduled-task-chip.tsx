@@ -11,7 +11,7 @@ export function ScheduledTaskChip({ task, onOpen }: ScheduledTaskChipProps) {
     <div className="scheduled-task-chip" data-testid="scheduled-task-chip">
       <span>{formatScheduledTaskRowMeta(task)}</span>
       <button className="button button--secondary" type="button" onClick={onOpen}>
-        Open
+        打开
       </button>
     </div>
   );

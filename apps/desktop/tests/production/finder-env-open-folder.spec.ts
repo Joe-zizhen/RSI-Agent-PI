@@ -76,7 +76,7 @@ test("launches a packaged app under a Finder-style PATH and opens the first fold
       });
 
     await stubNextOpenDialog(harness, [workspacePath]);
-    await window.getByRole("button", { name: "Open first folder" }).click();
+    await window.getByRole("button", { name: "打开第一个文件夹" }).click();
 
     await waitForWorkspaceByPath(window, workspacePath);
     await expect(window.getByTestId("workspace-list")).toContainText(basename(workspacePath));

@@ -33,9 +33,9 @@ test("toggles and restores window transparency", async () => {
 
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "Appearance", exact: true }).click();
+    await window.getByRole("button", { name: "外观", exact: true }).click();
 
-    const transparencyToggle = window.getByLabel("Window transparency");
+    const transparencyToggle = window.getByLabel("窗口透明");
     await expect(transparencyToggle).not.toBeChecked();
     await transparencyToggle.click();
     await expect.poll(async () => (await getDesktopState(window)).enableTransparency).toBe(true);
@@ -81,13 +81,13 @@ test("selects and restores theme presets", async () => {
     const window = await harness.firstWindow();
     await waitForWorkspaceByPath(window, workspacePath);
     await openAppearance(window);
-    await window.getByRole("radio", { name: "Light", exact: true }).click();
+    await window.getByRole("radio", { name: "浅色", exact: true }).click();
     await selectThemePreset(window, "Catppuccin");
     await expect.poll(async () => (await getDesktopState(window)).themePresetId).toBe("catppuccin");
     await expectDerivedTokens(window, "catppuccin", "light");
 
     await selectThemePreset(window, "Tokyo Night");
-    await window.getByRole("radio", { name: "Dark", exact: true }).click();
+    await window.getByRole("radio", { name: "深色", exact: true }).click();
     await expect
       .poll(() => window.evaluate(() => document.documentElement.classList.contains("dark")))
       .toBe(true);
@@ -154,12 +154,12 @@ test("every preset recolours the same design instead of restyling it", async () 
       for (const preset of themePresets) {
         await openAppearance(window);
         await window
-          .getByRole("radio", { name: variant === "light" ? "Light" : "Dark", exact: true })
+          .getByRole("radio", { name: variant === "light" ? "浅色" : "深色", exact: true })
           .click();
         await selectThemePreset(window, preset.name);
-        await expect(window.getByLabel("Color preset")).toHaveValue(preset.id);
+        await expect(window.getByLabel("颜色预设")).toHaveValue(preset.id);
         await expectDerivedTokens(window, preset.id, variant);
-        await window.getByRole("button", { name: "Back to app" }).click();
+        await window.getByRole("button", { name: "返回应用" }).click();
         await expect(window.locator(".main")).toBeVisible();
         await expectSameDesign(window);
       }
@@ -172,7 +172,7 @@ test("every preset recolours the same design instead of restyling it", async () 
 async function openAppearance(window: Page): Promise<void> {
   await window.keyboard.press(desktopShortcut(","));
   await expect(window.getByTestId("settings-surface")).toBeVisible();
-  await window.getByRole("button", { name: "Appearance", exact: true }).click();
+  await window.getByRole("button", { name: "外观", exact: true }).click();
 }
 
 async function hasTransparencyClass(window: Page): Promise<boolean> {
@@ -251,5 +251,5 @@ async function expectSameDesign(window: Page): Promise<void> {
 }
 
 async function selectThemePreset(window: Page, name: string): Promise<void> {
-  await window.getByLabel("Color preset").selectOption({ label: name });
+  await window.getByLabel("颜色预设").selectOption({ label: name });
 }

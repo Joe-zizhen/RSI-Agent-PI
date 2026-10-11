@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import type { HostUiResponse } from "@pi-gui/session-driver";
+import type { HostUiResponse } from "@rsi-agent-pi/session-driver";
 import { trapDialogFocus } from "../../ui/dialog-focus";
 import { focusComposerAfter } from "./focus-composer";
 import { ChevronDownIcon, ChevronRightIcon, CloseIcon } from "../../ui/icons";
@@ -10,7 +10,7 @@ import type {
 
 const ANSI_ESCAPE_PATTERN = /\u001B\[[0-?]*[ -/]*[@-~]/g;
 const DOCK_SEGMENT_SEPARATOR = "--------------------";
-const GENERIC_ACTIVE_LABEL = "Extension UI active";
+const GENERIC_ACTIVE_LABEL = "扩展界面运行中";
 
 interface ExtensionDockBlock {
   readonly key: string;
@@ -125,10 +125,10 @@ export function ExtensionDock({
         </button>
         {onDismiss ? (
           <button
-            aria-label="Hide extension status"
+            aria-label="隐藏扩展状态"
             className="extension-dock__dismiss icon-button"
             data-testid="extension-dock-dismiss"
-            title="Hide until the extension changes it"
+            title="隐藏到扩展更改为止"
             type="button"
             onClick={(event) => focusComposerAfter(event.currentTarget, onDismiss)}
           >
@@ -254,7 +254,7 @@ export function ExtensionDialog({
           <input
             autoFocus
             className="skills-search"
-            placeholder={dialog.placeholder ?? "Enter a value"}
+            placeholder={dialog.placeholder ?? "输入一个值"}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />
@@ -277,7 +277,7 @@ export function ExtensionDialog({
             type="button"
             onClick={respondWithCancel}
           >
-            Cancel
+            取消
           </button>
           {dialog.kind === "confirm" ? (
             <button
@@ -286,7 +286,7 @@ export function ExtensionDialog({
               type="button"
               onClick={respondWithSubmit}
             >
-              Confirm
+              确认
             </button>
           ) : null}
           {dialog.kind === "input" || dialog.kind === "editor" ? (
@@ -296,7 +296,7 @@ export function ExtensionDialog({
               type="button"
               onClick={respondWithSubmit}
             >
-              Submit
+              提交
             </button>
           ) : null}
         </div>

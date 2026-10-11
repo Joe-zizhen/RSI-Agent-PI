@@ -56,8 +56,8 @@ test("ignores persisted multiple app instance opt-in and hides the setting", asy
 
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "General", exact: true }).click();
-    await expect(window.getByLabel("Shell of integrated terminal")).toBeVisible();
+    await window.getByRole("button", { name: "通用", exact: true }).click();
+    await expect(window.getByLabel("集成终端的 Shell")).toBeVisible();
     await expect(window.getByText("Allow multiple app instances")).toHaveCount(0);
     await expect(window.getByLabel("Allow multiple app instances")).toHaveCount(0);
   } finally {
@@ -86,9 +86,9 @@ test("settings nav search filters sections, opens the first match and clears on 
     const search = surface.getByLabel("Search settings");
 
     await search.fill("dark");
-    await expect(nav.getByRole("button")).toHaveText(["Appearance"]);
+    await expect(nav.getByRole("button")).toHaveText(["外观"]);
     await search.press("Enter");
-    await expect(window.locator(".view-header__title")).toHaveText("Appearance");
+    await expect(window.locator(".view-header__title")).toHaveText("外观");
 
     await search.fill("zzz");
     await expect(nav.getByRole("button")).toHaveCount(0);
@@ -97,7 +97,7 @@ test("settings nav search filters sections, opens the first match and clears on 
     await search.press("Escape");
     await expect(search).toHaveValue("");
     await expect(surface).toBeVisible();
-    await expect(nav.getByRole("button", { name: "Keyboard shortcuts" })).toBeVisible();
+    await expect(nav.getByRole("button", { name: "键盘快捷键" })).toBeVisible();
 
     await search.press("Escape");
     await expect(surface).toHaveCount(0);

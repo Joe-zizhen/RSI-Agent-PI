@@ -1,5 +1,5 @@
 import { useCallback, useRef, type RefObject } from "react";
-import type { ExtensionAction, SessionRef } from "@pi-gui/session-driver";
+import type { ExtensionAction, SessionRef } from "@rsi-agent-pi/session-driver";
 import type { PiDesktopApi } from "../../../contracts/ipc";
 import type { RunExtensionAction } from "../conversation/extension-card";
 import type { WorkspaceFileLine } from "../conversation/workspace-file-line";

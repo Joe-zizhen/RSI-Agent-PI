@@ -137,7 +137,7 @@ test("assistant file lines open in the Files panel and web links stay external",
     expect(window.url()).toBe(appUrl);
     await expect(window.getByTestId("file-workbench")).toHaveCount(0);
 
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     await expect(window.locator(".diff-panel")).toBeVisible();
     await fileButton(assistant, "missing.ts:2").click();
     await expect(window.locator(".diff-panel")).toBeVisible();
@@ -177,10 +177,10 @@ test("assistant file lines open in the Files panel and web links stay external",
     await expect(window.locator('[data-testid="file-line-mark"][data-line="2"]')).toContainText(
       "Line two is here",
     );
-    await window.getByRole("button", { name: "View source" }).click();
+    await window.getByRole("button", { name: "查看源码" }).click();
     await expect(window.locator(".file-editor__markdown")).toBeVisible();
     await expect(window.locator(".file-editor__source")).toHaveCount(0);
-    await window.getByRole("button", { name: "View source" }).click();
+    await window.getByRole("button", { name: "查看源码" }).click();
     await expect(window.locator(".file-editor__source")).toBeVisible();
     await expect(window.locator('[data-testid="file-line-mark"][data-line="2"]')).toBeVisible();
 

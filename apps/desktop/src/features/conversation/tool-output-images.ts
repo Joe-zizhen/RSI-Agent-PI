@@ -46,7 +46,7 @@ export function stringifyToolValue(value: unknown): string {
       isImageBlock(nested)
         ? {
             ...nested,
-            data: `[${typeof nested.mimeType === "string" ? nested.mimeType : "image"} image]`,
+            data: `[${typeof nested.mimeType === "string" ? nested.mimeType : "image"} 图片]`,
           }
         : nested,
     2,

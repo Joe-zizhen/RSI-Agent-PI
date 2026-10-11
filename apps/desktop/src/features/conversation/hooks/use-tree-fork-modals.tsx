@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import type { SessionTreeSnapshot } from "@pi-gui/session-driver/types";
+import type { SessionTreeSnapshot } from "@rsi-agent-pi/session-driver/types";
 import {
   type AppView,
   type DesktopAppState,

@@ -37,7 +37,7 @@ for (const invalid of [
     const path = await tempPath();
     const original = `${JSON.stringify(invalid)}\n`;
     await writeFile(path, original);
-    await expect(readScheduledTasksFile(path)).rejects.toThrow(/Invalid scheduled-tasks/);
+    await expect(readScheduledTasksFile(path)).rejects.toThrow(/计划任务数据无效|计划任务字段/);
     await expect(writeScheduledTasksFile(path, [validTask])).rejects.toThrow();
     expect(await readFile(path, "utf8")).toBe(original);
   });
@@ -65,7 +65,7 @@ test("invalid IANA time zones fail decode and do not overwrite the file", async 
   };
   const original = `${JSON.stringify(invalid)}\n`;
   await writeFile(path, original);
-  await expect(readScheduledTasksFile(path)).rejects.toThrow(/Invalid scheduled-tasks/);
+  await expect(readScheduledTasksFile(path)).rejects.toThrow(/计划任务数据无效|计划任务字段/);
   expect(await readFile(path, "utf8")).toBe(original);
 });
 

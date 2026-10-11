@@ -16,13 +16,17 @@ import {
   SessionManager,
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import { DESKTOP_VIEW_REGISTER } from "@pi-gui/extension-ui";
+import { DESKTOP_VIEW_REGISTER } from "@rsi-agent-pi/extension-ui";
 
 // This is an offline integration test, not a real GitHub or model review.
 // Only gh's metadata response is a fixture; Pi, its file loader, Chord, and Git run normally.
 test(
   "the actual file-based extension keeps a rejected Pi preflight Requested, then restores Interrupted",
-  { timeout: 20_000 },
+  {
+    timeout: 20_000,
+    skip:
+      process.platform === "win32" ? "The fixture gh executable is a POSIX shebang script." : false,
+  },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "pi-pr-review-admission-"));
     const cwd = join(directory, "checkout");

@@ -1,5 +1,5 @@
-import type { ExtensionFlagValues } from "@pi-gui/session-driver";
-import type { RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { ExtensionFlagValues } from "@rsi-agent-pi/session-driver";
+import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 
 export interface ResolvedExtensionFlags {
   /** Every registered flag the user set, switched-off booleans included: the workspace's next defaults. */

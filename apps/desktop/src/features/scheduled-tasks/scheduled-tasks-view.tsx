@@ -26,10 +26,10 @@ interface ScheduledTasksViewProps {
 }
 
 const FILTERS: readonly { readonly id: ScheduledTaskFilter; readonly label: string }[] = [
-  { id: "all", label: "All" },
-  { id: "active", label: "Active" },
-  { id: "paused", label: "Paused" },
-  { id: "completed", label: "Completed" },
+  { id: "all", label: "全部" },
+  { id: "active", label: "生效中" },
+  { id: "paused", label: "已暂停" },
+  { id: "completed", label: "已完成" },
 ];
 
 export function ScheduledTasksView({
@@ -51,10 +51,8 @@ export function ScheduledTasksView({
     <section className="canvas scheduled-tasks-view" data-testid="scheduled-tasks-view">
       <header className="view-header">
         <div>
-          <h1 className="view-header__title">Scheduled tasks</h1>
-          <p className="view-header__body">
-            Ask pi to schedule tasks, set reminders, or monitor for updates.
-          </p>
+          <h1 className="view-header__title">计划任务</h1>
+          <p className="view-header__body">让 pi 安排任务、设置提醒或监控更新。</p>
         </div>
         <div className="view-header__actions">
           <div className="scheduled-create">
@@ -66,7 +64,7 @@ export function ScheduledTasksView({
               aria-expanded={createOpen}
               onClick={() => setCreateOpen((open) => !open)}
             >
-              Create
+              创建
             </button>
             {createOpen ? (
               <div className="workspace-menu scheduled-create__menu" role="menu">
@@ -79,7 +77,7 @@ export function ScheduledTasksView({
                     onCreateWithPi();
                   }}
                 >
-                  Create with pi
+                  让 pi 创建
                 </button>
                 <button
                   className="workspace-menu__item"
@@ -90,7 +88,7 @@ export function ScheduledTasksView({
                     onOpenEditor({ mode: "create" });
                   }}
                 >
-                  Set up manually
+                  手动设置
                 </button>
               </div>
             ) : null}
@@ -100,10 +98,10 @@ export function ScheduledTasksView({
 
       <div className="scheduled-toolbar">
         <input
-          aria-label="Search scheduled tasks"
+          aria-label="搜索计划任务"
           className="skills-search"
           data-testid="scheduled-task-search"
-          placeholder="Search"
+          placeholder="搜索"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -128,11 +126,11 @@ export function ScheduledTasksView({
 
       {visible.length === 0 ? (
         <div className="empty-panel" data-testid="scheduled-tasks-empty">
-          <h2>{filter === "active" ? "No active scheduled tasks" : "No scheduled tasks"}</h2>
+          <h2>{filter === "active" ? "没有生效中的计划任务" : "没有计划任务"}</h2>
           <p>
             {filter === "active"
-              ? "Scheduled tasks run on this device while pi-gui is open. They do not run in the cloud or after you quit."
-              : "Create a task manually or ask pi to set one up."}
+              ? "计划任务在 RSI-Agent-PI 打开时于本设备运行。它们不会在云端运行，也不会在你退出后运行。"
+              : "手动创建任务，或让 pi 建立一个。"}
           </p>
         </div>
       ) : (
@@ -156,7 +154,7 @@ export function ScheduledTasksView({
                 <button
                   className="icon-button"
                   type="button"
-                  aria-label={`Actions for ${task.title}`}
+                  aria-label={`${task.title} 的操作`}
                   aria-haspopup="menu"
                   aria-expanded={menuTaskId === task.id}
                   onClick={(event) => {
@@ -181,7 +179,7 @@ export function ScheduledTasksView({
                           });
                         }}
                       >
-                        Resume
+                        恢复
                       </button>
                     ) : task.status !== "completed" ? (
                       <button
@@ -196,7 +194,7 @@ export function ScheduledTasksView({
                           });
                         }}
                       >
-                        Pause
+                        暂停
                       </button>
                     ) : null}
                     <button
@@ -207,7 +205,7 @@ export function ScheduledTasksView({
                         onOpenEditor({ mode: "edit", taskId: task.id });
                       }}
                     >
-                      Edit
+                      编辑
                     </button>
                     <button
                       className="workspace-menu__item workspace-menu__item--danger"
@@ -221,7 +219,7 @@ export function ScheduledTasksView({
                         });
                       }}
                     >
-                      Delete
+                      删除
                     </button>
                   </div>
                 ) : null}

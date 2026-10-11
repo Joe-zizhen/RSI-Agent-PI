@@ -64,10 +64,8 @@ test("creates and selects a worktree-backed workspace from the desktop UI", asyn
     const window = await harness.firstWindow();
     const rootWorkspace = await waitForWorkspaceByPath(window, workspacePath);
 
-    await window
-      .getByRole("button", { name: `Workspace actions for ${rootWorkspace.name}` })
-      .click();
-    await window.getByRole("button", { name: "Create permanent worktree" }).click();
+    await window.getByRole("button", { name: `${rootWorkspace.name} 的项目操作` }).click();
+    await window.getByRole("button", { name: "创建永久工作树" }).click();
 
     await expect
       .poll(async () => {
@@ -100,11 +98,11 @@ test("creates and selects a worktree-backed workspace from the desktop UI", asyn
 
     await window
       .getByRole("complementary")
-      .getByRole("button", { name: "New thread", exact: true })
+      .getByRole("button", { name: "新建会话", exact: true })
       .click();
     await expect(window.getByTestId("new-thread-composer")).toBeVisible();
-    await expect(window.getByRole("button", { name: "Local", exact: true })).toBeVisible();
-    await expect(window.getByRole("button", { name: "Worktree", exact: true })).toBeVisible();
+    await expect(window.getByRole("button", { name: "本地", exact: true })).toBeVisible();
+    await expect(window.getByRole("button", { name: "工作树", exact: true })).toBeVisible();
   } finally {
     await harness.close();
   }
@@ -136,10 +134,8 @@ test("scopes worktree creation and startup collection to the active profile", as
       const legacyWorkspace = await waitForWorkspaceByPath(window, canonicalLegacyWorktree);
       expect(legacyWorkspace.kind).toBe("worktree");
 
-      await window
-        .getByRole("button", { name: `Workspace actions for ${rootWorkspace.name}` })
-        .click();
-      await window.getByRole("button", { name: "Create permanent worktree" }).click();
+      await window.getByRole("button", { name: `${rootWorkspace.name} 的项目操作` }).click();
+      await window.getByRole("button", { name: "创建永久工作树" }).click();
 
       await expect
         .poll(async () => {
@@ -249,10 +245,8 @@ test("shows a worktree icon in the sidebar without a local text badge", async ()
     await expect(localRow.locator(".session-row__workspace-icon")).toHaveCount(0);
     await chooseThreadGrouping(window, "workspace");
 
-    await window
-      .getByRole("button", { name: `Workspace actions for ${rootWorkspace.name}` })
-      .click();
-    await window.getByRole("button", { name: "Create permanent worktree" }).click();
+    await window.getByRole("button", { name: `${rootWorkspace.name} 的项目操作` }).click();
+    await window.getByRole("button", { name: "创建永久工作树" }).click();
 
     await expect
       .poll(async () => {
@@ -294,10 +288,8 @@ test("keeps orphaned worktree workspaces visible after removing the root workspa
     const window = await harness.firstWindow();
     const rootWorkspace = await waitForWorkspaceByPath(window, workspacePath);
 
-    await window
-      .getByRole("button", { name: `Workspace actions for ${rootWorkspace.name}` })
-      .click();
-    await window.getByRole("button", { name: "Create permanent worktree" }).click();
+    await window.getByRole("button", { name: `${rootWorkspace.name} 的项目操作` }).click();
+    await window.getByRole("button", { name: "创建永久工作树" }).click();
 
     await expect
       .poll(async () => {
@@ -315,11 +307,9 @@ test("keeps orphaned worktree workspaces visible after removing the root workspa
     );
     assertExists(createdWorkspace, "Expected created worktree workspace");
 
-    await window
-      .getByRole("button", { name: `Workspace actions for ${rootWorkspace.name}` })
-      .click();
+    await window.getByRole("button", { name: `${rootWorkspace.name} 的项目操作` }).click();
     const acceptRemoval = window.waitForEvent("dialog").then((dialog) => dialog.accept());
-    await Promise.all([window.getByRole("button", { name: "Remove" }).click(), acceptRemoval]);
+    await Promise.all([window.getByRole("button", { name: "移除" }).click(), acceptRemoval]);
 
     await expect(window.getByTestId("empty-state")).toHaveCount(0);
     await expect
@@ -361,8 +351,8 @@ test("a git worktree the user opens is its own folder and nests the worktrees ma
 
     // The user's own checkout offers to make a worktree, never to delete itself.
     await window.getByRole("button", { name: `Workspace actions for ${checkout.name}` }).click();
-    await expect(window.getByRole("button", { name: "Remove worktree" })).toHaveCount(0);
-    await window.getByRole("button", { name: "Create permanent worktree" }).click();
+    await expect(window.getByRole("button", { name: "移除工作树" })).toHaveCount(0);
+    await window.getByRole("button", { name: "创建永久工作树" }).click();
 
     await expect
       .poll(async () => {

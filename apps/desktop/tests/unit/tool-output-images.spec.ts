@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { sessionKey } from "@pi-gui/session-driver";
+import { sessionKey } from "@rsi-agent-pi/session-driver";
 import type { TranscriptMessage } from "../../contracts/timeline-types";
 import { applyTimelineEvent } from "../../electron/conversation/app-store-timeline";
 import {
@@ -23,8 +23,8 @@ test("only listed image types become thumbnails", () => {
 
 test("the row's text hides every image's data, shown or not", () => {
   const text = stringifyToolValue(output);
-  expect(text).toContain("[image/png image]");
-  expect(text).toContain("[image/svg+xml image]");
+  expect(text).toContain("[image/png 图片]");
+  expect(text).toContain("[image/svg+xml 图片]");
   expect(text).not.toContain("UE5HREFUQQ==");
   expect(text).not.toContain("PHN2Zz4=");
   expect(text).toContain("two images");

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { PiDesktopApi } from "../../../contracts/ipc";
 import type { DesktopExtensionViewInfo } from "../../../contracts/extension-views";
 

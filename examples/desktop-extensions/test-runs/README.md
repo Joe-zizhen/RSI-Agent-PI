@@ -4,7 +4,7 @@ This is a normal file-based Pi extension with an optional custom browser view.
 The command, agent tool and desktop buttons share one backend run owner. It uses
 Pi's `createLocalBashOperations` API for live process output,
 timeout and cancellation. The optional desktop declaration uses Pi-gui's local
-private `@pi-gui/extension-ui` package. This helper is implemented in this repository;
+private `@rsi-agent-pi/extension-ui` package. This helper is implemented in this repository;
 it is not published to npm or provided by upstream Pi.
 
 The supplied suites execute real `node:test` files: a passing suite, an intentional

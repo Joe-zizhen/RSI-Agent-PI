@@ -2,7 +2,7 @@ import { defineFacet } from "@earendil-works/chord";
 import { BACKGROUND_CONTEXT } from "@earendil-works/chord/context";
 import { Type } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { registerDesktopView } from "@pi-gui/extension-ui";
+import { registerDesktopView } from "@rsi-agent-pi/extension-ui";
 import { PRReview, type ReviewRecord, type ReviewState } from "./contract";
 import { ReviewRepository } from "./repository";
 import {

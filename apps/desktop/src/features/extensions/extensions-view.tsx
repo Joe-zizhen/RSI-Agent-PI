@@ -1,4 +1,4 @@
-import type { RuntimeExtensionRecord } from "@pi-gui/session-driver/runtime-types";
+import type { RuntimeExtensionRecord } from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
   ExtensionCommandCompatibilityRecord,
   WorkspaceRecord,
@@ -15,7 +15,7 @@ import {
 import { displayPath, ResourceDetail } from "./resource-detail";
 import { ResourceEmptyState, ResourceList, type ResourceListGroup } from "./resource-list";
 
-const GROUP_ORDER = ["Workspace", "User", "This session", PI_ADDONS_LABEL, PI_GUI_TOOLS_LABEL];
+const GROUP_ORDER = ["项目", "用户", "本次会话", PI_ADDONS_LABEL, PI_GUI_TOOLS_LABEL];
 
 interface ExtensionsTabProps {
   readonly workspace: WorkspaceRecord;
@@ -43,11 +43,11 @@ export function ExtensionsTab({
   const list =
     extensions.length === 0 ? (
       <ResourceEmptyState
-        title={searching ? "No extensions match" : "No extensions yet"}
+        title={searching ? "没有匹配的扩展" : "还没有扩展"}
         body={
           searching
-            ? "Try another name, command or tool."
-            : "Extensions are discovered in this workspace and your user extension folders. Refresh after adding one."
+            ? "换一个名称、命令或工具再试。"
+            : "扩展会在此项目和你的用户扩展文件夹中被发现。添加后刷新即可。"
         }
       />
     ) : (
@@ -121,34 +121,34 @@ function ExtensionDetail({
       ) : null}
       <SettingsGroup>
         <SettingsRow
-          title="Source"
+          title="来源"
           description={
             isPiAddonExtension(selected)
-              ? "Ships with pi; this switch also applies to pi in the terminal"
+              ? "随 pi 附带；此开关同时作用于终端中的 pi"
               : selected.sourceInfo.origin === "package"
-                ? "Installed as a package"
-                : "Loaded from a file"
+                ? "已作为软件包安装"
+                : "从文件加载"
           }
         >
           <span className="settings-row__value">{extensionGroupLabel(selected)}</span>
         </SettingsRow>
         {isPiGuiBuiltinExtension(selected) || isPiAddonExtension(selected) ? null : (
-          <SettingsRow title="Location">
+          <SettingsRow title="位置">
             <code className="resource-detail__code" title={selected.path}>
               {displayPath(selected.path, workspace.path)}
             </code>
           </SettingsRow>
         )}
       </SettingsGroup>
-      <ExtensionContributionSection title="Tools" items={selected.tools.map((tool) => tool.name)} />
+      <ExtensionContributionSection title="工具" items={selected.tools.map((tool) => tool.name)} />
       {selected.commands.length > 0 ? (
         <ExtensionCompatibilitySection
           commands={selected.commands}
           compatibilityRecords={compatibilityRecords}
         />
       ) : null}
-      <ExtensionContributionSection title="Flags" items={selected.flags} />
-      <ExtensionContributionSection title="Shortcuts" items={selected.shortcuts} />
+      <ExtensionContributionSection title="标志" items={selected.flags} />
+      <ExtensionContributionSection title="快捷键" items={selected.shortcuts} />
       <ExtensionDiagnostics diagnostics={selected.diagnostics} />
     </ResourceDetail>
   );
@@ -178,15 +178,15 @@ function groupExtensions(
 function describeExtension(extension: RuntimeExtensionRecord): string {
   if (extension.description) return extension.description;
   const parts = [
-    countLabel(extension.tools.length, "tool"),
-    countLabel(extension.commands.length, "command"),
-    countLabel(extension.diagnostics.length, "issue"),
+    countLabel(extension.tools.length, "工具"),
+    countLabel(extension.commands.length, "命令"),
+    countLabel(extension.diagnostics.length, "问题"),
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(" · ") : extension.sourceInfo.source;
 }
 
 function countLabel(count: number, noun: string): string {
-  return count === 0 ? "" : `${count} ${noun}${count === 1 ? "" : "s"}`;
+  return count === 0 ? "" : `${count} 个${noun}`;
 }
 
 function isFolderExtension(extension: RuntimeExtensionRecord): boolean {
@@ -232,7 +232,7 @@ function ExtensionDiagnostics({
 }) {
   if (diagnostics.length === 0) return null;
   return (
-    <SettingsGroup title="Diagnostics">
+    <SettingsGroup title="诊断">
       {diagnostics.map((diagnostic, index) => (
         <div
           className={`activity-item activity-item--${diagnostic.type === "error" ? "error" : "info"}`}
@@ -264,13 +264,13 @@ function ExtensionCompatibilitySection({
 
   return (
     <SettingsGroup
-      title="Commands"
-      description="Whether each command works in the app is learned the first time it runs here."
+      title="命令"
+      description="每个命令是否可在应用内使用，会在它首次在此运行后获知。"
     >
       <div className="resource-detail__tokens">
         {supported.map((record) => (
           <code className="resource-detail__token" key={`supported:${record.commandName}`}>
-            {record.commandName} · GUI-compatible
+            {record.commandName} · 兼容 GUI
           </code>
         ))}
         {terminalOnly.map((record) => (
@@ -278,12 +278,12 @@ function ExtensionCompatibilitySection({
             className="resource-detail__token resource-detail__token--warning"
             key={`terminal:${record.commandName}`}
           >
-            {record.commandName} · Terminal-only
+            {record.commandName} · 仅限终端
           </code>
         ))}
         {unknown.map((commandName) => (
           <code className="resource-detail__token" key={`unknown:${commandName}`}>
-            {commandName} · Unknown
+            {commandName} · 未知
           </code>
         ))}
       </div>

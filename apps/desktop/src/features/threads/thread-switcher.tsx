@@ -19,13 +19,8 @@ export function ThreadSwitcher({ state, onChoose }: ThreadSwitcherProps) {
   return (
     <div className="thread-switcher" data-testid="thread-switcher">
       <div className="thread-switcher__panel">
-        <div className="thread-switcher__title">Switch thread</div>
-        <ul
-          aria-label="Recent threads"
-          className="thread-switcher__list"
-          ref={listRef}
-          role="listbox"
-        >
+        <div className="thread-switcher__title">切换会话</div>
+        <ul aria-label="最近会话" className="thread-switcher__list" ref={listRef} role="listbox">
           {state.entries.map((entry, index) => (
             <li
               aria-selected={index === state.index}

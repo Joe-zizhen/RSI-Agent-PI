@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type SetStateAction } from "react";
-import type { SessionRef } from "@pi-gui/session-driver/types";
+import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { ComposerDraftSyncSource, DesktopAppState } from "../../../../contracts/desktop-state";
 import type { PiDesktopApi } from "../../../../contracts/ipc";
 
@@ -219,14 +219,14 @@ export function useComposerDraftSync(params: UseComposerDraftSyncParams) {
 
   const flushComposerDraftAsync = useCallback(
     async (target: SessionRef): Promise<void> => {
-      if (!api) throw new Error("The desktop connection is unavailable.");
+      if (!api) throw new Error("桌面连接不可用。");
       const sessionKey = `${target.workspaceId}:${target.sessionId}`;
       const requireCurrentSession = () => {
         if (
           currentSessionKeyRef.current !== sessionKey ||
           hydratedComposerSessionKeyRef.current !== sessionKey
         )
-          throw new Error("The task changed before its draft could be saved.");
+          throw new Error("任务在草稿保存前已发生变更。");
       };
       const cancelPendingWrite = () => {
         if (composerDraftWriteTimerRef.current !== null) {

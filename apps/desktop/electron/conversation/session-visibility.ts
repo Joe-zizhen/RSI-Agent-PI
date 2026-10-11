@@ -1,6 +1,6 @@
 import type { BrowserWindow } from "electron";
 import type { DesktopAppState } from "../../contracts/desktop-state";
-import type { SessionRef } from "@pi-gui/session-driver";
+import type { SessionRef } from "@rsi-agent-pi/session-driver";
 
 type SessionVisibilityOverride = "active" | "inactive" | undefined;
 

@@ -1,5 +1,5 @@
 import type { ExtensionFactory } from "@earendil-works/pi-coding-agent";
-import type { SessionRef, WorkspaceRef } from "@pi-gui/session-driver";
+import type { SessionRef, WorkspaceRef } from "@rsi-agent-pi/session-driver";
 
 /** Pi publishes message_end before append; turn_end supplies the persisted identity. */
 export function createTranscriptIdentityExtension(options: {

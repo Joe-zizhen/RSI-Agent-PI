@@ -169,7 +169,7 @@ async function main() {
   await mkdir(path.join(tapDir, "Casks"), { recursive: true });
 
   try {
-    await run("pnpm", ["--filter", "@pi-gui/desktop", "run", "build"]);
+    await run("pnpm", ["--filter", "@rsi-agent-pi/desktop", "run", "build"]);
 
     const dmgA = await packageDmg(values["version-a"], releaseDirA);
     const dmgB = await packageDmg(values["version-b"], releaseDirB);

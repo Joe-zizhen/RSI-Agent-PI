@@ -6,7 +6,7 @@ import type {
   TurnCaptureObserver,
   TurnCaptureOpening,
   WorkspaceRef,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 
 interface CaptureOptions {
   readonly workspace: WorkspaceRef;

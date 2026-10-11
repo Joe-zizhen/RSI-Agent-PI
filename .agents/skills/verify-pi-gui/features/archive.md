@@ -19,7 +19,7 @@ Users hide a thread from the active sidebar and recover it from the Archived gro
 Preconditions: isolated workspace with fixture threads Thread one and Thread two.
 
 - **Primary proof:** the default conversation recipe archives and restores a real thread; see [thread continuity](thread-continuity.md).
-- **Additional regression:** `pnpm --filter @pi-gui/desktop run test:e2e:runner -- apps/desktop/tests/core/archive.spec.ts`. Menu and shortcut routes: `apps/desktop/tests/core/thread-menu.spec.ts`.
+- **Additional regression:** `pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner -- apps/desktop/tests/core/archive.spec.ts`. Menu and shortcut routes: `apps/desktop/tests/core/thread-menu.spec.ts`.
 - **Archive:** hover the active `.session-row` for Thread two and click `getByLabel('Archive Thread two')`. Because Thread two was selected, the topbar switches to Thread one (selection only moves when the archived thread was selected) and `.archived-thread-group` appears collapsed.
 - **Expand/restore:** click `.archived-thread-group__toggle`, require `aria-expanded="true"`, then hover the archived row and click `getByLabel('Restore Thread two')`. Archived rows always show their folder, so the full label is `Restore <title> in <folder>`; the locator relies on substring matching.
 - **Proof:** Thread two returns to the active session list, the now-empty archived group disappears, and read-only state confirms `archivedAt` is cleared. Capture before/archive/restore states and the actions.

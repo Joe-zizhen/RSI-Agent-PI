@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type {
   RuntimeSettingsSnapshot,
   RuntimeSnapshot,
-} from "@pi-gui/session-driver/runtime-types";
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
   ModelSettingsScopeMode,
   NotificationPreferences,
@@ -16,11 +16,13 @@ import type {
 import { SettingsAppearanceSection } from "./settings-appearance-section";
 import { SettingsGeneralSection } from "./settings-general-section";
 import { type McpSettingsActions, SettingsMcpSection } from "./settings-mcp-section";
+import { SettingsMemorySection } from "./settings-memory-section";
 import { SettingsModelsSection } from "./settings-models-section";
 import { SettingsNotificationsSection } from "./settings-notifications-section";
 import { SettingsProvidersSection } from "./settings-providers-section";
 import { type SettingsSection, settingsSectionDefinition } from "./settings-sections";
 import { SettingsShortcutsSection } from "./settings-shortcuts-section";
+import { SettingsUpdateSection } from "./settings-update-section";
 
 export type { SettingsSection } from "./settings-sections";
 
@@ -60,6 +62,8 @@ interface SettingsViewProps {
   readonly onSetThemeMode: (mode: "system" | "light" | "dark") => void;
   readonly onSetThemePresetId: (presetId: ThemePresetId) => void;
   readonly onSetEnableTransparency: (enabled: boolean) => void;
+  readonly memoryEnabled: boolean;
+  readonly onToggleMemory: (enabled: boolean) => void;
   readonly mcpActions: McpSettingsActions;
 }
 
@@ -96,6 +100,8 @@ export function SettingsView({
   onSetThemeMode,
   onSetThemePresetId,
   onSetEnableTransparency,
+  memoryEnabled,
+  onToggleMemory,
   mcpActions,
 }: SettingsViewProps) {
   const definition = settingsSectionDefinition(section);
@@ -103,9 +109,7 @@ export function SettingsView({
     <header className="view-header">
       <div>
         <h1 className="view-header__title">{definition.title}</h1>
-        <p className="view-header__body">
-          {definition.description(workspace?.name ?? "this workspace")}
-        </p>
+        <p className="view-header__body">{definition.description(workspace?.name ?? "当前项目")}</p>
       </div>
       {headerAccessory ? <div className="view-header__actions">{headerAccessory}</div> : null}
     </header>
@@ -119,9 +123,9 @@ export function SettingsView({
           <div className="settings-group">
             <div className="settings-row">
               <div className="settings-row__label">
-                <div className="settings-row__title">Select a workspace</div>
+                <div className="settings-row__title">选择项目</div>
                 <div className="settings-row__description">
-                  Providers and models are set per workspace. Choose one, or open a folder first.
+                  提供商与模型按项目设置。请选择一个项目，或先打开一个文件夹。
                 </div>
               </div>
             </div>
@@ -161,6 +165,8 @@ export function SettingsView({
 
           {section === "shortcuts" ? <SettingsShortcutsSection platform={platform} /> : null}
 
+          {section === "update" ? <SettingsUpdateSection /> : null}
+
           {section === "providers" ? (
             <SettingsProvidersSection
               runtime={runtime}
@@ -185,6 +191,14 @@ export function SettingsView({
 
           {section === "mcp" && workspace ? (
             <SettingsMcpSection actions={mcpActions} workspaceId={workspace.id} />
+          ) : null}
+
+          {section === "memory" && workspace ? (
+            <SettingsMemorySection
+              workspaceId={workspace.id}
+              memoryEnabled={memoryEnabled}
+              onToggleMemory={onToggleMemory}
+            />
           ) : null}
 
           {section === "notifications" ? (

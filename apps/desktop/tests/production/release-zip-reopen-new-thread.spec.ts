@@ -47,7 +47,7 @@ test("relaunches a packaged release-zip build with a new auto-titled thread and 
       workspaceName: basename(workspacePath),
     });
 
-    await expect(window.locator(".chat-header__title")).toHaveText("New thread");
+    await expect(window.locator(".chat-header__title")).toHaveText("新会话");
     await resolveDeferredThreadTitleEventually(firstRun, generatedTitle);
     await expect(window.locator(".chat-header__title")).toHaveText(generatedTitle);
     await expect(
@@ -78,7 +78,7 @@ test("relaunches a packaged release-zip build with a new auto-titled thread and 
       window.locator(".session-row__select", { hasText: generatedTitle }).first(),
     ).toBeVisible();
     await expect(window.getByTestId("transcript")).toContainText(promptText);
-    await expect(window.getByTestId("transcript")).not.toContainText("Loading transcript");
+    await expect(window.getByTestId("transcript")).not.toContainText("正在加载对话记录");
     await expect
       .poll(async () => {
         const transcript = await getSelectedTranscript(window);
@@ -144,7 +144,7 @@ test("relaunches a packaged release-zip build with multiple new threads and rest
 
     await selectSession(window, firstTitle);
     await expect(window.getByTestId("transcript")).toContainText(firstResponse);
-    await expect(window.getByTestId("transcript")).not.toContainText("Loading transcript");
+    await expect(window.getByTestId("transcript")).not.toContainText("正在加载对话记录");
     await expect
       .poll(async () => {
         const persisted = JSON.parse(
@@ -176,7 +176,7 @@ test("relaunches a packaged release-zip build with multiple new threads and rest
 
     await expect(window.locator(".chat-header__title")).toHaveText(firstTitle);
     await expect(window.getByTestId("transcript")).toContainText(firstResponse);
-    await expect(window.getByTestId("transcript")).not.toContainText("Loading transcript");
+    await expect(window.getByTestId("transcript")).not.toContainText("正在加载对话记录");
     await expect
       .poll(async () => {
         const transcript = await getSelectedTranscript(window);
@@ -186,7 +186,7 @@ test("relaunches a packaged release-zip build with multiple new threads and rest
 
     await selectSession(window, secondTitle);
     await expect(window.getByTestId("transcript")).toContainText(secondResponse);
-    await expect(window.getByTestId("transcript")).not.toContainText("Loading transcript");
+    await expect(window.getByTestId("transcript")).not.toContainText("正在加载对话记录");
   } finally {
     await secondRun.close();
   }

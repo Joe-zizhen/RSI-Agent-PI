@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import type { Context } from "@earendil-works/chord";
-import type { DesktopViewDeclaration } from "@pi-gui/extension-ui";
+import type { DesktopViewDeclaration } from "@rsi-agent-pi/extension-ui";
 import { expect, test } from "@playwright/test";
 import { createJiti } from "jiti";
 

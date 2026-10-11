@@ -1,4 +1,4 @@
-import type { ExtensionCompatibilityIssue } from "@pi-gui/session-driver";
+import type { ExtensionCompatibilityIssue } from "@rsi-agent-pi/session-driver";
 
 const UNSUPPORTED_HOST_UI_PREFIX = "__PI_GUI_UNSUPPORTED_HOST_UI__:";
 

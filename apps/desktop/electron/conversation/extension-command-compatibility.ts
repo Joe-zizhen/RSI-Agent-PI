@@ -1,4 +1,7 @@
-import type { RuntimeCommandRecord, RuntimeSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type {
+  RuntimeCommandRecord,
+  RuntimeSnapshot,
+} from "@rsi-agent-pi/session-driver/runtime-types";
 import type { ExtensionCommandCompatibilityRecord } from "../../contracts/desktop-state";
 
 export interface PendingRuntimeCommandExecution {

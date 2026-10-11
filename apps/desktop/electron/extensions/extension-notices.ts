@@ -1,4 +1,4 @@
-import type { HostUiRequest } from "@pi-gui/session-driver";
+import type { HostUiRequest } from "@rsi-agent-pi/session-driver";
 import type { SessionExtensionNoticeRecord } from "../../contracts/desktop-state";
 
 /** Most toasts shown at once; the oldest drops when an extension notifies past this. */

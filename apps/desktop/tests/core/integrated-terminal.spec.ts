@@ -33,7 +33,7 @@ test("opens task terminals with persistent output and independent shell tabs", a
     await waitForWorkspaceByPath(window, workspacePath);
     await createNamedThread(window, "Terminal host thread");
 
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     const terminal = window.getByTestId("integrated-terminal");
     await expect(terminal).toBeVisible();
     await expect(window.getByTestId("terminal-tab")).toHaveCount(1);
@@ -87,7 +87,7 @@ test("opens task terminals with persistent output and independent shell tabs", a
       .poll(async () => (await getDesktopState(window)).composerAttachments.length)
       .toBe(0);
 
-    await window.getByLabel("New terminal").click();
+    await window.getByLabel("新建终端").click();
     await expect(window.getByTestId("terminal-tab")).toHaveCount(2);
     await window.getByTestId("integrated-terminal").locator(".xterm").click();
     await window.keyboard.press(desktopShortcut("T"));
@@ -98,7 +98,7 @@ test("opens task terminals with persistent output and independent shell tabs", a
     // Shells rename tabs through OSC titles (Ubuntu's bashrc sets user@host: dir), so
     // target the panel's own close buttons rather than the "Terminal N" label.
     await window
-      .getByRole("tablist", { name: "Terminal sessions" })
+      .getByRole("tablist", { name: "终端会话" })
       .locator(".terminal-panel__tab-close")
       .last()
       .click();
@@ -123,7 +123,7 @@ test("persists the integrated terminal shell setting", async () => {
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
     await window.getByRole("button", { name: "General", exact: true }).click();
-    const shellInput = window.getByLabel("Shell of integrated terminal");
+    const shellInput = window.getByLabel("集成终端的 Shell");
     await shellInput.fill("/bin/zsh");
     await shellInput.press("Enter");
     await expect
@@ -147,7 +147,7 @@ test("pastes clipboard text into the integrated terminal once", async () => {
     await waitForWorkspaceByPath(window, workspacePath);
     await createNamedThread(window, "Terminal paste thread");
 
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     const terminal = window.getByTestId("integrated-terminal");
     await expect(terminal).toBeVisible();
     await terminal.locator(".xterm").click();
@@ -189,7 +189,7 @@ test("writes an oversized terminal paste in chunks instead of dropping it", asyn
     await waitForWorkspaceByPath(window, workspacePath);
     await createNamedThread(window, "Terminal large paste thread");
 
-    await selectSidePanel(window, "Terminal");
+    await selectSidePanel(window, "终端");
     const terminal = window.getByTestId("integrated-terminal");
     await expect(terminal).toBeVisible();
     await terminal.locator(".xterm").click();

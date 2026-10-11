@@ -61,11 +61,11 @@ export function ForkModal({
       >
         <div className="tree-modal__header">
           <div>
-            <div className="tree-modal__eyebrow">Fork conversation</div>
-            <h2 className="tree-modal__title">Start a new thread</h2>
+            <div className="tree-modal__eyebrow">分叉对话</div>
+            <h2 className="tree-modal__title">开始新会话</h2>
           </div>
           <button
-            aria-label="Close fork modal"
+            aria-label="关闭分叉对话框"
             className="tree-modal__close"
             disabled={submitting}
             type="button"
@@ -83,9 +83,7 @@ export function ForkModal({
 
         <div className="tree-modal__summary-step">
           <div className="tree-modal__summary-copy">
-            Forks the conversation up to and including this response into a new sidebar thread with
-            an empty composer, so you can continue it in a different direction. The original thread
-            stays untouched.
+            把对话截至并包含本条回复的内容分叉为侧边栏中的新会话，输入框为空，你可以朝不同方向继续。原会话保持不变。
           </div>
 
           {messagePreview ? (
@@ -94,11 +92,7 @@ export function ForkModal({
             </div>
           ) : null}
 
-          <div
-            className="new-thread__environment-group"
-            role="radiogroup"
-            aria-label="Fork environment"
-          >
+          <div className="new-thread__environment-group" role="radiogroup" aria-label="分叉环境">
             <button
               aria-pressed={environment === "local"}
               className={`new-thread__environment ${environment === "local" ? "new-thread__environment--active" : ""}`}
@@ -106,26 +100,26 @@ export function ForkModal({
               type="button"
               onClick={() => setEnvironment("local")}
             >
-              <span>Same worktree</span>
+              <span>同一工作树</span>
             </button>
             <button
               aria-pressed={environment === "worktree"}
               className={`new-thread__environment ${environment === "worktree" ? "new-thread__environment--active" : ""}`}
               data-testid="fork-environment-worktree"
               disabled={!canUseWorktree}
-              title={canUseWorktree ? undefined : "This workspace can't create worktrees."}
+              title={canUseWorktree ? undefined : "此项目无法创建工作树。"}
               type="button"
               onClick={() => setEnvironment("worktree")}
             >
-              <span>New worktree</span>
+              <span>新建工作树</span>
             </button>
           </div>
 
           <div className="tree-modal__footer">
             <div className="tree-modal__hint">
               {environment === "worktree"
-                ? "A fresh worktree is created and the forked thread opens there."
-                : "The forked thread opens in the same folder as the original."}
+                ? "将创建一个全新工作树，分叉出的会话在其中打开。"
+                : "分叉出的会话在与原会话相同的文件夹中打开。"}
             </div>
             <div className="tree-modal__actions">
               <button
@@ -134,7 +128,7 @@ export function ForkModal({
                 type="button"
                 onClick={onClose}
               >
-                Cancel
+                取消
               </button>
               <button
                 className="button button--primary"
@@ -144,7 +138,7 @@ export function ForkModal({
                 type="button"
                 onClick={() => onSubmit(environment)}
               >
-                {submitting ? "Forking…" : "Fork thread"}
+                {submitting ? "分叉中…" : "分叉会话"}
               </button>
             </div>
           </div>

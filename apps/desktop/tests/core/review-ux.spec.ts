@@ -3,7 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
-import type { SessionDriverEvent, SessionRef } from "@pi-gui/session-driver";
+import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import {
   commitAllInGitRepo,
   createNamedThread,
@@ -75,7 +75,7 @@ test("syntax-highlights known languages and leaves unknown extensions plain", as
   test.setTimeout(45_000);
   const { harness, window } = await launchSeeded("Review UX highlight");
   try {
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     const diffPanel = window.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
 
@@ -83,7 +83,7 @@ test("syntax-highlights known languages and leaves unknown extensions plain", as
     await expect(tsRow).toBeVisible();
     await tsRow.locator(".diff-panel__file-name").click();
     const tsDiff = diffPanel
-      .getByRole("region", { name: "Diff", exact: true })
+      .getByRole("region", { name: "差异", exact: true })
       .locator(".diff-inline");
     await expect(tsDiff).toHaveAttribute("data-language", "typescript");
     await expect(tsDiff.locator('span[style*="color"]').first()).toBeVisible();
@@ -91,11 +91,11 @@ test("syntax-highlights known languages and leaves unknown extensions plain", as
     const pyRow = diffPanel.locator('.diff-panel__file[data-file-path="script.py"]');
     await pyRow.locator(".diff-panel__file-name").click();
     await expect(
-      diffPanel.getByRole("region", { name: "Diff", exact: true }).locator(".diff-inline"),
+      diffPanel.getByRole("region", { name: "差异", exact: true }).locator(".diff-inline"),
     ).toHaveAttribute("data-language", "python");
     await expect(
       diffPanel
-        .getByRole("region", { name: "Diff", exact: true })
+        .getByRole("region", { name: "差异", exact: true })
         .locator('.diff-inline span[style*="color"]')
         .first(),
     ).toBeVisible();
@@ -103,7 +103,7 @@ test("syntax-highlights known languages and leaves unknown extensions plain", as
     const mdRow = diffPanel.locator('.diff-panel__file[data-file-path="notes.md"]');
     await mdRow.locator(".diff-panel__file-name").click();
     const mdDiff = diffPanel
-      .getByRole("region", { name: "Diff", exact: true })
+      .getByRole("region", { name: "差异", exact: true })
       .locator(".diff-inline");
     await expect(mdDiff).not.toHaveAttribute("data-language", /.*/);
     await expect(mdDiff.locator('span[style*="color"]')).toHaveCount(0);
@@ -131,7 +131,7 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
       value: legacyValue,
     });
 
-    await selectSidePanel(firstWindow, "Review");
+    await selectSidePanel(firstWindow, "审查");
     const diffPanel = firstWindow.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
     await expect(diffPanel.locator(".diff-panel__file")).toHaveCount(3);
@@ -162,7 +162,7 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
   const window = await reopened.firstWindow();
   try {
     await expect(window.locator(".chat-header__title")).toBeVisible();
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     const reopenedPanel = window.locator(".diff-panel");
     await expect(reopenedPanel).toBeVisible();
     await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 2 of 3");
@@ -181,7 +181,7 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
       "def hello():\n    return 'a new revision'\n",
       "utf8",
     );
-    await reopenedPanel.getByRole("button", { name: "Refresh", exact: true }).click();
+    await reopenedPanel.getByRole("button", { name: "刷新", exact: true }).click();
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-script.py")).not.toBeChecked();
     await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 0 of 2");
     expect(await window.evaluate((key) => globalThis.localStorage.getItem(key), storageKey)).toBe(
@@ -198,7 +198,7 @@ test("a new file at a renamed file's old path can be marked reviewed", async () 
   try {
     await execFileAsync("git", ["mv", "notes.md", "renamed.md"], { cwd: workspacePath });
     await writeFile(join(workspacePath, "notes.md"), "# a new notes file\n", "utf8");
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     const diffPanel = window.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
     await diffPanel.locator('button[aria-label="Refresh"]').click();
@@ -218,7 +218,7 @@ test("Files mode shows a file browser and reader instead of the changes reviewer
   test.setTimeout(45_000);
   const { harness, window } = await launchSeeded("Review UX files mode");
   try {
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
     const diffPanel = window.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
     await expect(diffPanel).toHaveAttribute("aria-label", "Review");
@@ -228,10 +228,10 @@ test("Files mode shows a file browser and reader instead of the changes reviewer
       .locator('.diff-panel__file[data-file-path="src/foo.ts"] .diff-panel__file-name')
       .click();
     await expect(
-      diffPanel.getByRole("region", { name: "Diff", exact: true }).locator(".diff-inline"),
+      diffPanel.getByRole("region", { name: "差异", exact: true }).locator(".diff-inline"),
     ).toBeVisible();
 
-    await selectSidePanel(window, "Files");
+    await selectSidePanel(window, "文件");
     const workbench = window.getByTestId("file-workbench");
     await expect(workbench).toBeVisible();
     await expect(window.locator(".diff-panel")).toHaveCount(0);
@@ -247,9 +247,9 @@ test("Files mode shows a file browser and reader instead of the changes reviewer
     ).toContainText("notes");
     await expect(window.getByTestId("file-editor").locator(".diff-inline")).toHaveCount(0);
     await expect(
-      window.getByTestId("file-editor").getByRole("button", { name: "View source" }),
+      window.getByTestId("file-editor").getByRole("button", { name: "查看源码" }),
     ).toBeVisible();
-    await window.getByTestId("file-editor").getByRole("button", { name: "View source" }).click();
+    await window.getByTestId("file-editor").getByRole("button", { name: "查看源码" }).click();
     await expect(window.getByTestId("file-workbench-preview")).toContainText("# notes");
     await expect(
       window.getByTestId("file-editor").getByRole("button", { name: "Open" }),
@@ -301,7 +301,7 @@ test("view-in-changes button on a write tool row opens the diff panel without to
     const selectedRow = diffPanel.locator('.diff-panel__file[data-file-path="src/foo.ts"]');
     await expect(selectedRow).toHaveClass(/diff-panel__file--selected/);
     await expect(
-      diffPanel.getByRole("region", { name: "Diff", exact: true }).locator(".diff-inline"),
+      diffPanel.getByRole("region", { name: "差异", exact: true }).locator(".diff-inline"),
     ).toHaveAttribute("data-language", "typescript");
 
     await toolHeader.click();
@@ -315,14 +315,14 @@ test("highlighting follows the theme when light or dark changes", async () => {
   test.setTimeout(45_000);
   const { harness, window } = await launchSeeded("Review UX theme");
   try {
-    await selectSidePanel(window, "Review");
+    await selectSidePanel(window, "审查");
 
     const diffPanel = window.locator(".diff-panel");
     await diffPanel
       .locator('.diff-panel__file[data-file-path="src/foo.ts"] .diff-panel__file-name')
       .click();
     const token = diffPanel
-      .getByRole("region", { name: "Diff", exact: true })
+      .getByRole("region", { name: "差异", exact: true })
       .locator('.diff-inline span[style*="color"]')
       .first();
     await expect(token).toBeVisible();

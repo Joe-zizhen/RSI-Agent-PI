@@ -5,14 +5,14 @@ import { join } from "node:path";
 import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 import { SessionSupervisor } from "../dist/index.js";
-import { JsonCatalogStore } from "@pi-gui/catalogs/node";
+import { JsonCatalogStore } from "@rsi-agent-pi/catalogs/node";
 import type {
   SessionCatalogEntry,
   SessionFileCatalogStorage,
   SessionRef,
   WorkspaceCatalogEntry,
   WorkspaceId,
-} from "@pi-gui/catalogs";
+} from "@rsi-agent-pi/catalogs";
 
 const timestamp = "2026-07-27T00:00:00.000Z";
 

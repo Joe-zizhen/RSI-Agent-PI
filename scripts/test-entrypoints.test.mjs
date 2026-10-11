@@ -13,7 +13,7 @@ const require = createRequire(import.meta.url);
 test("root e2e delegates to the built, isolated desktop core lane", async () => {
   const manifest = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   const desktop = JSON.parse(await readFile(path.join(root, "apps/desktop/package.json"), "utf8"));
-  assert.equal(manifest.scripts.e2e, "pnpm --filter @pi-gui/desktop run test:e2e:core");
+  assert.equal(manifest.scripts.e2e, "pnpm --filter @rsi-agent-pi/desktop run test:e2e:core");
   assert.match(desktop.scripts["test:e2e:core"], /^pnpm build && /);
   assert.match(desktop.scripts["test:e2e:core"], /PI_APP_TEST_MODE=background/);
   assert.match(
@@ -92,7 +92,9 @@ test("desktop tests use one public Electron helper entrypoint", async () => {
 
 test("the public Electron helper loads through Playwright and the marketing script loader", async () => {
   const desktopConfig = path.join(root, "apps/desktop/playwright.config.ts");
-  const smokeSpec = path.join(root, "apps/desktop/tests/core/smoke.spec.ts");
+  // Playwright matches positional spec arguments as regexes over forward-slash
+  // paths, so pass the repo-relative path rather than a platform-native one.
+  const smokeSpec = "apps/desktop/tests/core/smoke.spec.ts";
   const result = spawnSync(
     process.execPath,
     [require.resolve("@playwright/test/cli"), "test", "-c", desktopConfig, smokeSpec, "--list"],

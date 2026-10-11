@@ -70,21 +70,21 @@ test("resets dock expansion on /reload and extension enable or disable transitio
     await expect(dockSummary).toHaveText("Session ready");
     await expect(dockBody).toHaveCount(0);
 
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     const extensionCard = window
       .getByTestId("extensions-list")
       .getByRole("button", { name: /reload-dock-extension/i });
     await extensionCard.click();
-    await window.getByRole("switch", { name: "Enabled", exact: true }).click();
-    await expect(window.getByRole("switch", { name: "Enabled", exact: true })).not.toBeChecked();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("switch", { name: "已启用", exact: true }).click();
+    await expect(window.getByRole("switch", { name: "已启用", exact: true })).not.toBeChecked();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expect(window.getByTestId("extension-dock")).toHaveCount(0);
 
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
     await extensionCard.click();
-    await window.getByRole("switch", { name: "Enabled", exact: true }).click();
-    await expect(window.getByRole("switch", { name: "Enabled", exact: true })).toBeChecked();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("switch", { name: "已启用", exact: true }).click();
+    await expect(window.getByRole("switch", { name: "已启用", exact: true })).toBeChecked();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
     await expect(dockSummary).toHaveText("Session ready");
     await expect(dockBody).toHaveCount(0);
   } finally {
@@ -120,9 +120,9 @@ test("refreshes runtime with new extension output and keeps the dock collapsed a
       "reload-dock-extension.ts",
       refreshedExtensionSource,
     );
-    await window.getByRole("button", { name: "Extensions", exact: true }).click();
-    await window.getByRole("button", { name: "Refresh", exact: true }).click();
-    await window.getByRole("button", { name: "Back to app", exact: true }).click();
+    await window.getByRole("button", { name: "扩展", exact: true }).click();
+    await window.getByRole("button", { name: "刷新", exact: true }).click();
+    await window.getByRole("button", { name: "返回应用", exact: true }).click();
 
     await expect(dockSummary).toHaveText("Refreshed session ready");
     await expect(dockBody).toHaveCount(0);

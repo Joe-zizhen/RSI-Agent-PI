@@ -2,10 +2,10 @@ import {
   parseExtensionAction,
   type ExtensionFlagValues,
   type HostUiResponse,
-} from "@pi-gui/session-driver";
+} from "@rsi-agent-pi/session-driver";
 import type { ExtensionActionRequest } from "../../contracts/extension-actions";
-import type { NavigateSessionTreeOptions } from "@pi-gui/session-driver/types";
-import type { RuntimeSettingsSnapshot } from "@pi-gui/session-driver/runtime-types";
+import type { NavigateSessionTreeOptions } from "@rsi-agent-pi/session-driver/types";
+import type { RuntimeSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import {
   isThemeMode,
   isThemePresetId,

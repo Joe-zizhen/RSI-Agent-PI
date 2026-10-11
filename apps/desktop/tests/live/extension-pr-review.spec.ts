@@ -80,16 +80,13 @@ test("a real provider records PR findings through the installed extension and pr
       .context()
       .tracing.start({ screenshots: true, snapshots: true, sources: true });
     tracing = true;
+    await window.locator(".sidebar").getByRole("button", { name: "新建会话", exact: true }).click();
     await window
-      .locator(".sidebar")
-      .getByRole("button", { name: "New thread", exact: true })
-      .click();
-    await window
-      .getByLabel("New thread prompt", { exact: true })
+      .getByLabel("新建会话输入", { exact: true })
       .fill(
         'This workspace has an explicit requirement: search("") must return an empty array, and search("text") must return ["text"]. A PR review will follow. For now reply exactly READY without changing files.',
       );
-    await window.getByRole("button", { name: "Start thread", exact: true }).click();
+    await window.getByRole("button", { name: "开始会话", exact: true }).click();
     await expect(
       window.locator(".timeline-item--assistant .message__content").last(),
     ).toContainText("READY", { timeout: 90_000 });

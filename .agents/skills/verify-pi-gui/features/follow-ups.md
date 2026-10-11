@@ -19,7 +19,7 @@ Users can queue another prompt while an agent works or steer the current run. Th
 Preconditions: explicitly enabled real auth and a working provider/model. Default conversation proof covers ordinary send/stop, not queue/steer. Visible maintenance proof is `scripts/prove.sh --maintenance`.
 
 - **Visible recipe:** `.agents/skills/verify-pi-gui/scripts/prove.sh --maintenance` launches without test mode or test hooks. After a long tool run starts, type a follow-up and press Enter; require a `queued-composer-message` containing that prompt. Type a steer marker and press the platform-modified Enter shortcut (`Control+Enter` here, `Cmd+Enter` on macOS). Require `STEER_DONE` and `FOLLOW_UP_DONE` once each in assistant-only timeline text, the steered reply before the follow-up, idle, and no remaining queued messages. The per-item Steer/Edit/Delete buttons and Stop clearing the queue are not driven.
-- **Existing live spec:** `pnpm --filter @pi-gui/desktop run test:e2e:runner apps/desktop/tests/live/queued-messages.spec.ts` uses `PI_APP_REAL_AUTH=1` and `PI_APP_REAL_AUTH_SOURCE_DIR`. It currently launches in background mode; do not treat it as the visible proof.
+- **Existing live spec:** `pnpm --filter @rsi-agent-pi/desktop run test:e2e:runner apps/desktop/tests/live/queued-messages.spec.ts` uses `PI_APP_REAL_AUTH=1` and `PI_APP_REAL_AUTH_SOURCE_DIR`. It currently launches in background mode; do not treat it as the visible proof.
 
 ## Gotchas
 

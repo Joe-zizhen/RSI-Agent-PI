@@ -16,7 +16,7 @@ export function ImageAttachmentThumb({ src, name, className }: ImageAttachmentTh
   return (
     <>
       <button
-        aria-label={`View ${name}`}
+        aria-label={`查看 ${name}`}
         className={`image-attachment-thumb ${className}`}
         ref={triggerRef}
         title={name}
@@ -83,12 +83,7 @@ function ImageViewer({
       }}
     >
       <img alt={name} className="image-viewer__image" src={src} />
-      <button
-        aria-label="Close image"
-        className="image-viewer__close"
-        type="button"
-        onClick={onClose}
-      >
+      <button aria-label="关闭图片" className="image-viewer__close" type="button" onClick={onClose}>
         ×
       </button>
     </div>,
