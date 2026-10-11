@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { PiDesktopApi } from "../../../contracts/ipc";
 import type { useWorkbench } from "../workbench/use-workbench";
+import { t, useLocale } from "../../t";
 
 /**
  * Host actions an extension view asks of the task it is shown for: open a
@@ -18,6 +19,7 @@ export function useExtensionHostActions({
   readonly workbench: ReturnType<typeof useWorkbench>;
   readonly flushComposerDraftAsync: (target: SessionRef) => Promise<void>;
 }) {
+  useLocale();
   const [fileError, setFileError] = useState<{
     readonly target: SessionRef;
     readonly message: string;
@@ -34,9 +36,17 @@ export function useExtensionHostActions({
   const beforePrepareTaskDraft = useCallback(async () => {
     const draftTarget = target;
     if (!draftTarget || targetRef.current !== draftTarget)
-      throw new Error("请返回扩展的任务以创建任务草稿。");
+      throw new Error(
+        t(
+          "Return to the extension's task to create a task draft.",
+          "请返回扩展的任务以创建任务草稿。",
+        ),
+      );
     await flushComposerDraftAsync(draftTarget);
-    if (targetRef.current !== draftTarget) throw new Error("任务已更改，草稿未能保存。");
+    if (targetRef.current !== draftTarget)
+      throw new Error(
+        t("The task changed before its draft could be saved.", "任务已更改，草稿未能保存。"),
+      );
   }, [flushComposerDraftAsync, target]);
   const handlePrepareTaskDraftPendingChange = useCallback(
     (pending: boolean, requestKey: string) => {
@@ -71,7 +81,10 @@ export function useExtensionHostActions({
             if (targetRef.current !== current || fileRequestRef.current !== request) return;
             setFileError({
               target: current,
-              message: `无法打开 ${event.path}。${error instanceof Error ? error.message : "请重试打开该文件。"}`,
+              message: t(
+                `Couldn't open ${event.path}. ${error instanceof Error ? error.message : "Try opening the file again."}`,
+                `无法打开 ${event.path}。${error instanceof Error ? error.message : "请重试打开该文件。"}`,
+              ),
             });
           });
       }),

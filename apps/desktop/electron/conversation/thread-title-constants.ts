@@ -1,1 +1,5 @@
-export const NEW_THREAD_PLACEHOLDER_TITLE = "新会话";
+import { t } from "../t";
+
+export function newThreadPlaceholderTitle(): string {
+  return t("New thread", "新会话");
+}

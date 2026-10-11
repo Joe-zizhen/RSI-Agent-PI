@@ -29,6 +29,7 @@ import {
 } from "../../ui/icons";
 import { ImageAttachmentThumb } from "./image-attachment-thumb";
 import { QueuedComposerMessages } from "./queued-composer-messages";
+import { t, useLocale } from "../../t";
 
 type ExtensionMentionOption = Extract<MentionOption, { kind: "extension" }>;
 type FileMentionOption = Extract<MentionOption, { kind: "file" }>;
@@ -128,6 +129,7 @@ export function ComposerSurface({
   footer,
   annotationChip,
 }: ComposerSurfaceProps) {
+  useLocale();
   const [isDragActive, setIsDragActive] = useState(false);
   const dragDepthRef = useRef(0);
 
@@ -183,7 +185,7 @@ export function ComposerSurface({
     >
       {isDragActive ? (
         <div className="composer__drop-indicator" data-testid="composer-drop-indicator">
-          拖入图片或文件以添加附件
+          {t("Drop images or files to attach", "拖入图片或文件以添加附件")}
         </div>
       ) : null}
       {activeSlashCommand ? (
@@ -198,7 +200,7 @@ export function ComposerSurface({
             ) : null}
           </span>
           <button
-            aria-label={`清除 ${activeSlashCommand.title}`}
+            aria-label={t(`Clear ${activeSlashCommand.title}`, `清除 ${activeSlashCommand.title}`)}
             className="composer__slash-intent-clear"
             type="button"
             onClick={onClearSlashCommand}
@@ -238,7 +240,7 @@ export function ComposerSurface({
                 </>
               )}
               <button
-                aria-label={`移除 ${attachment.name}`}
+                aria-label={t(`Remove ${attachment.name}`, `移除 ${attachment.name}`)}
                 className="composer-attachment__remove"
                 type="button"
                 onClick={() => onRemoveAttachment(attachment.id)}
@@ -322,7 +324,7 @@ export function ComposerSurface({
                               ) : null}
                               {command.compatibility?.status === "terminal-only" ? (
                                 <span className="slash-menu__skill-badge slash-menu__skill-badge--warning">
-                                  仅终端可用
+                                  {t("Terminal only", "仅终端可用")}
                                 </span>
                               ) : null}
                             </span>
@@ -408,6 +410,7 @@ function MentionMenuSections({
   readonly onSelect: (option: MentionOption) => void;
   readonly onEnableExtension: (option: ExtensionMentionOption) => void;
 }) {
+  useLocale();
   const extensionOptions = options.filter(
     (option): option is ExtensionMentionOption => option.kind === "extension",
   );
@@ -419,7 +422,7 @@ function MentionMenuSections({
     <>
       {extensionOptions.length > 0 ? (
         <MentionMenuSection
-          title="扩展"
+          title={t("Extensions", "扩展")}
           options={extensionOptions}
           selectedIndex={selectedIndex}
           allOptions={options}
@@ -429,7 +432,7 @@ function MentionMenuSections({
       ) : null}
       {fileOptions.length > 0 ? (
         <MentionMenuSection
-          title="文件"
+          title={t("Files", "文件")}
           options={fileOptions}
           selectedIndex={selectedIndex}
           allOptions={options}
@@ -483,6 +486,7 @@ function MentionMenuItem({
   readonly onSelect: (option: MentionOption) => void;
   readonly onEnableExtension: (option: ExtensionMentionOption) => void;
 }) {
+  useLocale();
   if (option.kind === "extension") {
     return (
       <div
@@ -507,7 +511,9 @@ function MentionMenuItem({
             <span className="mention-menu__line">
               <span className="mention-menu__filename">{option.displayName}</span>
               {option.enabled ? null : (
-                <span className="mention-menu__badge">{option.enabling ? "启用中" : "已禁用"}</span>
+                <span className="mention-menu__badge">
+                  {option.enabling ? t("Enabling", "启用中") : t("Disabled", "已禁用")}
+                </span>
               )}
             </span>
             <span className="mention-menu__description">{option.description}</span>
@@ -515,13 +521,13 @@ function MentionMenuItem({
         </button>
         {option.enabled ? null : (
           <button
-            aria-label={`启用 ${option.displayName}`}
+            aria-label={t(`Enable ${option.displayName}`, `启用 ${option.displayName}`)}
             className="mention-menu__enable"
             disabled={option.enabling}
             type="button"
             onClick={() => onEnableExtension(option)}
           >
-            {option.enabling ? "启用中" : "启用"}
+            {option.enabling ? t("Enabling", "启用中") : t("Enable", "启用")}
           </button>
         )}
       </div>

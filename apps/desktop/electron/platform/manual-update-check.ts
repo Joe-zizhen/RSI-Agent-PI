@@ -5,6 +5,7 @@
 import { BrowserWindow, dialog, type MessageBoxOptions } from "electron";
 
 import { checkForUpdate, openReleasesPage } from "./update-checker";
+import { t } from "../t";
 
 export async function runManualUpdateCheck(window?: BrowserWindow | null): Promise<void> {
   const target = window && !window.isDestroyed() ? window : undefined;
@@ -20,9 +21,12 @@ export async function runManualUpdateCheck(window?: BrowserWindow | null): Promi
       const choice = await showDialog({
         type: "info",
         title: "RSI-Agent-PI",
-        message: `版本 ${result.latestVersion} 可用。`,
-        detail: `你正在使用 ${result.currentVersion}。`,
-        buttons: ["下载", "稍后"],
+        message: t(
+          `Version ${result.latestVersion} is available.`,
+          `版本 ${result.latestVersion} 可用。`,
+        ),
+        detail: t(`You have ${result.currentVersion}.`, `你正在使用 ${result.currentVersion}。`),
+        buttons: [t("Download", "下载"), t("Later", "稍后")],
         defaultId: 0,
         cancelId: 1,
       });
@@ -36,8 +40,11 @@ export async function runManualUpdateCheck(window?: BrowserWindow | null): Promi
       await showDialog({
         type: "info",
         title: "RSI-Agent-PI",
-        message: `当前已是最新版本 ${result.currentVersion}。`,
-        buttons: ["确定"],
+        message: t(
+          `You're up to date on version ${result.currentVersion}.`,
+          `当前已是最新版本 ${result.currentVersion}。`,
+        ),
+        buttons: [t("OK", "确定")],
       });
       return;
     }
@@ -45,18 +52,18 @@ export async function runManualUpdateCheck(window?: BrowserWindow | null): Promi
     await showDialog({
       type: "warning",
       title: "RSI-Agent-PI",
-      message: "暂时无法检查更新。",
+      message: t("Could not check for updates right now.", "暂时无法检查更新。"),
       detail: result.message,
-      buttons: ["确定"],
+      buttons: [t("OK", "确定")],
     });
   } catch (error) {
     console.error("pi-gui: manual update check failed:", error);
     await showDialog({
       type: "warning",
       title: "RSI-Agent-PI",
-      message: "暂时无法检查更新。",
+      message: t("Could not check for updates right now.", "暂时无法检查更新。"),
       detail: error instanceof Error ? error.message : String(error),
-      buttons: ["确定"],
+      buttons: [t("OK", "确定")],
     }).catch(() => undefined);
   }
 }

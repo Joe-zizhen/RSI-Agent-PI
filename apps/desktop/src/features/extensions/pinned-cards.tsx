@@ -5,6 +5,7 @@ import { ExtensionCardItem, type RunExtensionAction } from "../conversation/exte
 import { ChevronDownIcon, ChevronRightIcon, CloseIcon } from "../../ui/icons";
 import { focusComposerAfter } from "./focus-composer";
 import { splitPinnedCards, visiblePinnedCards, type PinnedCard } from "./pinned-cards-model";
+import { t, useLocale } from "../../t";
 
 export type { PinnedCard } from "./pinned-cards-model";
 
@@ -70,6 +71,7 @@ export function PinnedCards({
   readonly onDismiss: (pin: PinnedCard) => void;
   readonly onAction: RunExtensionAction;
 }) {
+  useLocale();
   if (pins.length === 0) return null;
   return (
     <div className="pinned-cards" data-testid="pinned-cards">
@@ -87,10 +89,13 @@ export function PinnedCards({
                 {canCollapse ? (
                   <button
                     aria-expanded={!collapsed}
-                    aria-label={`${collapsed ? "展开" : "收起"} ${pin.card.title}`}
+                    aria-label={t(
+                      `${collapsed ? "Expand" : "Collapse"} ${pin.card.title}`,
+                      `${collapsed ? "展开" : "收起"} ${pin.card.title}`,
+                    )}
                     className="pinned-card__control icon-button"
                     data-testid="pinned-card-toggle"
-                    title={collapsed ? "展开" : "收起"}
+                    title={collapsed ? t("Expand", "展开") : t("Collapse", "收起")}
                     type="button"
                     onClick={() => onToggle(pin)}
                   >
@@ -98,10 +103,10 @@ export function PinnedCards({
                   </button>
                 ) : null}
                 <button
-                  aria-label={`隐藏 ${pin.card.title}`}
+                  aria-label={t(`Hide ${pin.card.title}`, `隐藏 ${pin.card.title}`)}
                   className="pinned-card__control icon-button"
                   data-testid="pinned-card-dismiss"
-                  title="隐藏到它更改为止"
+                  title={t("Hide until it changes", "隐藏到它更改为止")}
                   type="button"
                   onClick={(event) => focusComposerAfter(event.currentTarget, () => onDismiss(pin))}
                 >

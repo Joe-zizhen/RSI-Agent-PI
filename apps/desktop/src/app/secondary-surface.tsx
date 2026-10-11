@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { SearchIcon } from "../ui/icons";
+import { t, useLocale } from "../t";
 
 export interface SecondarySurfaceNavItem {
   readonly id: string;
@@ -29,6 +30,7 @@ export function SecondarySurface({
   testId,
   children,
 }: SecondarySurfaceProps) {
+  useLocale();
   const backRef = useRef(onBack);
   backRef.current = onBack;
   useEffect(() => {
@@ -55,14 +57,14 @@ export function SecondarySurface({
       <aside className="secondary-surface__sidebar">
         <button className="secondary-surface__back" type="button" onClick={onBack}>
           <span aria-hidden="true">←</span>
-          <span>返回应用</span>
+          <span>{t("Back to app", "返回应用")}</span>
         </button>
         {navItems.length > 0 ? (
           <SecondarySurfaceNav
             activeNavId={activeNavId}
             items={navItems}
-            label={`${title}分区`}
-            searchLabel={`搜索${title}`}
+            label={t(`${title} sections`, `${title}分区`)}
+            searchLabel={t(`Search ${title.toLowerCase()}`, `搜索${title}`)}
             onSelect={(id) => onSelectNav?.(id)}
           />
         ) : (
@@ -89,6 +91,7 @@ function SecondarySurfaceNav({
   readonly searchLabel: string;
   readonly onSelect: (id: string) => void;
 }) {
+  useLocale();
   const [query, setQuery] = useState("");
   const matches = filterNavItems(items, query);
   const groups = [...new Set(matches.map((item) => item.group))];
@@ -99,7 +102,7 @@ function SecondarySurfaceNav({
         <SearchIcon />
         <input
           aria-label={searchLabel}
-          placeholder="搜索"
+          placeholder={t("Search", "搜索")}
           spellCheck={false}
           type="search"
           value={query}

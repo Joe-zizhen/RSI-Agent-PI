@@ -6,6 +6,7 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { t } from "../plugins/i18n-shim.js";
 
 export default function (pi: ExtensionAPI) {
 	const protectedPaths = [".env", ".git/", "node_modules/"];
@@ -20,7 +21,7 @@ export default function (pi: ExtensionAPI) {
 
 		if (isProtected) {
 			if (ctx.hasUI) {
-				ctx.ui.notify(`已拦截对受保护路径的写入：${path}`, "warning");
+				ctx.ui.notify(t(`Blocked write to a protected path: ${path}`, `已拦截对受保护路径的写入：${path}`), "warning");
 			}
 			return { block: true, reason: `Path "${path}" is protected` };
 		}

@@ -8,6 +8,7 @@ import {
 import type { WorkspaceRecord } from "../../contracts/desktop-state";
 import type { ExtensionActionEffect } from "../../contracts/extension-actions";
 import { resolveExistingWorkspacePath } from "../platform/files/workspace-paths";
+import { t } from "../t";
 
 /**
  * The app operations an extension's UI can ask for, one per action type, each with its checks.
@@ -39,9 +40,11 @@ export async function runExtensionAction(
     case "openFile": {
       // Only files inside the thread's checkout; the renderer opens the returned relative path.
       const workspacePath = host.workspacePath(target.workspaceId);
-      if (!workspacePath) throw new Error("该会话的文件夹不可用");
+      if (!workspacePath)
+        throw new Error(t("The thread's folder is unavailable", "该会话的文件夹不可用"));
       const filePath = await resolveExistingWorkspacePath(workspacePath, action.path);
-      if (!(await stat(filePath)).isFile()) throw new Error(`${action.path} 不是文件`);
+      if (!(await stat(filePath)).isFile())
+        throw new Error(t(`${action.path} is not a file`, `${action.path} 不是文件`));
       return {
         kind: "openFile",
         path: path.relative(workspacePath, filePath),
@@ -53,7 +56,8 @@ export async function runExtensionAction(
       return { kind: "composer", text: action.text };
     case "url": {
       const url = parseExtensionUrl(action.url);
-      if (!url) throw new Error("扩展只能打开 https 链接");
+      if (!url)
+        throw new Error(t("Extensions can only open https links", "扩展只能打开 https 链接"));
       await host.openExternal(url);
       return undefined;
     }
@@ -63,7 +67,8 @@ export async function runExtensionAction(
     case "openThread": {
       const resolve = () => {
         const thread = threadInFolder(host.workspaces(), target, action.sessionId);
-        if (!thread) throw new Error("该会话未在此文件夹中打开");
+        if (!thread)
+          throw new Error(t("That thread isn't open in this folder", "该会话未在此文件夹中打开"));
         return thread;
       };
       // Refuse at once, and again in the queue in case the thread was archived meanwhile.

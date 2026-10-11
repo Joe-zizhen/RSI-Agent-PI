@@ -14,6 +14,7 @@ import type {
 import { extensionSourceSummary } from "../../extensions/extension-display";
 import type { PiDesktopApi } from "../../../../contracts/ipc";
 import { nextMenuIndex } from "./use-slash-menu";
+import { t } from "../../../t";
 
 export type MentionOption =
   | {
@@ -320,9 +321,11 @@ function describeExtension(extension: RuntimeExtensionRecord): string {
 
   const contributionParts = [
     extension.commands.length > 0
-      ? pluralizeContribution(extension.commands.length, "命令")
+      ? pluralizeContribution(extension.commands.length, t("Command", "命令"))
       : undefined,
-    extension.tools.length > 0 ? pluralizeContribution(extension.tools.length, "工具") : undefined,
+    extension.tools.length > 0
+      ? pluralizeContribution(extension.tools.length, t("Tools", "工具"))
+      : undefined,
   ].filter(Boolean);
   if (contributionParts.length > 0) {
     return contributionParts.join(" · ");
@@ -381,5 +384,5 @@ function normalizeMentionText(value: string): string {
 }
 
 function pluralizeContribution(count: number, label: string): string {
-  return `${count} 个${label}`;
+  return t(`${count} ${label}${count === 1 ? "" : "s"}`, `${count} 个${label}`);
 }

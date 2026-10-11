@@ -1,3 +1,4 @@
+import { t } from "../i18n-shim.js";
 import {
   copyToClipboard,
   type ExtensionAPI,
@@ -1181,20 +1182,20 @@ function computeResponsiveLayout(
 function warnInvalidSegmentSettings(ctx: any): void {
   if (config.invalidDisabledSegments.length > 0) {
     const invalid = config.invalidDisabledSegments.map((id) => JSON.stringify(id)).join(", ");
-    const message = `忽略未知的 powerline 禁用 segment${config.invalidDisabledSegments.length === 1 ? "" : "s"}：${invalid}`;
+    const message = t(`Ignoring unknown powerline disabled segment${config.invalidDisabledSegments.length === 1 ? "" : "s"}: ${invalid}`, `忽略未知的 powerline 禁用 segment${config.invalidDisabledSegments.length === 1 ? "" : "s"}：${invalid}`);
     console.warn(`[powerline-footer] ${message}`);
     if (ctx.hasUI) ctx.ui.notify(message, "warning");
   }
 
   if (config.invalidLayoutSegments.length > 0) {
     const invalid = config.invalidLayoutSegments.map((id) => JSON.stringify(id)).join(", ");
-    const message = `忽略未知的 powerline 布局 segment${config.invalidLayoutSegments.length === 1 ? "" : "s"}：${invalid}`;
+    const message = t(`Ignoring unknown powerline layout segment${config.invalidLayoutSegments.length === 1 ? "" : "s"}: ${invalid}`, `忽略未知的 powerline 布局 segment${config.invalidLayoutSegments.length === 1 ? "" : "s"}：${invalid}`);
     console.warn(`[powerline-footer] ${message}`);
     if (ctx.hasUI) ctx.ui.notify(message, "warning");
   }
 
   if (config.invalidPlacement !== null) {
-    const message = `忽略无效的 powerline 位置：${JSON.stringify(config.invalidPlacement)}`;
+    const message = t(`Ignoring invalid powerline placement: ${JSON.stringify(config.invalidPlacement)}`, `忽略无效的 powerline 位置：${JSON.stringify(config.invalidPlacement)}`);
     console.warn(`[powerline-footer] ${message}`);
     if (ctx.hasUI) ctx.ui.notify(message, "warning");
   }
@@ -1382,14 +1383,14 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       requestStatusRender();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      ctx.ui.notify(`执行 shell 命令失败：${message}`, "error");
+      ctx.ui.notify(t(`Failed to run shell command: ${message}`, `执行 shell 命令失败：${message}`), "error");
     }
   };
 
   const setBashModeActive = async (value: boolean, ctx: any): Promise<void> => {
     if (value === bashModeActive) return;
     if (!value && shellSession?.state.running) {
-      ctx.ui.notify("退出 bash 模式前请等待当前 shell 命令结束", "warning");
+      ctx.ui.notify(t("Wait for the current shell command to finish before leaving bash mode", "退出 bash 模式前请等待当前 shell 命令结束"), "warning");
       return;
     }
 
@@ -1400,14 +1401,14 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         currentEditor?.dismissBashModeUi?.();
         currentEditor?.refreshGhostSuggestion?.();
         requestStatusRender();
-        ctx.ui.notify(`已启用 Bash 模式（${session.state.shellName}）`, "info");
+        ctx.ui.notify(t(`Bash mode enabled (${session.state.shellName})`, `已启用 Bash 模式（${session.state.shellName}）`), "info");
       } catch (error) {
         shellSession?.dispose();
         shellSession = null;
         bashModeActive = false;
         requestStatusRender();
         const message = error instanceof Error ? error.message : String(error);
-        ctx.ui.notify(`启动 shell 会话失败：${message}`, "error");
+        ctx.ui.notify(t(`Failed to start shell session: ${message}`, `启动 shell 会话失败：${message}`), "error");
       }
       return;
     }
@@ -1415,7 +1416,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     bashModeActive = value;
     currentEditor?.dismissBashModeUi?.();
     requestStatusRender();
-    ctx.ui.notify("已禁用 Bash 模式", "info");
+    ctx.ui.notify(t("Bash mode disabled", "已禁用 Bash 模式"), "info");
   };
 
   function overlaySelectListTheme(theme: Theme) {
@@ -1547,7 +1548,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     if (!trimmed) return null;
 
     const item = captureQueueItem(ctx, trimmed, "post-compact", { kind: "current-session" });
-    ctx.ui.notify(`已加入压缩后队列（${item.id}）`, "info");
+    ctx.ui.notify(t(`Queued for after compaction (${item.id})`, `已加入压缩后队列（${item.id}）`), "info");
     return item;
   }
 
@@ -1621,7 +1622,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       pendingQueueDeliveries.delete(item.id);
       const current = queueStore.get(item.id);
       if (current?.status === "delivering") {
-        queueStore.update(item.id, { status: "queued", error: "排队消息未启动" });
+        queueStore.update(item.id, { status: "queued", error: t("Queued message did not start", "排队消息未启动") });
         requestQueueRender();
       }
     }, 60_000);
@@ -1646,7 +1647,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       const updated = queueStore.update(id, { status: "sent", error: undefined });
       if (!updated) return;
       try {
-        ctx.ui.notify(`已发送排队项 ${id}`, "info");
+        ctx.ui.notify(t(`Sent queued item ${id}`, `已发送排队项 ${id}`), "info");
       } catch (error) {
         if (!isStaleExtensionContextError(error)) throw error;
         currentCtx = null;
@@ -1685,7 +1686,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       }
       const message = error instanceof Error ? error.message : String(error);
       queueStore.update(item.id, { status: "failed", error: message });
-      ctx.ui.notify(`发送 ${item.id} 失败：${message}`, "error");
+      ctx.ui.notify(t(`Failed to send ${item.id}: ${message}`, `发送 ${item.id} 失败：${message}`), "error");
       requestQueueRender();
       return false;
     }
@@ -1734,7 +1735,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       queueStore.update(item.id, { status: "blocked", error: errorMessage });
     }
     if (items.length > 0) {
-      ctx.ui.notify(`已保留 ${items.length} 个压缩后项处于阻塞状态`, "warning");
+      ctx.ui.notify(t(`Kept ${items.length} post-compaction item${items.length === 1 ? "" : "s"} blocked`, `已保留 ${items.length} 个压缩后项处于阻塞状态`), "warning");
       requestQueueRender();
     }
   }
@@ -1749,13 +1750,13 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
   async function chooseQueueAction(ctx: any, item: PowerlineQueueItem): Promise<void> {
     const actions: SelectItem[] = [
-      { value: "send", label: "发送到当前会话", description: "作为提示词/后续消息投递" },
-      { value: "edit", label: "在提示词中编辑", description: "把文本移入编辑器" },
-      { value: "retry", label: "重试", description: "标记为排队并投递" },
-      { value: "clear", label: "清除", description: "标记该项完成" },
-      { value: "cancel", label: "取消" },
+      { value: "send", label: t("Send to current session", "发送到当前会话"), description: t("Deliver as prompt/follow-up", "作为提示词/后续消息投递") },
+      { value: "edit", label: t("Edit in prompt", "在提示词中编辑"), description: t("Move text into the editor", "把文本移入编辑器") },
+      { value: "retry", label: t("Retry", "重试"), description: t("Mark queued and deliver", "标记为排队并投递") },
+      { value: "clear", label: t("Clear", "清除"), description: t("Mark item done", "标记该项完成") },
+      { value: "cancel", label: t("Cancel", "取消") },
     ];
-    const selected = await showSelectOverlay(ctx, `队列项 ${item.id}`, buildStashPreview(item.text, 72), actions, actions.length);
+    const selected = await showSelectOverlay(ctx, t(`Queue item ${item.id}`, `队列项 ${item.id}`), buildStashPreview(item.text, 72), actions, actions.length);
     if (!selected || selected.value === "cancel") return;
 
     if (selected.value === "send") {
@@ -1778,7 +1779,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
     if (selected.value === "clear") {
       queueStore.clear(item.id);
-      ctx.ui.notify(`已清除 ${item.id}`, "info");
+      ctx.ui.notify(t(`Cleared ${item.id}`, `已清除 ${item.id}`), "info");
       requestQueueRender();
     }
   }
@@ -1786,7 +1787,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
   async function openQueuePicker(ctx: any): Promise<void> {
     const active = queueStore.activeItems(getQueueContext(ctx));
     if (active.length === 0) {
-      ctx.ui.notify("没有排队项", "info");
+      ctx.ui.notify(t("No queued items", "没有排队项"), "info");
       return;
     }
 
@@ -1797,8 +1798,8 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     }));
     const selected = await showSelectOverlay(
       ctx,
-      "Powerline 队列",
-      "↑↓ 移动 • enter 管理 • esc 取消",
+      t("Powerline queue", "Powerline 队列"),
+      t("↑↓ navigate • enter manage • esc cancel", "↑↓ 移动 • enter 管理 • esc 取消"),
       items,
       Math.min(active.length, 12),
     );
@@ -1814,14 +1815,14 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     if (normalized === "global") return { kind: "global" };
 
     const cwd = queueStore.resolveAlias(normalized);
-    if (!cwd) throw new Error(`未知项目别名 @${normalized}。请先执行 /queue alias ${normalized} <path>。`);
+    if (!cwd) throw new Error(t(`Unknown project alias @${normalized}. Use /queue alias ${normalized} <path> first.`, `未知项目别名 @${normalized}。请先执行 /queue alias ${normalized} <path>。`));
     return { kind: "project", cwd, alias: normalized };
   }
 
   function sendOrRetryQueueItem(ctx: any, idPrefix: string): void {
     const item = queueStore.get(idPrefix);
     if (!item) {
-      ctx.ui.notify(`没有唯一匹配 ${idPrefix} 的队列项`, "warning");
+      ctx.ui.notify(t(`No unique queue item matches ${idPrefix}`, `没有唯一匹配 ${idPrefix} 的队列项`), "warning");
       return;
     }
     const updated = queueStore.update(item.id, { status: "queued", error: undefined });
@@ -1910,7 +1911,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     shellSession?.dispose();
     shellSession = null;
     cancelPostCompactionDelivery();
-    requeuePendingQueueDeliveries("排队消息启动前会话已结束");
+    requeuePendingQueueDeliveries(t("Session ended before queued message started", "排队消息启动前会话已结束"));
     powerlineCompacting = false;
     bashModeActive = false;
     currentCtx = null;
@@ -2016,7 +2017,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     if (event.text.trimStart().startsWith("/")) return;
     const apiKey = process.env.TYPESAFE_API_KEY?.trim();
     if (!apiKey) {
-      ctx.ui.notify("自动跟进需要 TYPESAFE_API_KEY；已按引导方式发送", "warning");
+      ctx.ui.notify(t("Auto follow-up needs TYPESAFE_API_KEY; sent as steering", "自动跟进需要 TYPESAFE_API_KEY；已按引导方式发送"), "warning");
       return;
     }
 
@@ -2050,7 +2051,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     if (generation !== sessionGeneration) return;
     if (routing?.restored) return { action: "handled" };
     if (failure !== undefined) {
-      ctx.ui.notify(`自动跟进不可用（${failure}）；已按引导方式发送`, "warning");
+      ctx.ui.notify(t(`Auto follow-up unavailable (${failure}); sent as steering`, `自动跟进不可用（${failure}）；已按引导方式发送`), "warning");
       return;
     }
     if (!followUp) return;
@@ -2138,7 +2139,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
   });
 
   pi.on("session_compact_failed", async (event, ctx) => {
-    finishFailedCompaction(ctx, event.errorMessage ?? "压缩已取消");
+    finishFailedCompaction(ctx, event.errorMessage ?? t("Compaction cancelled", "压缩已取消"));
   });
 
   pi.on("agent_settled", async () => {
@@ -2223,7 +2224,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       return text;
     }
 
-    ctx.ui.notify("编辑器为空", "info");
+    ctx.ui.notify(t("Editor is empty", "编辑器为空"), "info");
     return null;
   }
 
@@ -2235,7 +2236,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     }));
 
     const selected = await showSelectOverlay(
-      ctx, "暂存历史", "↑↓ 移动 • enter 插入 • esc 取消",
+      ctx, t("Stash history", "暂存历史"), t("↑↓ navigate • enter insert • esc cancel", "↑↓ 移动 • enter 插入 • esc 取消"),
       items, Math.min(items.length, 10));
     if (!selected) return null;
 
@@ -2250,7 +2251,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     }));
 
     const selected = await showSelectOverlay(
-      ctx, "最近的项目提示词", "↑↓ 移动 • enter 插入 • esc 取消",
+      ctx, t("Recent project prompts", "最近的项目提示词"), t("↑↓ navigate • enter insert • esc cancel", "↑↓ 移动 • enter 插入 • esc 取消"),
       items, Math.min(items.length, 10));
     if (!selected) return null;
 
@@ -2270,17 +2271,17 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
     items.push({
       value: "stash",
-      label: "暂存的提示词",
-      description: `已保存 ${stashCount} 条`,
+      label: t("Stashed prompts", "暂存的提示词"),
+      description: t(`${stashCount} saved`, `已保存 ${stashCount} 条`),
     });
     items.push({
       value: "project",
-      label: "最近的项目提示词",
-      description: "按需加载",
+      label: t("Recent project prompts", "最近的项目提示词"),
+      description: t("load on demand", "按需加载"),
     });
 
     const selected = await showSelectOverlay(
-      ctx, "提示词历史", "↑↓ 移动 • enter 打开 • esc 取消",
+      ctx, t("Prompt history", "提示词历史"), t("↑↓ navigate • enter open • esc cancel", "↑↓ 移动 • enter 打开 • esc 取消"),
       items, items.length);
     if (!selected) return null;
 
@@ -2291,28 +2292,28 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     const currentText = getCurrentEditorText(ctx, currentEditor);
     if (!hasNonWhitespaceText(currentText)) {
       ctx.ui.setEditorText(selected);
-      ctx.ui.notify("已插入提示词", "info");
+      ctx.ui.notify(t("Inserted prompt", "已插入提示词"), "info");
       return;
     }
 
-    const action = await ctx.ui.select("插入提示词", ["替换", "追加", "取消"]);
+    const action = await ctx.ui.select(t("Insert prompt", "插入提示词"), [t("Replace", "替换"), t("Append", "追加"), t("Cancel", "取消")]);
 
-    if (action === "替换") {
+    if (action === t("Replace", "替换")) {
       ctx.ui.setEditorText(selected);
-      ctx.ui.notify("已用提示词替换编辑器内容", "info");
+      ctx.ui.notify(t("Replaced editor with prompt", "已用提示词替换编辑器内容"), "info");
       return;
     }
 
-    if (action === "追加") {
+    if (action === t("Append", "追加")) {
       const separator = currentText.endsWith("\n") || selected.startsWith("\n") ? "" : "\n";
       ctx.ui.setEditorText(`${currentText}${separator}${selected}`);
-      ctx.ui.notify("已追加提示词", "info");
+      ctx.ui.notify(t("Appended prompt", "已追加提示词"), "info");
     }
   }
 
   async function handleSelectedStashHistoryEntry(ctx: any, selected: string): Promise<void> {
-    const action = await ctx.ui.select("暂存的提示词", ["插入", "取消"]);
-    if (action === "插入") await insertSelectedPromptHistoryEntry(ctx, selected);
+    const action = await ctx.ui.select(t("Stashed prompt", "暂存的提示词"), [t("Insert", "插入"), t("Cancel", "取消")]);
+    if (action === t("Insert", "插入")) await insertSelectedPromptHistoryEntry(ctx, selected);
   }
 
   function isStashShortcutInput(data: string): boolean {
@@ -2366,7 +2367,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       copyTextToClipboard(ctx, text, action.kind === "copyEditor" ? "Copied editor text" : undefined);
       if (action.kind === "cutEditor") {
         ctx.ui.setEditorText("");
-        ctx.ui.notify("已剪切编辑器文本", "info");
+        ctx.ui.notify(t("Cut editor text", "已剪切编辑器文本"), "info");
       }
       return;
     }
@@ -2393,14 +2394,14 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
     if (!hasNonWhitespaceText(rawText)) {
       if (!hasStash) {
-        ctx.ui.notify("没有可暂存的内容", "info");
+        ctx.ui.notify(t("Nothing to stash", "没有可暂存的内容"), "info");
         return;
       }
 
       ctx.ui.setEditorText(stashedEditorText);
       stashedEditorText = null;
       ctx.ui.setStatus("stash", undefined);
-      ctx.ui.notify("已恢复暂存内容", "info");
+      ctx.ui.notify(t("Stash restored", "已恢复暂存内容"), "info");
       return;
     }
 
@@ -2408,7 +2409,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
     addStashHistoryEntry(rawText);
     ctx.ui.setEditorText("");
     ctx.ui.setStatus("stash", "stash");
-    ctx.ui.notify(hasStash ? "已更新暂存" : "已暂存文本", "info");
+    ctx.ui.notify(hasStash ? t("Stash updated", "已更新暂存") : t("Text stashed", "已暂存文本"), "info");
   }
 
   async function openStashHistory(ctx: any): Promise<void> {
@@ -2423,7 +2424,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         projectPrompts = readRecentProjectPrompts(ctx.cwd, PROJECT_PROMPT_HISTORY_LIMIT);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        ctx.ui.notify(`加载项目提示词失败：${message}`, "warning");
+        ctx.ui.notify(t(`Failed to load project prompts: ${message}`, `加载项目提示词失败：${message}`), "warning");
         return;
       }
 
@@ -2477,7 +2478,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
   registerCdCommand(pi, () => currentCtx?.cwd ?? process.cwd());
 
   pi.registerCommand("reply", {
-    description: "引用一条历史用户或助手消息到编辑器",
+    description: t("Quote a previous user or assistant message into the editor", "引用一条历史用户或助手消息到编辑器"),
     handler: async (args, ctx) => {
       const { reply } = await import("./quote-reply.ts");
       await reply(args, ctx);
@@ -2485,7 +2486,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("queue", {
-    description: "管理 Powerline 排队提示词与项目别名",
+    description: t("Manage Powerline queued prompts and project aliases", "管理 Powerline 排队提示词与项目别名"),
     handler: async (args, ctx) => {
       currentCtx = ctx;
       const parts = args.trim().split(/\s+/).filter(Boolean);
@@ -2500,12 +2501,12 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         const alias = parts[1];
         const aliasPath = parts.slice(2).join(" ") || ctx.cwd || process.cwd();
         if (!alias) {
-          ctx.ui.notify("用法：/queue alias <name> [path]", "info");
+          ctx.ui.notify(t("Usage: /queue alias <name> [path]", "用法：/queue alias <name> [path]"), "info");
           return;
         }
         try {
           queueStore.setAlias(alias, aliasPath);
-          ctx.ui.notify(`别名 @${alias} → ${aliasPath}`, "info");
+          ctx.ui.notify(t(`Alias @${alias} → ${aliasPath}`, `别名 @${alias} → ${aliasPath}`), "info");
         } catch (error) {
           ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
         }
@@ -2517,7 +2518,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         if (!id) {
           const item = queueStore.queuedDeliveryItems(getQueueContext(ctx))[0];
           if (!item) {
-            ctx.ui.notify("没有可发送的排队项", "info");
+            ctx.ui.notify(t("No queued item to send", "没有可发送的排队项"), "info");
             return;
           }
           sendOrRetryQueueItem(ctx, item.id);
@@ -2532,21 +2533,21 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         if (id === "all") {
           const active = queueStore.activeItems(getQueueContext(ctx));
           for (const item of active) queueStore.clear(item.id);
-          ctx.ui.notify(`已清除 ${active.length} 个排队项`, "info");
+          ctx.ui.notify(t(`Cleared ${active.length} queued item${active.length === 1 ? "" : "s"}`, `已清除 ${active.length} 个排队项`), "info");
           requestQueueRender();
           return;
         }
         if (!id) {
-          ctx.ui.notify("用法：/queue clear <id|all>", "info");
+          ctx.ui.notify(t("Usage: /queue clear <id|all>", "用法：/queue clear <id|all>"), "info");
           return;
         }
         const item = queueStore.get(id);
         if (!item) {
-          ctx.ui.notify(`没有唯一匹配 ${id} 的排队项`, "warning");
+          ctx.ui.notify(t(`No unique queued item matches ${id}`, `没有唯一匹配 ${id} 的排队项`), "warning");
           return;
         }
         queueStore.clear(item.id);
-        ctx.ui.notify(`已清除 ${item.id}`, "info");
+        ctx.ui.notify(t(`Cleared ${item.id}`, `已清除 ${item.id}`), "info");
         requestQueueRender();
         return;
       }
@@ -2555,18 +2556,18 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         const id = parts[1];
         const spec = parts[2];
         if (!id || !spec) {
-          ctx.ui.notify("用法：/queue target <id> @alias|global|current", "info");
+          ctx.ui.notify(t("Usage: /queue target <id> @alias|global|current", "用法：/queue target <id> @alias|global|current"), "info");
           return;
         }
         const item = queueStore.get(id);
         if (!item) {
-          ctx.ui.notify(`没有唯一匹配 ${id} 的队列项`, "warning");
+          ctx.ui.notify(t(`No unique queue item matches ${id}`, `没有唯一匹配 ${id} 的队列项`), "warning");
           return;
         }
         try {
           const target = resolveCommandTarget(ctx, spec);
           queueStore.update(item.id, { target });
-          ctx.ui.notify(`已更改目标 ${item.id}`, "info");
+          ctx.ui.notify(t(`Retargeted ${item.id}`, `已更改目标 ${item.id}`), "info");
           requestQueueRender();
         } catch (error) {
           ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
@@ -2574,13 +2575,13 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         return;
       }
 
-      ctx.ui.notify("用法：/queue [send|retry|clear|target|alias]", "info");
+      ctx.ui.notify(t("Usage: /queue [send|retry|clear|target|alias]", "用法：/queue [send|retry|clear|target|alias]"), "info");
     },
   });
 
   // Command to toggle/configure
   pi.registerCommand("powerline", {
-    description: "配置 powerline 状态栏（开关、预设）",
+    description: t("Configure powerline status (toggle, preset)", "配置 powerline 状态栏（开关、预设）"),
     handler: async (args, ctx) => {
       // Update context reference (command ctx may have more methods)
       currentCtx = ctx;
@@ -2590,7 +2591,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         enabled = !enabled;
         if (enabled) {
           setupCustomEditor(ctx);
-          ctx.ui.notify("已启用 Powerline", "info");
+          ctx.ui.notify(t("Powerline enabled", "已启用 Powerline"), "info");
         } else {
           shellSession?.dispose();
           shellSession = null;
@@ -2622,7 +2623,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
           currentEditor = null;
           statusRenderScheduler.cancel();
           resetLayoutCache();
-          ctx.ui.notify("已禁用 Powerline", "info");
+          ctx.ui.notify(t("Powerline disabled", "已禁用 Powerline"), "info");
         }
         return;
       }
@@ -2638,9 +2639,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         if (enabled && ctx.hasUI) setupCustomEditor(ctx);
 
         if (writePowerlineOptionSetting(ctx.cwd, { placement: config.placement }, config.preset)) {
-          ctx.ui.notify(`Powerline 位置已设为：${config.placement}`, "info");
+          ctx.ui.notify(t(`Powerline placement set to: ${config.placement}`, `Powerline 位置已设为：${config.placement}`), "info");
         } else {
-          ctx.ui.notify(`Powerline 位置已设为：${config.placement}（未持久化，请检查 settings.json）`, "warning");
+          ctx.ui.notify(t(`Powerline placement set to: ${config.placement} (not persisted; check settings.json)`, `Powerline 位置已设为：${config.placement}（未持久化，请检查 settings.json）`), "warning");
         }
         return;
       }
@@ -2654,25 +2655,25 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         }
 
         if (writePowerlinePresetSetting(preset, ctx.cwd)) {
-          ctx.ui.notify(`预设已设为：${preset}`, "info");
+          ctx.ui.notify(t(`Preset set to: ${preset}`, `预设已设为：${preset}`), "info");
         } else {
-          ctx.ui.notify(`预设已设为：${preset}（未持久化，请检查 settings.json）`, "warning");
+          ctx.ui.notify(t(`Preset set to: ${preset} (not persisted; check settings.json)`, `预设已设为：${preset}（未持久化，请检查 settings.json）`), "warning");
         }
         return;
       }
 
       // Show available presets
       const presetList = Object.keys(PRESETS).join(", ");
-      ctx.ui.notify(`可用预设：${presetList}`, "info");
+      ctx.ui.notify(t(`Available presets: ${presetList}`, `可用预设：${presetList}`), "info");
     },
   });
 
   pi.registerCommand("stash-history", {
-    description: "打开提示词历史选择器",
+    description: t("Open prompt history picker", "打开提示词历史选择器"),
     handler: async (_args, ctx) => {
       if (!ctx.hasUI) return;
       if (!enabled) {
-        ctx.ui.notify("Powerline 已禁用", "info");
+        ctx.ui.notify(t("Powerline is disabled", "Powerline 已禁用"), "info");
         return;
       }
 
@@ -2681,7 +2682,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("bash-mode", {
-    description: "开关粘性 bash 模式（on、off、toggle）",
+    description: t("Toggle sticky bash mode (on, off, toggle)", "开关粘性 bash 模式（on、off、toggle）"),
     handler: async (args, ctx) => {
       const mode = args?.trim().toLowerCase() || "toggle";
       if (mode === "on") {
@@ -2696,20 +2697,20 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         await setBashModeActive(!bashModeActive, ctx);
         return;
       }
-      ctx.ui.notify("用法：/bash-mode [on|off|toggle]", "warning");
+      ctx.ui.notify(t("Usage: /bash-mode [on|off|toggle]", "用法：/bash-mode [on|off|toggle]"), "warning");
     },
   });
 
   pi.registerCommand("powerline-perf", {
-    description: "查看或重置编辑器性能剖析（需主动开启）",
+    description: t("Show or reset opt-in editor performance profiling", "查看或重置编辑器性能剖析（需主动开启）"),
     handler: async (args, ctx) => {
       if (!editorPerf.options.enabled) {
-        ctx.ui.notify("请设置 POWERLINE_DEBUG_PERF=1 并重新加载以启用编辑器性能剖析", "info");
+        ctx.ui.notify(t("Set POWERLINE_DEBUG_PERF=1 and reload to enable editor profiling", "请设置 POWERLINE_DEBUG_PERF=1 并重新加载以启用编辑器性能剖析"), "info");
         return;
       }
       if (args.trim().toLowerCase() === "reset") {
         editorPerf.reset();
-        ctx.ui.notify("Powerline 编辑器性能计数器已重置", "info");
+        ctx.ui.notify(t("Powerline editor performance counters reset", "Powerline 编辑器性能计数器已重置"), "info");
         return;
       }
       ctx.ui.notify(editorPerf.report(), "info");
@@ -2717,7 +2718,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
   });
 
   pi.registerCommand("bash-reset", {
-    description: "重置托管的 bash 会话",
+    description: t("Reset the managed bash session", "重置托管的 bash 会话"),
     handler: async (_args, ctx) => {
       shellSession?.dispose();
       shellSession = null;
@@ -2728,20 +2729,20 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         } catch (error) {
           bashModeActive = false;
           const message = error instanceof Error ? error.message : String(error);
-          ctx.ui.notify(`重启 shell 会话失败：${message}`, "error");
+          ctx.ui.notify(t(`Failed to restart shell session: ${message}`, `重启 shell 会话失败：${message}`), "error");
           requestStatusRender();
           return;
         }
       }
       requestStatusRender();
-      ctx.ui.notify("Bash 会话已重置", "info");
+      ctx.ui.notify(t("Bash session reset", "Bash 会话已重置"), "info");
     },
   });
 
 
   // Command to set working message theme
   pi.registerCommand("vibe", {
-    description: "设置工作消息主题。用法：/vibe [theme|off|mode|model|generate]",
+    description: t("Set working message theme. Usage: /vibe [theme|off|mode|model|generate]", "设置工作消息主题。用法：/vibe [theme|off|mode|model|generate]"),
     handler: async (args, ctx) => {
       const parts = args?.trim().split(/\s+/) || [];
       const subcommand = parts[0]?.toLowerCase();
@@ -2751,10 +2752,10 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         const theme = getVibeTheme();
         const mode = getVibeMode();
         const model = getVibeModel();
-        let status = `Vibe：${theme || "关闭"} | 模式：${mode} | 模型：${model}`;
+        let status = t(`Vibe: ${theme || "off"} | Mode: ${mode} | Model: ${model}`, `Vibe：${theme || "关闭"} | 模式：${mode} | 模型：${model}`);
         if (theme && mode === "file") {
           const count = getVibeFileCount(theme);
-          status += count > 0 ? ` | 文件：${count} 条 vibe` : " | 文件：未找到";
+          status += count > 0 ? t(` | File: ${count} vibes`, ` | 文件：${count} 条 vibe`) : t(" | File: not found", " | 文件：未找到");
         }
         ctx.ui.notify(status, "info");
         return;
@@ -2764,19 +2765,19 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       if (subcommand === "model") {
         const modelSpec = parts.slice(1).join(" ");
         if (!modelSpec) {
-          ctx.ui.notify(`当前 vibe 模型：${getVibeModel()}`, "info");
+          ctx.ui.notify(t(`Current vibe model: ${getVibeModel()}`, `当前 vibe 模型：${getVibeModel()}`), "info");
           return;
         }
         // Validate format (provider/modelId)
         if (!modelSpec.includes("/")) {
-          ctx.ui.notify("模型格式无效。请使用：provider/modelId（例如 openai-codex/gpt-5.4-mini）", "error");
+          ctx.ui.notify(t("Invalid model format. Use: provider/modelId (e.g., openai-codex/gpt-5.4-mini)", "模型格式无效。请使用：provider/modelId（例如 openai-codex/gpt-5.4-mini）"), "error");
           return;
         }
         const persisted = setVibeModel(modelSpec);
         if (persisted) {
-          ctx.ui.notify(`Vibe 模型已设为：${modelSpec}`, "info");
+          ctx.ui.notify(t(`Vibe model set to: ${modelSpec}`, `Vibe 模型已设为：${modelSpec}`), "info");
         } else {
-          ctx.ui.notify(`Vibe 模型已设为：${modelSpec}（未持久化，请检查 settings.json）`, "warning");
+          ctx.ui.notify(t(`Vibe model set to: ${modelSpec} (not persisted; check settings.json)`, `Vibe 模型已设为：${modelSpec}（未持久化，请检查 settings.json）`), "warning");
         }
         return;
       }
@@ -2785,24 +2786,24 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       if (subcommand === "mode") {
         const newMode = parts[1]?.toLowerCase();
         if (!newMode) {
-          ctx.ui.notify(`当前 vibe 模式：${getVibeMode()}`, "info");
+          ctx.ui.notify(t(`Current vibe mode: ${getVibeMode()}`, `当前 vibe 模式：${getVibeMode()}`), "info");
           return;
         }
         if (newMode !== "generate" && newMode !== "file") {
-          ctx.ui.notify("模式无效。请使用：generate 或 file", "error");
+          ctx.ui.notify(t("Invalid mode. Use: generate or file", "模式无效。请使用：generate 或 file"), "error");
           return;
         }
         // Check if file exists when switching to file mode
         const theme = getVibeTheme();
         if (newMode === "file" && theme && !hasVibeFile(theme)) {
-          ctx.ui.notify(`没有 "${theme}" 的 vibe 文件。请先运行 /vibe generate ${theme}`, "error");
+          ctx.ui.notify(t(`No vibe file for "${theme}". Run /vibe generate ${theme} first`, `没有 "${theme}" 的 vibe 文件。请先运行 /vibe generate ${theme}`), "error");
           return;
         }
         const persisted = setVibeMode(newMode);
         if (persisted) {
-          ctx.ui.notify(`Vibe 模式已设为：${newMode}`, "info");
+          ctx.ui.notify(t(`Vibe mode set to: ${newMode}`, `Vibe 模式已设为：${newMode}`), "info");
         } else {
-          ctx.ui.notify(`Vibe 模式已设为：${newMode}（未持久化，请检查 settings.json）`, "warning");
+          ctx.ui.notify(t(`Vibe mode set to: ${newMode} (not persisted; check settings.json)`, `Vibe 模式已设为：${newMode}（未持久化，请检查 settings.json）`), "warning");
         }
         return;
       }
@@ -2811,19 +2812,19 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       if (subcommand === "generate") {
         const parsed = parseVibeGenerateArgs(parts.slice(1));
         if (!parsed) {
-          ctx.ui.notify("用法：/vibe generate <theme> [count]", "error");
+          ctx.ui.notify(t("Usage: /vibe generate <theme> [count]", "用法：/vibe generate <theme> [count]"), "error");
           return;
         }
 
         const { theme, count } = parsed;
-        ctx.ui.notify(`正在为 "${theme}" 生成 ${count} 条 vibe…`, "info");
+        ctx.ui.notify(t(`Generating ${count} vibes for "${theme}"...`, `正在为 "${theme}" 生成 ${count} 条 vibe…`), "info");
 
         const result = await generateVibesBatch(theme, count);
 
         if (result.success) {
-          ctx.ui.notify(`已为 "${theme}" 生成 ${result.count} 条 vibe → ${result.filePath}`, "info");
+          ctx.ui.notify(t(`Generated ${result.count} vibes for "${theme}" → ${result.filePath}`, `已为 "${theme}" 生成 ${result.count} 条 vibe → ${result.filePath}`), "info");
         } else {
-          ctx.ui.notify(`生成 vibe 失败：${result.error}`, "error");
+          ctx.ui.notify(t(`Failed to generate vibes: ${result.error}`, `生成 vibe 失败：${result.error}`), "error");
         }
         return;
       }
@@ -2832,9 +2833,9 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       if (subcommand === "off") {
         const persisted = setVibeTheme(null);
         if (persisted) {
-          ctx.ui.notify("已禁用 Vibe", "info");
+          ctx.ui.notify(t("Vibe disabled", "已禁用 Vibe"), "info");
         } else {
-          ctx.ui.notify("已禁用 Vibe（未持久化，请检查 settings.json）", "warning");
+          ctx.ui.notify(t("Vibe disabled (not persisted; check settings.json)", "已禁用 Vibe（未持久化，请检查 settings.json）"), "warning");
         }
         return;
       }
@@ -2845,11 +2846,11 @@ export default function powerlineFooter(pi: ExtensionAPI) {
       const mode = getVibeMode();
       if (mode === "file" && !hasVibeFile(theme)) {
         const suffix = persisted ? "" : " (not persisted; check settings.json)";
-        ctx.ui.notify(`Vibe 已设为：${theme}（文件模式，但未找到文件 - 请运行 /vibe generate ${theme}）${suffix}`, "warning");
+        ctx.ui.notify(t(`Vibe set to: ${theme} (file mode, but no file found - run /vibe generate ${theme})${suffix}`, `Vibe 已设为：${theme}（文件模式，但未找到文件 - 请运行 /vibe generate ${theme}）${suffix}`), "warning");
       } else if (persisted) {
-        ctx.ui.notify(`Vibe 已设为：${theme}`, "info");
+        ctx.ui.notify(t(`Vibe set to: ${theme}`, `Vibe 已设为：${theme}`), "info");
       } else {
-        ctx.ui.notify(`Vibe 已设为：${theme}（未持久化，请检查 settings.json）`, "warning");
+        ctx.ui.notify(t(`Vibe set to: ${theme} (not persisted; check settings.json)`, `Vibe 已设为：${theme}（未持久化，请检查 settings.json）`), "warning");
       }
     },
   });
@@ -3245,7 +3246,7 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         },
         onInterrupt: () => {
           shellSession?.interrupt();
-          ctx.ui.notify("已向 shell 发送中断信号", "info");
+          ctx.ui.notify(t("Sent interrupt to shell", "已向 shell 发送中断信号"), "info");
         },
         onNotify: (message, level = "info") => ctx.ui.notify(message, level),
         getHistoryEntries: (prefix) => getShellHistoryEntries(prefix),
@@ -3564,8 +3565,8 @@ export default function powerlineFooter(pi: ExtensionAPI) {
         if (!canShowWelcome(ctx, request, generation)) return;
         const recentSessions = await getRecentSessions(3, request.signal);
         if (!canShowWelcome(ctx, request, generation)) return;
-        const modelName = ctx.model?.name || ctx.model?.id || "无模型";
-        const providerName = ctx.model?.provider || "未知";
+        const modelName = ctx.model?.name || ctx.model?.id || t("No model", "无模型");
+        const providerName = ctx.model?.provider || t("Unknown", "未知");
         const loadedCounts = discoverLoadedCounts(pi.getCommands());
         const initialContextTokens = estimateInitialContextTokens(ctx);
 
@@ -3582,8 +3583,8 @@ export default function powerlineFooter(pi: ExtensionAPI) {
 
   function setupWelcomeOverlay(ctx: any) {
     const request = beginWelcomeRequest(ctx);
-    const modelName = ctx.model?.name || ctx.model?.id || "无模型";
-    const providerName = ctx.model?.provider || "未知";
+    const modelName = ctx.model?.name || ctx.model?.id || t("No model", "无模型");
+    const providerName = ctx.model?.provider || t("Unknown", "未知");
 
     const overlaySessionGeneration = sessionGeneration;
 

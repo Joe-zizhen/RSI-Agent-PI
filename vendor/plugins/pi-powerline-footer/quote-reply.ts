@@ -1,3 +1,4 @@
+import { t } from "../i18n-shim.js";
 import type { ExtensionContext, SessionEntry, Theme } from "@earendil-works/pi-coding-agent";
 import { decodeKittyPrintable, fuzzyFilter, Key, matchesKey, truncateToWidth, visibleWidth, type Component, type OverlayHandle } from "@earendil-works/pi-tui";
 
@@ -95,18 +96,18 @@ function formatQuote(candidate: QuoteCandidate): string {
   const truncated = candidate.text.length > MAX_QUOTE_CHARS;
   const quoteText = truncated ? candidate.text.slice(0, MAX_QUOTE_CHARS).trimEnd() : candidate.text;
   const lines = [
-    `以下引用此前的 ${candidate.role} 消息 ${candidate.id}，仅供参考：`,
+    t(`Quoted previous ${candidate.role} message ${candidate.id} for reference only:`, `以下引用此前的 ${candidate.role} 消息 ${candidate.id}，仅供参考：`),
     "",
     quoteText.split(/\r?\n/).map((line) => (line ? `> ${line}` : ">")).join("\n"),
   ];
-  if (truncated) lines.push("", `> [引用已从 ${candidate.text.length.toLocaleString()} 字符截断。]`);
-  lines.push("", "我的回复：", "");
+  if (truncated) lines.push("", t(`> [Quote truncated from ${candidate.text.length.toLocaleString()} characters.]`, `> [引用已从 ${candidate.text.length.toLocaleString()} 字符截断。]`));
+  lines.push("", t("My reply:", "我的回复："), "");
   return lines.join("\n");
 }
 
 function insertQuote(ctx: QuoteReplyContext, candidate: QuoteCandidate): void {
   ctx.ui.setEditorText(`${formatQuote(candidate)}${ctx.ui.getEditorText()}`);
-  ctx.ui.notify(`已插入来自 ${candidate.role} 消息 ${candidate.id} 的引用。`, "info");
+  ctx.ui.notify(t(`Inserted quote from ${candidate.role} message ${candidate.id}.`, `已插入来自 ${candidate.role} 消息 ${candidate.id} 的引用。`), "info");
 }
 
 function printableInput(data: string): string | undefined {
@@ -143,10 +144,10 @@ class QuotePicker implements Component {
     const innerWidth = Math.max(0, width - 2);
     const filtered = filterCandidates(this.candidates, this.query);
     this.selectedIndex = filtered.length === 0 ? 0 : Math.min(this.selectedIndex, filtered.length - 1);
-    const lines = [this.topBorder(innerWidth, " 回复 "), this.emptyRow(innerWidth), this.row(innerWidth, this.searchLine()), this.emptyRow(innerWidth), this.divider(innerWidth)];
+    const lines = [this.topBorder(innerWidth, t(" Reply ", " 回复 ")), this.emptyRow(innerWidth), this.row(innerWidth, this.searchLine()), this.emptyRow(innerWidth), this.divider(innerWidth)];
 
     if (filtered.length === 0) {
-      lines.push(this.emptyRow(innerWidth), this.row(innerWidth, this.theme.fg("warning", this.theme.italic("没有匹配的消息"))), this.emptyRow(innerWidth));
+      lines.push(this.emptyRow(innerWidth), this.row(innerWidth, this.theme.fg("warning", this.theme.italic(t("No matching messages", "没有匹配的消息")))), this.emptyRow(innerWidth));
     } else {
       lines.push(this.emptyRow(innerWidth));
       const start = Math.max(0, Math.min(this.selectedIndex - Math.floor(MAX_VISIBLE_ITEMS / 2), filtered.length - MAX_VISIBLE_ITEMS));
@@ -234,13 +235,13 @@ class QuotePicker implements Component {
   private emptyRow(innerWidth: number): string { return this.border("│") + " ".repeat(innerWidth) + this.border("│"); }
   private row(innerWidth: number, content: string): string { return this.border("│") + truncateToWidth(` ${content}`, innerWidth, "…", true) + this.border("│"); }
   private border(text: string): string { return this.theme.fg("borderMuted", text); }
-  private help(): string { return this.theme.fg("dim", `${this.theme.italic("↑↓")} 移动  ${this.theme.italic("enter")} 引用  ${this.theme.italic("esc")} 取消  ${this.theme.italic("⌫")} 编辑`); }
+  private help(): string { return this.theme.fg("dim", t(`${this.theme.italic("↑↓")} navigate  ${this.theme.italic("enter")} quote  ${this.theme.italic("esc")} cancel  ${this.theme.italic("⌫")} edit`, `${this.theme.italic("↑↓")} 移动  ${this.theme.italic("enter")} 引用  ${this.theme.italic("esc")} 取消  ${this.theme.italic("⌫")} 编辑`)); }
 }
 
 async function pickCandidate(ctx: QuoteReplyContext, candidates: QuoteCandidate[]): Promise<QuoteCandidate | undefined> {
   if (ctx.mode !== "tui" || !ctx.ui.custom) {
     const options = candidates.slice(0, MAX_RPC_OPTIONS).map((candidate) => `${candidate.id} ${candidate.role}: ${excerpt(candidate.text)}`);
-    const selected = await ctx.ui.select("回复历史消息", options);
+    const selected = await ctx.ui.select(t("Reply to previous message", "回复历史消息"), options);
     if (!selected) return undefined;
     const [id] = selected.split(" ");
     return id ? candidates.find((candidate) => candidate.id === id) : undefined;
@@ -268,7 +269,7 @@ async function pickCandidate(ctx: QuoteReplyContext, candidates: QuoteCandidate[
 export async function reply(args: string, ctx: QuoteReplyContext): Promise<void> {
   const candidates = collectCandidates(ctx);
   if (candidates.length === 0) {
-    ctx.ui.notify("没有可引用的用户或助手消息。", "warning");
+    ctx.ui.notify(t("No user or assistant messages are available to quote.", "没有可引用的用户或助手消息。"), "warning");
     return;
   }
 
@@ -280,7 +281,7 @@ export async function reply(args: string, ctx: QuoteReplyContext): Promise<void>
       insertQuote(ctx, candidate);
       return;
     }
-    ctx.ui.notify(matches.length > 1 ? `消息 id "${query}" 匹配到 ${matches.length} 条消息。请输入更长的 id。` : `没有可引用的消息匹配 id "${query}"。`, "warning");
+    ctx.ui.notify(matches.length > 1 ? t(`Message id "${query}" matches ${matches.length} messages. Type more of the id.`, `消息 id "${query}" 匹配到 ${matches.length} 条消息。请输入更长的 id。`) : t(`No quotable message matches id "${query}".`, `没有可引用的消息匹配 id "${query}"。`), "warning");
     return;
   }
 

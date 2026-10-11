@@ -19,6 +19,7 @@ import {
   type CommandFilter,
   type PaletteCandidate,
 } from "./palette-sections";
+import { t, useLocale } from "../../t";
 
 export interface PaletteFileScope {
   readonly workspaceId: string;
@@ -73,6 +74,7 @@ export function CommandPaletteSurface({
   onOpenFile,
   onSelectModel,
 }: CommandPaletteSurfaceProps) {
+  useLocale();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<CommandFilter>("all");
   const [listing, setListing] = useState<FileListing>({ status: "loading" });
@@ -118,7 +120,11 @@ export function CommandPaletteSurface({
         .filter(Boolean)
         .join(" · "),
       icon: <ChatIcon />,
-      hint: isCurrent ? "当前" : thread.session.status === "running" ? "运行中" : undefined,
+      hint: isCurrent
+        ? t("Current", "当前")
+        : thread.session.status === "running"
+          ? t("Running", "运行中")
+          : undefined,
       run: () => {
         onClose();
         onOpenThread(target);
@@ -153,8 +159,10 @@ export function CommandPaletteSurface({
   let sections: readonly PaletteSection[];
   let emptyText: string;
   if (mode === "files") {
-    label = "转到文件";
-    placeholder = fileScope ? `在 ${fileScope.label} 中搜索文件` : "搜索文件";
+    label = t("Go to file", "转到文件");
+    placeholder = fileScope
+      ? t(`Search files in ${fileScope.label}`, `在 ${fileScope.label} 中搜索文件`)
+      : t("Search files", "搜索文件");
     sections =
       fileScope && files
         ? buildFileSections({
@@ -177,22 +185,25 @@ export function CommandPaletteSurface({
           })
         : [];
     emptyText = !fileScope
-      ? "打开一个会话以搜索其文件。"
+      ? t("Open a thread to search its files.", "打开一个会话以搜索其文件。")
       : listing.status === "loading"
-        ? "正在加载文件…"
+        ? t("Loading files…", "正在加载文件…")
         : listing.status === "error"
-          ? "无法加载文件。"
+          ? t("Couldn't load files.", "无法加载文件。")
           : query !== fileQuery
-            ? "正在搜索…"
+            ? t("Searching…", "正在搜索…")
             : query.trim()
-              ? "没有匹配的文件。"
-              : `输入内容以搜索 ${(files?.length ?? 0).toLocaleString()} 个文件。`;
+              ? t("No matching files.", "没有匹配的文件。")
+              : t(
+                  `Type to search ${(files?.length ?? 0).toLocaleString()} files.`,
+                  `输入内容以搜索 ${(files?.length ?? 0).toLocaleString()} 个文件。`,
+                );
   } else if (mode === "models") {
-    label = "切换模型";
-    placeholder = "切换模型";
+    label = t("Switch model", "切换模型");
+    placeholder = t("Switch model", "切换模型");
     sections = buildListSection({
       id: "models",
-      label: "模型",
+      label: t("Models", "模型"),
       query,
       candidates: (modelScope?.options ?? []).map((option) => ({
         id: `model:${option.providerId}/${option.modelId}`,
@@ -201,7 +212,7 @@ export function CommandPaletteSurface({
         hint:
           option.providerId === modelScope?.currentProvider &&
           option.modelId === modelScope.currentModelId
-            ? "当前"
+            ? t("Current", "当前")
             : undefined,
         run: () => {
           onClose();
@@ -209,10 +220,12 @@ export function CommandPaletteSurface({
         },
       })),
     });
-    emptyText = modelScope?.options.length ? "没有匹配的模型。" : "没有可用的模型。";
+    emptyText = modelScope?.options.length
+      ? t("No matching models.", "没有匹配的模型。")
+      : t("No models available.", "没有可用的模型。");
   } else {
-    label = "命令面板";
-    placeholder = "搜索会话、项目和操作";
+    label = t("Command palette", "命令面板");
+    placeholder = t("Search threads, projects, and actions", "搜索会话、项目和操作");
     sections = buildCommandSections({
       query,
       filter,
@@ -220,7 +233,9 @@ export function CommandPaletteSurface({
       workspaces: workspaceCandidates,
       actions: actionCandidates,
     });
-    emptyText = query.trim() ? "没有匹配项。" : "这里还没有内容。";
+    emptyText = query.trim()
+      ? t("No matches.", "没有匹配项。")
+      : t("Nothing here yet.", "这里还没有内容。");
   }
 
   return (

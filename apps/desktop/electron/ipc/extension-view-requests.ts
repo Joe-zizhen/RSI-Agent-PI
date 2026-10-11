@@ -4,6 +4,7 @@ import type { DesktopExtensionViewOwner } from "../extensions/extension-view-own
 import type { WindowOwner } from "../windows/window-owner";
 import type { MainFrameHandler } from "./main-frame-ipc";
 import { expectNonEmptyString, expectRecord, expectSessionTarget } from "./request-validation";
+import { t } from "../t";
 
 function decodeOpenRequest(raw: unknown) {
   const input = expectRecord(raw, "extension view request");
@@ -88,7 +89,8 @@ export function registerExtensionViewRequests(
       return;
     }
     const requestId = expectNonEmptyString(message.requestId, "requestId");
-    if (requestId.length > 200) throw new Error("无效的宿主操作请求 ID");
+    if (requestId.length > 200)
+      throw new Error(t("Invalid host action request ID", "无效的宿主操作请求 ID"));
     // Validate connection ownership before returning any result to this sender.
     owner.getConnectionContext(connectionId, contents.id);
     let pending = pendingActions.get(connectionId);
@@ -103,7 +105,10 @@ export function registerExtensionViewRequests(
           type: "host-action-result",
           requestId,
           ok: false,
-          error: "待处理的桌面操作过多。请等待当前操作完成。",
+          error: t(
+            "Too many pending desktop actions. Wait for the current actions to finish.",
+            "待处理的桌面操作过多。请等待当前操作完成。",
+          ),
         },
       });
       return;
@@ -122,7 +127,8 @@ export function registerExtensionViewRequests(
         type: "host-action-result",
         requestId,
         ok: false,
-        error: error instanceof Error ? error.message : "扩展操作失败",
+        error:
+          error instanceof Error ? error.message : t("Extension action failed", "扩展操作失败"),
       };
     }
     pending.delete(requestId);

@@ -3,6 +3,7 @@ import type {
   RuntimeSettingsSnapshot,
   RuntimeSnapshot,
 } from "@rsi-agent-pi/session-driver/runtime-types";
+import { t } from "../../t";
 
 export const THINKING_LEVELS: NonNullable<RuntimeSettingsSnapshot["defaultThinkingLevel"]>[] = [
   "low",
@@ -139,21 +140,23 @@ export function ProviderRow({
 function describeProviderStatus(provider: RuntimeSnapshot["providers"][number]): string {
   switch (provider.authSource) {
     case "oauth":
-      return "OAuth · 已连接";
+      return t("OAuth · connected", "OAuth · 已连接");
     case "auth_file":
-      return "API key · 已连接";
+      return t("API key · connected", "API key · 已连接");
     case "env":
-      return "环境变量 · 已连接";
+      return t("Environment variable · connected", "环境变量 · 已连接");
     case "external":
-      return provider.hasAuth ? "外部配置 · 已连接" : "在外部配置";
+      return provider.hasAuth
+        ? t("Configured externally · connected", "外部配置 · 已连接")
+        : t("Configure externally", "在外部配置");
     default:
       if (provider.oauthSupported) {
-        return provider.apiKeySetupSupported ? "OAuth 或 API key" : "OAuth";
+        return provider.apiKeySetupSupported ? t("OAuth or API key", "OAuth 或 API key") : "OAuth";
       }
       if (provider.apiKeySetupSupported) {
         return "API key";
       }
-      return provider.authType === "api_key" ? "API key" : "内置";
+      return provider.authType === "api_key" ? "API key" : t("Built in", "内置");
   }
 }
 
@@ -171,12 +174,22 @@ function resolveProviderActions(
   onConfigureApiKey: (provider: RuntimeSnapshot["providers"][number]) => void,
 ): readonly ProviderAction[] {
   if (provider.authSource === "oauth") {
-    return [{ disabled: false, label: "退出登录", onClick: () => onLogoutProvider(provider.id) }];
+    return [
+      {
+        disabled: false,
+        label: t("Logout", "退出登录"),
+        onClick: () => onLogoutProvider(provider.id),
+      },
+    ];
   }
 
   const actions: ProviderAction[] = [];
   if (provider.oauthSupported && provider.authSource === "none") {
-    actions.push({ disabled: false, label: "登录", onClick: () => onLoginProvider(provider.id) });
+    actions.push({
+      disabled: false,
+      label: t("Login", "登录"),
+      onClick: () => onLoginProvider(provider.id),
+    });
   }
   if (
     provider.apiKeySetupSupported &&
@@ -184,7 +197,10 @@ function resolveProviderActions(
   ) {
     actions.push({
       disabled: false,
-      label: provider.authSource === "auth_file" ? "管理" : "设置 API key",
+      label:
+        provider.authSource === "auth_file"
+          ? t("Manage", "管理")
+          : t("Set an API key", "设置 API key"),
       onClick: () => onConfigureApiKey(provider),
     });
   }
@@ -192,5 +208,5 @@ function resolveProviderActions(
     return actions;
   }
 
-  return [{ disabled: true, label: "在外部配置" }];
+  return [{ disabled: true, label: t("Configure externally", "在外部配置") }];
 }

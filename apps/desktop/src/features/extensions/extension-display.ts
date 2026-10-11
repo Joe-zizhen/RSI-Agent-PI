@@ -2,13 +2,18 @@ import type {
   RuntimeExtensionRecord,
   RuntimeSourceScope,
 } from "@rsi-agent-pi/session-driver/runtime-types";
+import { t } from "../../t";
 
 export function extensionSourceSummary(extension: RuntimeExtensionRecord): string {
   return `${extensionScopeLabel(extension)} · ${extension.sourceInfo.origin}`;
 }
 
-export const PI_GUI_TOOLS_LABEL = "RSI-Agent-PI 工具";
-export const PI_ADDONS_LABEL = "pi 内置";
+export function piGuiToolsLabel(): string {
+  return t("RSI-Agent-PI tools", "RSI-Agent-PI 工具");
+}
+export function piAddonsLabel(): string {
+  return t("Built into pi", "pi 内置");
+}
 
 /** Extensions pi-gui itself adds to every session; switched on and off app-wide. */
 export function isPiGuiBuiltinExtension(extension: RuntimeExtensionRecord): boolean {
@@ -28,8 +33,8 @@ export function isPiAddonExtension(extension: RuntimeExtensionRecord): boolean {
 }
 
 export function extensionScopeLabel(extension: RuntimeExtensionRecord): string {
-  if (isPiGuiBuiltinExtension(extension)) return PI_GUI_TOOLS_LABEL;
-  if (isPiAddonExtension(extension)) return PI_ADDONS_LABEL;
+  if (isPiGuiBuiltinExtension(extension)) return piGuiToolsLabel();
+  if (isPiAddonExtension(extension)) return piAddonsLabel();
   return extension.sourceInfo.scope;
 }
 
@@ -37,16 +42,16 @@ export function extensionScopeLabel(extension: RuntimeExtensionRecord): string {
 export function sourceScopeGroupLabel(scope: RuntimeSourceScope): string {
   switch (scope) {
     case "project":
-      return "项目";
+      return t("Project", "项目");
     case "user":
-      return "用户";
+      return t("User", "用户");
     case "temporary":
-      return "本次会话";
+      return t("This session", "本次会话");
   }
 }
 
 export function extensionGroupLabel(extension: RuntimeExtensionRecord): string {
-  if (isPiGuiBuiltinExtension(extension)) return PI_GUI_TOOLS_LABEL;
-  if (isPiAddonExtension(extension)) return PI_ADDONS_LABEL;
+  if (isPiGuiBuiltinExtension(extension)) return piGuiToolsLabel();
+  if (isPiAddonExtension(extension)) return piAddonsLabel();
   return sourceScopeGroupLabel(extension.sourceInfo.scope);
 }

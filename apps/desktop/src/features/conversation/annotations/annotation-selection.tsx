@@ -3,6 +3,7 @@ import { CloseIcon } from "../../../ui/icons";
 import { ANNOTATION_ROOT_ATTRIBUTE, type OpenAnnotation } from "./annotation-markers";
 import { rangeToOffsets } from "./text-offsets";
 import type { TranscriptAnnotations } from "./use-transcript-annotations";
+import { t, useLocale } from "../../../t";
 
 interface TranscriptSelection {
   readonly messageIds: readonly string[];
@@ -272,6 +273,7 @@ function AddToChatButton({
   readonly platform: NodeJS.Platform;
   readonly onAdd: () => void;
 }) {
+  useLocale();
   return (
     <div
       className="annotation-popover annotation-add"
@@ -285,7 +287,7 @@ function AddToChatButton({
         onMouseDown={(event) => event.preventDefault()}
         onClick={onAdd}
       >
-        <span>添加到对话</span>
+        <span>{t("Add to conversation", "添加到对话")}</span>
         <span className="annotation-add__keys" aria-hidden="true">
           {addToChatShortcutKeys(platform).map((key) => (
             <kbd key={key}>{key}</kbd>
@@ -309,6 +311,7 @@ function AnnotationEditor({
   readonly onRemove: () => void;
   readonly onClose: () => void;
 }) {
+  useLocale();
   const [value, setValue] = useState(note);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const closingRef = useRef(false);
@@ -337,9 +340,9 @@ function AnnotationEditor({
       style={{ top: popoverTop(anchor, 44), left: Math.max(POPOVER_GAP, anchor.left - 24) }}
     >
       <input
-        aria-label="批注评论"
+        aria-label={t("Annotation comment", "批注评论")}
         className="annotation-editor__input"
-        placeholder="可选，添加评论…"
+        placeholder={t("Add an optional comment…", "可选，添加评论…")}
         ref={inputRef}
         value={value}
         onBlur={() => finish(true)}
@@ -356,10 +359,10 @@ function AnnotationEditor({
         }}
       />
       <button
-        aria-label="移除批注"
+        aria-label={t("Remove annotation", "移除批注")}
         className="annotation-editor__remove"
         data-testid="annotation-remove"
-        title="移除批注"
+        title={t("Remove annotation", "移除批注")}
         type="button"
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => {

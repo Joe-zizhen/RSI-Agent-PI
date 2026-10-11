@@ -23,7 +23,7 @@ import type {
 import { toSessionRef } from "../application/app-store-utils";
 import type { RefreshStateOptions } from "../application/refresh-state-options";
 import type { GitWorktreeManager } from "../platform/worktrees/worktree-manager";
-import { NEW_THREAD_PLACEHOLDER_TITLE } from "../conversation/thread-title-constants";
+import { newThreadPlaceholderTitle } from "../conversation/thread-title-constants";
 import type { PendingAutoTitle } from "../conversation/session-state-map";
 import * as worktree from "./app-store-worktree";
 import type { ResolvedExtensionFlags } from "./extension-flags";
@@ -412,7 +412,7 @@ async function createSession(
     const createOptions = await store.buildCreateSessionOptions(input.workspaceId);
     const snapshot = await store.driver.createSession(ws, {
       ...createOptions,
-      title: input.title?.trim() || NEW_THREAD_PLACEHOLDER_TITLE,
+      title: input.title?.trim() || newThreadPlaceholderTitle(),
     });
     store.seedSession(snapshot);
     store.setActiveSession(snapshot.ref);

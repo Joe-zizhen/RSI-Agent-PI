@@ -1,3 +1,4 @@
+import { t } from "../i18n-shim.js";
 import { hostname as osHostname } from "node:os";
 import { basename } from "node:path";
 import { visibleWidth } from "@earendil-works/pi-tui";
@@ -82,7 +83,7 @@ const shellModeSegment: StatusLineSegment = {
     }
 
     const shellName = ctx.shellName ?? "shell";
-    const state = ctx.shellRunning ? "运行" : "空闲";
+    const state = ctx.shellRunning ? t("run", "运行") : t("idle", "空闲");
     const cwd = ctx.shellCwd ? basename(ctx.shellCwd) : null;
     const parts = [shellName, state];
     if (cwd) {
@@ -215,7 +216,7 @@ const thinkingSegment: StatusLineSegment = {
       xhigh: "xhigh",
     };
     const label = levelText[level] || level;
-    const content = `思考：${label}`;
+    const content = t(`think:${label}`, `思考：${label}`);
 
     if (level === "high") {
       return { content: color(ctx, "thinkingHigh", content), visible: true };

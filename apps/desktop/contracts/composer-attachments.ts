@@ -1,4 +1,5 @@
 import type { ComposerAttachment, ComposerImageAttachment } from "./desktop-state";
+import { t } from "./t";
 
 export const SUPPORTED_COMPOSER_IMAGE_TYPES = [
   { extension: "png", mimeType: "image/png" },
@@ -53,22 +54,31 @@ export function totalComposerImageBytes(attachments: readonly ComposerAttachment
 }
 
 export function composerImageBytesLimitMessage(): string {
-  return `Image is larger than ${formatMegabytes(COMPOSER_IMAGE_MAX_BYTES)} MB.`;
+  return t(
+    `Image is larger than ${formatMegabytes(COMPOSER_IMAGE_MAX_BYTES)} MB.`,
+    `图片超过 ${formatMegabytes(COMPOSER_IMAGE_MAX_BYTES)} MB。`,
+  );
 }
 
 export function composerImagePixelsLimitMessage(): string {
-  return `Image is larger than ${COMPOSER_IMAGE_MAX_DIMENSION} pixels.`;
+  return t(
+    `Image is larger than ${COMPOSER_IMAGE_MAX_DIMENSION} pixels.`,
+    `图片超过 ${COMPOSER_IMAGE_MAX_DIMENSION} 像素。`,
+  );
 }
 
 export function composerImageAggregateLimitMessage(): string {
-  return `Images together are larger than ${formatMegabytes(COMPOSER_IMAGE_MAX_BYTES_TOTAL)} MB.`;
+  return t(
+    `Images together are larger than ${formatMegabytes(COMPOSER_IMAGE_MAX_BYTES_TOTAL)} MB.`,
+    `多张图片合计超过 ${formatMegabytes(COMPOSER_IMAGE_MAX_BYTES_TOTAL)} MB。`,
+  );
 }
 
 export function composerImageSavedSkipMessage(skipped: number): string {
   if (skipped === 1) {
-    return "Skipped an oversized saved image.";
+    return t("Skipped an oversized saved image.", "已跳过一张过大的已保存图片。");
   }
-  return `Skipped ${skipped} oversized saved images.`;
+  return t(`Skipped ${skipped} oversized saved images.`, `已跳过 ${skipped} 张过大的已保存图片。`);
 }
 
 export function composerImageBytesLimitError(

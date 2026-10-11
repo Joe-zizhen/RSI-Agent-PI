@@ -4,6 +4,7 @@ import type {
   SessionPromptCache,
   SessionUsageSnapshot,
 } from "@rsi-agent-pi/session-driver";
+import { t, useLocale } from "../../t";
 
 interface ContextMeterProps {
   readonly usage: SessionUsageSnapshot | undefined;
@@ -17,6 +18,7 @@ const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
  * opens a card with pi's context, prompt-cache, plan-limit and thread usage.
  */
 export function ContextMeter({ usage }: ContextMeterProps) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const cardId = useId();
   const now = useNow(open && hasCountdown(usage));
@@ -28,8 +30,11 @@ export function ContextMeter({ usage }: ContextMeterProps) {
     percent === null ? "unknown" : percent > 90 ? "danger" : percent > 70 ? "warning" : "normal";
   const label =
     percent === null
-      ? "上下文窗口：下次回复前用量未知"
-      : `上下文窗口：已用 ${formatPercent(percent)}`;
+      ? t("Context window: usage unknown until the next reply", "上下文窗口：下次回复前用量未知")
+      : t(
+          `Context window: ${formatPercent(percent)} used`,
+          `上下文窗口：已用 ${formatPercent(percent)}`,
+        );
 
   return (
     <div
@@ -64,38 +69,56 @@ export function ContextMeter({ usage }: ContextMeterProps) {
       {open ? (
         <div className="context-meter__card" id={cardId} role="tooltip">
           <section className="context-meter__section">
-            <h3 className="context-meter__heading">上下文窗口</h3>
+            <h3 className="context-meter__heading">{t("Context window", "上下文窗口")}</h3>
             <p className="context-meter__headline">
               {context.tokens === null || percent === null
-                ? `下次回复前未知 · 窗口 ${formatTokens(context.contextWindow)}`
-                : `已用 ${formatPercent(percent)} · ${formatTokens(context.tokens)} / ${formatTokens(context.contextWindow)} tokens`}
+                ? t(
+                    `Unknown until the next reply · ${formatTokens(context.contextWindow)} window`,
+                    `下次回复前未知 · 窗口 ${formatTokens(context.contextWindow)}`,
+                  )
+                : t(
+                    `${formatPercent(percent)} used · ${formatTokens(context.tokens)} / ${formatTokens(context.contextWindow)} tokens`,
+                    `已用 ${formatPercent(percent)} · ${formatTokens(context.tokens)} / ${formatTokens(context.contextWindow)} tokens`,
+                  )}
             </p>
             <p className="context-meter__note">
               {context.compactAtTokens === undefined
-                ? "自动上下文压缩已关闭"
-                : `达到 ${formatPercent((context.compactAtTokens / context.contextWindow) * 100)} 时自动压缩`}
+                ? t("Automatic compaction is off", "自动上下文压缩已关闭")
+                : t(
+                    `Compacts automatically at ${formatPercent((context.compactAtTokens / context.contextWindow) * 100)}`,
+                    `达到 ${formatPercent((context.compactAtTokens / context.contextWindow) * 100)} 时自动压缩`,
+                  )}
             </p>
           </section>
           <section className="context-meter__section">
-            <h3 className="context-meter__heading">提示缓存</h3>
+            <h3 className="context-meter__heading">{t("Prompt cache", "提示缓存")}</h3>
             {usage.lastTurn ? (
               <Row
-                label="上一轮"
-                value={`已缓存 ${formatPercent(cacheHitPercent(usage.lastTurn))}`}
+                label={t("Last turn", "上一轮")}
+                value={t(
+                  `${formatPercent(cacheHitPercent(usage.lastTurn))} cached`,
+                  `已缓存 ${formatPercent(cacheHitPercent(usage.lastTurn))}`,
+                )}
               />
             ) : null}
             <CacheRow cache={usage.cache} now={now} />
           </section>
           {usage.planLimits && usage.planLimits.limits.length > 0 ? (
             <section className="context-meter__section">
-              <h3 className="context-meter__heading">套餐限额</h3>
+              <h3 className="context-meter__heading">{t("Plan limits", "套餐限额")}</h3>
               {usage.planLimits.limits.map((limit) => (
                 <Row
                   key={limit.windowMinutes}
-                  label={`${windowLabel(limit)}限额已用 ${formatPercent(limit.usedPercent)}`}
+                  label={t(
+                    `${formatPercent(limit.usedPercent)} of ${windowLabel(limit)} limit`,
+                    `${windowLabel(limit)}限额已用 ${formatPercent(limit.usedPercent)}`,
+                  )}
                   value={
                     limit.resetsAt
-                      ? `${formatDuration(Date.parse(limit.resetsAt) - now)} 后重置`
+                      ? t(
+                          `resets in ${formatDuration(Date.parse(limit.resetsAt) - now)}`,
+                          `${formatDuration(Date.parse(limit.resetsAt) - now)} 后重置`,
+                        )
                       : ""
                   }
                 />
@@ -103,18 +126,20 @@ export function ContextMeter({ usage }: ContextMeterProps) {
             </section>
           ) : null}
           <section className="context-meter__section">
-            <h3 className="context-meter__heading">本会话</h3>
+            <h3 className="context-meter__heading">{t("This thread", "本会话")}</h3>
             <Row
-              label="输入 / 输出"
+              label={t("Input / Output", "输入 / 输出")}
               value={`${formatTokens(usage.totals.input)} / ${formatTokens(usage.totals.output)}`}
             />
             <Row
-              label="缓存读取 / 写入"
+              label={t("Cache read / write", "缓存读取 / 写入")}
               value={`${formatTokens(usage.totals.cacheRead)} / ${formatTokens(usage.totals.cacheWrite)}`}
             />
             <Row
-              label="费用"
-              value={usage.subscription ? "订阅" : `$${usage.totals.cost.toFixed(2)}`}
+              label={t("Cost", "费用")}
+              value={
+                usage.subscription ? t("Subscription", "订阅") : `$${usage.totals.cost.toFixed(2)}`
+              }
             />
           </section>
         </div>
@@ -133,22 +158,40 @@ function Row({ label, value }: { readonly label: string; readonly value: string 
 }
 
 function CacheRow({ cache, now }: { readonly cache: SessionPromptCache; readonly now: number }) {
+  useLocale();
   const nextRefreshIn = cache.nextRefreshAt ? Date.parse(cache.nextRefreshAt) - now : 0;
   if (nextRefreshIn > 0) {
-    return <Row label="保持预热" value={`${formatCountdown(nextRefreshIn)} 后刷新`} />;
+    return (
+      <Row
+        label={t("Kept warm", "保持预热")}
+        value={t(
+          `next refresh in ${formatCountdown(nextRefreshIn)}`,
+          `${formatCountdown(nextRefreshIn)} 后刷新`,
+        )}
+      />
+    );
   }
   if (!cache.expiresAt) {
     return cache.lifetimeSeconds === undefined ? (
-      <Row label="过期状态" value="此模型未报告" />
+      <Row
+        label={t("Expiry", "过期状态")}
+        value={t("not reported by this model", "此模型未报告")}
+      />
     ) : (
-      <Row label="过期状态" value="此模型尚无缓存" />
+      <Row
+        label={t("Expiry", "过期状态")}
+        value={t("nothing cached for this model yet", "此模型尚无缓存")}
+      />
     );
   }
   const expiresIn = Date.parse(cache.expiresAt) - now;
   return expiresIn > 0 ? (
-    <Row label="剩余有效期" value={formatCountdown(expiresIn)} />
+    <Row label={t("Expires in", "剩余有效期")} value={formatCountdown(expiresIn)} />
   ) : (
-    <Row label="过期状态" value="已过期，下一轮将重写" />
+    <Row
+      label={t("Expiry", "过期状态")}
+      value={t("expired, next turn rewrites it", "已过期，下一轮将重写")}
+    />
   );
 }
 
@@ -179,10 +222,11 @@ function cacheHitPercent(turn: NonNullable<SessionUsageSnapshot["lastTurn"]>): n
 }
 
 function windowLabel(limit: SessionPlanLimit): string {
-  if (limit.windowMinutes === 7 * 24 * 60) return "每周";
-  if (limit.windowMinutes === 24 * 60) return "每天";
-  if (limit.windowMinutes % 60 === 0) return `${limit.windowMinutes / 60} 小时`;
-  return `${limit.windowMinutes} 分钟`;
+  if (limit.windowMinutes === 7 * 24 * 60) return t("weekly", "每周");
+  if (limit.windowMinutes === 24 * 60) return t("daily", "每天");
+  if (limit.windowMinutes % 60 === 0)
+    return t(`${limit.windowMinutes / 60}-hour`, `${limit.windowMinutes / 60} 小时`);
+  return t(`${limit.windowMinutes}-minute`, `${limit.windowMinutes} 分钟`);
 }
 
 function formatTokens(count: number): string {
@@ -215,7 +259,7 @@ function formatDuration(ms: number): string {
   const days = Math.floor(totalMinutes / (24 * 60));
   const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
   const minutes = totalMinutes % 60;
-  if (days > 0) return `${days} 天 ${hours} 小时`;
-  if (hours > 0) return `${hours} 小时 ${minutes} 分钟`;
-  return `${minutes} 分钟`;
+  if (days > 0) return t(`${days} d ${hours} h`, `${days} 天 ${hours} 小时`);
+  if (hours > 0) return t(`${hours} hr ${minutes} min`, `${hours} 小时 ${minutes} 分钟`);
+  return t(`${minutes} min`, `${minutes} 分钟`);
 }

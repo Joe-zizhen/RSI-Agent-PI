@@ -5,6 +5,7 @@ import type {
   ExtensionCardTone,
 } from "@rsi-agent-pi/session-driver";
 import { ExtensionIcon } from "../../ui/icons";
+import { t } from "../../t";
 
 /** Asks the app to run one of the fixed actions an extension's button can name. */
 export type RunExtensionAction = (action: ExtensionAction) => void;
@@ -83,13 +84,13 @@ function actionTarget(action: ExtensionAction): string {
     case "openFile":
       return action.line ? `${action.path}:${action.line}` : action.path;
     case "composer":
-      return "添加到消息";
+      return t("Adds to message", "添加到消息");
     case "url":
       return new URL(action.url).host;
     case "command":
       return action.command;
     case "openThread":
-      return "打开会话";
+      return t("Opens thread", "打开会话");
     default:
       return unhandledAction(action);
   }
@@ -102,11 +103,11 @@ function unhandledAction(action: never): string {
 function cardToneLabel(tone: ExtensionCardTone): string | undefined {
   switch (tone) {
     case "success":
-      return "通过";
+      return t("Passed", "通过");
     case "warning":
-      return "警告";
+      return t("Warning", "警告");
     case "error":
-      return "失败";
+      return t("Failed", "失败");
     case "neutral":
       return undefined;
   }

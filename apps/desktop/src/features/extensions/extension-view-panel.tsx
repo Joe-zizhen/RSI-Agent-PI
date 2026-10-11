@@ -7,6 +7,7 @@ import type {
   ExtensionViewMessage,
 } from "../../../contracts/extension-views";
 import { RefreshIcon } from "../../ui/icons";
+import { t, useLocale } from "../../t";
 
 export interface ExtensionViewTheme {
   readonly mode: "light" | "dark";
@@ -38,6 +39,7 @@ export function ExtensionViewPanel({
   readonly onBeforePrepareTaskDraft: () => Promise<void>;
   readonly onPrepareTaskDraftPendingChange: (pending: boolean, requestKey: string) => void;
 }) {
+  useLocale();
   const [state, setState] = useState<ViewState>({ kind: "opening" });
   const [reloadNonce, setReloadNonce] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -98,7 +100,7 @@ export function ExtensionViewPanel({
       beforeMount.length = 0;
       if (channel) {
         try {
-          channel.port1.postMessage({ type: "closed", reason: "视图已关闭" });
+          channel.port1.postMessage({ type: "closed", reason: t("View closed", "视图已关闭") });
         } catch {
           /* Already disconnected. */
         }
@@ -119,13 +121,24 @@ export function ExtensionViewPanel({
       if (disposed) return;
       if (channel) channel.port1.postMessage(message);
       else if (beforeMount.length < MAX_BUFFERED_MESSAGES) beforeMount.push(message);
-      else fail("扩展在其视图就绪前发送了过多消息。重新加载视图以重新连接。");
+      else
+        fail(
+          t(
+            "The extension sent too many messages before its view was ready. Reload the view to reconnect.",
+            "扩展在其视图就绪前发送了过多消息。重新加载视图以重新连接。",
+          ),
+        );
     };
 
     const attachFrame = (frame: HTMLIFrameElement) => {
       if (disposed || !connection || !frame.contentWindow) return;
       if (channel) {
-        fail("扩展框架已重新加载。重新加载视图以重新连接。");
+        fail(
+          t(
+            "The extension frame reloaded. Reload the view to reconnect.",
+            "扩展框架已重新加载。重新加载视图以重新连接。",
+          ),
+        );
         return;
       }
       const opened = connection;
@@ -143,7 +156,7 @@ export function ExtensionViewPanel({
           fail(
             typeof message.message === "string"
               ? message.message.slice(0, 4096)
-              : "扩展视图无法启动。",
+              : t("The extension view could not start.", "扩展视图无法启动。"),
           );
           return;
         }
@@ -154,7 +167,7 @@ export function ExtensionViewPanel({
                 type: "host-action-result",
                 requestId: message.requestId,
                 ok: false,
-                error: "已在准备一个任务草稿。",
+                error: t("A task draft is already being prepared.", "已在准备一个任务草稿。"),
               });
               return;
             }
@@ -172,7 +185,10 @@ export function ExtensionViewPanel({
                   type: "host-action-result",
                   requestId: message.requestId,
                   ok: false,
-                  error: error instanceof Error ? error.message : "草稿未能保存。",
+                  error:
+                    error instanceof Error
+                      ? error.message
+                      : t("The draft could not be saved.", "草稿未能保存。"),
                 });
             } finally {
               forwardedPrepareTaskDraft = false;
@@ -187,7 +203,13 @@ export function ExtensionViewPanel({
           if (isCurrentMount()) fail(error instanceof Error ? error.message : String(error));
         });
       };
-      channel.port1.onmessageerror = () => fail("扩展发送了一条无法读取的消息。");
+      channel.port1.onmessageerror = () =>
+        fail(
+          t(
+            "The extension sent a message that could not be read.",
+            "扩展发送了一条无法读取的消息。",
+          ),
+        );
       channel.port1.start();
       // An opaque-origin frame requires '*'; the target is this exact iframe window and the
       // transferred capability is a dedicated port, never a broadcast window-message channel.
@@ -205,14 +227,20 @@ export function ExtensionViewPanel({
     attachFrameRef.current = attachFrame;
 
     if (view.state === "error") {
-      fail(view.error ?? "此扩展视图不可用。");
+      fail(view.error ?? t("This extension view is unavailable.", "此扩展视图不可用。"));
       return dispose;
     }
     unsubscribe = api.onExtensionViewMessage((event) => {
       if (disposed) return;
       if (!connection) {
         if (beforeOpen.length < MAX_BUFFERED_MESSAGES) beforeOpen.push(event);
-        else fail("打开视图时收到过多扩展消息。重新加载以重新连接。");
+        else
+          fail(
+            t(
+              "Too many extension messages arrived while opening the view. Reload to reconnect.",
+              "打开视图时收到过多扩展消息。重新加载以重新连接。",
+            ),
+          );
       } else if (event.connectionId === connection.connectionId) deliver(event.message);
     });
     void api
@@ -234,7 +262,13 @@ export function ExtensionViewPanel({
           if (disposed) return;
           setState({ kind: "mounting", connection: opened });
           readyTimer = window.setTimeout(
-            () => fail("扩展视图未能完成加载。重新加载后重试。"),
+            () =>
+              fail(
+                t(
+                  "The extension view did not finish loading. Reload it to try again.",
+                  "扩展视图未能完成加载。重新加载后重试。",
+                ),
+              ),
             FRAME_READY_TIMEOUT_MS,
           );
         },
@@ -277,21 +311,26 @@ export function ExtensionViewPanel({
           onClick={() => setReloadNonce((value) => value + 1)}
         >
           <RefreshIcon />
-          重新加载视图
+          {t("Reload view", "重新加载视图")}
         </button>
       </header>
       {state.kind === "failed" ? (
         <div className="extension-view-panel__status" role="status">
-          <h3>无法打开此视图</h3>
+          <h3>{t("Couldn't open this view", "无法打开此视图")}</h3>
           <p>{state.message}</p>
-          <p>扩展的命令仍可使用。重新加载视图可重新连接其界面。</p>
+          <p>
+            {t(
+              "The extension's commands still work. Reload the view to reconnect its interface.",
+              "扩展的命令仍可使用。重新加载视图可重新连接其界面。",
+            )}
+          </p>
         </div>
       ) : null}
       <div className="extension-view-panel__body">
         {state.kind === "opening" || state.kind === "mounting" ? (
           // Covers the frame while it mounts, so the frame keeps its place when the view becomes ready.
           <div className="extension-view-panel__status extension-view-panel__loading" role="status">
-            正在加载扩展视图…
+            {t("Loading extension view…", "正在加载扩展视图…")}
           </div>
         ) : null}
         {connection ? (

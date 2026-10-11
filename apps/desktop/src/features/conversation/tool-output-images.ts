@@ -1,3 +1,5 @@
+import { t } from "../../t";
+
 /**
  * Images a tool returned in its result content, such as the read tool on a screenshot or a code
  * mode script calling `image()` with `models.generateImages()`. pi keeps them as
@@ -46,7 +48,10 @@ export function stringifyToolValue(value: unknown): string {
       isImageBlock(nested)
         ? {
             ...nested,
-            data: `[${typeof nested.mimeType === "string" ? nested.mimeType : "image"} 图片]`,
+            data: t(
+              `[${typeof nested.mimeType === "string" ? nested.mimeType : "image"} image]`,
+              `[${typeof nested.mimeType === "string" ? nested.mimeType : "image"} 图片]`,
+            ),
           }
         : nested,
     2,

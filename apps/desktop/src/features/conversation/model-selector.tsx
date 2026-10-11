@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import {
   buildModelOptions,
-  MODEL_OPTIONS_EMPTY_TITLE,
+  modelOptionsEmptyTitle,
   THINKING_OPTIONS,
   type ComposerModelOption,
 } from "./composer-commands";
+import { t, useLocale } from "../../t";
 
 interface ModelSelectorProps {
   readonly runtime: RuntimeSnapshot | undefined;
@@ -32,12 +33,13 @@ export function ModelSelector({
   disabled,
   dropdownPlacement = "above",
   showEmptyModelControl = false,
-  unselectedModelLabel = "选择模型",
-  emptyModelLabel = "选择模型",
-  emptyModelTitle = MODEL_OPTIONS_EMPTY_TITLE,
+  unselectedModelLabel = t("Choose model", "选择模型"),
+  emptyModelLabel = t("Choose model", "选择模型"),
+  emptyModelTitle = modelOptionsEmptyTitle(),
   onSetModel,
   onSetThinking,
 }: ModelSelectorProps) {
+  useLocale();
   const [open, setOpen] = useState<OpenDropdown>("none");
   const [modelFilter, setModelFilter] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -117,7 +119,7 @@ export function ModelSelector({
               <div className="model-selector__filter">
                 <input
                   className="model-selector__filter-input"
-                  placeholder="过滤模型…"
+                  placeholder={t("Filter models...", "过滤模型…")}
                   value={modelFilter}
                   onChange={(e) => setModelFilter(e.target.value)}
                   autoFocus
@@ -141,7 +143,9 @@ export function ModelSelector({
                         }}
                       >
                         <span className="model-selector__item-label">{option.label}</span>
-                        {isActive ? <span className="model-selector__item-meta">当前</span> : null}
+                        {isActive ? (
+                          <span className="model-selector__item-meta">{t("Current", "当前")}</span>
+                        ) : null}
                       </button>
                     );
                   })}
@@ -150,10 +154,12 @@ export function ModelSelector({
               {groupedModels.length === 0 ? (
                 <>
                   <div className="model-selector__group-title">
-                    {noMatchingModels ? "没有匹配的模型" : emptyModelTitle}
+                    {noMatchingModels ? t("No matching models", "没有匹配的模型") : emptyModelTitle}
                   </div>
                   {noMatchingModels ? (
-                    <div className="model-selector__empty">换一个过滤条件试试。</div>
+                    <div className="model-selector__empty">
+                      {t("Try a different filter.", "换一个过滤条件试试。")}
+                    </div>
                   ) : null}
                 </>
               ) : null}
@@ -176,7 +182,7 @@ export function ModelSelector({
               className={`model-selector__dropdown ${dropdownPlacement === "below" ? "model-selector__dropdown--below" : ""}`}
               onWheel={(event) => event.stopPropagation()}
             >
-              <div className="model-selector__group-title">思考力度</div>
+              <div className="model-selector__group-title">{t("Thinking level", "思考力度")}</div>
               {THINKING_OPTIONS.map((option) => {
                 const isActive = option.value === thinkingLevel;
                 return (

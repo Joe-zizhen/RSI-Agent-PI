@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { offsetsToRange } from "./text-offsets";
+import { t, useLocale } from "../../../t";
 
 /**
  * The marker's span now. Streaming can re-render earlier markdown (a line becoming a table
@@ -79,6 +80,7 @@ export function AnnotationMarkers({
   readonly markers: readonly AnnotationMarker[];
   readonly onOpen: OpenAnnotation;
 }) {
+  useLocale();
   const [placed, setPlaced] = useState<readonly PlacedMarker[]>([]);
 
   useLayoutEffect(() => {
@@ -120,7 +122,7 @@ export function AnnotationMarkers({
     <div className="annotation-markers">
       {placed.map((marker) => (
         <button
-          aria-label={`编辑批注 ${marker.number}`}
+          aria-label={t(`Edit annotation ${marker.number}`, `编辑批注 ${marker.number}`)}
           className="annotation-marker"
           data-annotation-id={marker.id}
           data-testid="annotation-marker"

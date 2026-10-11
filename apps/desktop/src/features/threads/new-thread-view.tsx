@@ -16,7 +16,7 @@ import type {
 import type { MentionOption } from "../conversation/hooks/use-mention-menu";
 import { ArrowUpIcon, PiLogoMark, PlusIcon } from "../../ui/icons";
 import {
-  MODEL_OPTIONS_EMPTY_TITLE,
+  modelOptionsEmptyTitle,
   type ComposerSlashCommand,
   type ComposerSlashCommandSection,
   type ComposerSlashOption,
@@ -30,6 +30,7 @@ import type {
 } from "../settings/model-onboarding";
 import { ModelSelector } from "../conversation/model-selector";
 import { ExtensionFlagsSelector } from "./extension-flags-selector";
+import { t, useLocale } from "../../t";
 
 interface NewThreadViewProps {
   readonly workspaces: readonly WorkspaceRecord[];
@@ -124,6 +125,7 @@ export function NewThreadView({
   onRemoveAttachment,
   onSubmit,
 }: NewThreadViewProps) {
+  useLocale();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const workspace = workspaces.find((entry) => entry.id === selectedWorkspaceId);
 
@@ -145,9 +147,14 @@ export function NewThreadView({
     return (
       <section className="canvas canvas--empty">
         <div className="empty-panel">
-          <div className="session-header__eyebrow">新建会话</div>
-          <h1>先打开一个文件夹</h1>
-          <p>请先从侧边栏选择一个仓库，然后启动本地会话或基于工作树的会话。</p>
+          <div className="session-header__eyebrow">{t("New thread", "新建会话")}</div>
+          <h1>{t("Open a folder first", "先打开一个文件夹")}</h1>
+          <p>
+            {t(
+              "Select a repository from the sidebar first, then start a local or worktree-backed thread.",
+              "请先从侧边栏选择一个仓库，然后启动本地会话或基于工作树的会话。",
+            )}
+          </p>
         </div>
       </section>
     );
@@ -160,10 +167,10 @@ export function NewThreadView({
           <div className="new-thread__logo" data-testid="new-thread-logo">
             <PiLogoMark />
           </div>
-          <div className="new-thread__eyebrow">新建会话</div>
-          <h1 className="new-thread__title">开始构建</h1>
+          <div className="new-thread__eyebrow">{t("New thread", "新建会话")}</div>
+          <h1 className="new-thread__title">{t("Start building", "开始构建")}</h1>
           <label className="new-thread__workspace-picker">
-            <span className="sr-only">项目</span>
+            <span className="sr-only">{t("Project", "项目")}</span>
             <select
               className="new-thread__workspace"
               value={workspace.id}
@@ -218,10 +225,13 @@ export function NewThreadView({
               selectedMentionIndex={selectedMentionIndex}
               onSelectMention={onSelectMention}
               onEnableMentionExtension={onEnableMentionExtension}
-              textareaLabel="新建会话输入"
+              textareaLabel={t("New thread prompt", "新建会话输入")}
               textareaTestId="new-thread-composer"
               textareaClassName="new-thread__textarea"
-              textareaPlaceholder="向 pi 提问任何问题，输入 / 可使用命令与技能"
+              textareaPlaceholder={t(
+                "Ask pi anything, use / for commands and skills",
+                "向 pi 提问任何问题，输入 / 可使用命令与技能",
+              )}
               footer={
                 <NewThreadComposerFooter
                   runtime={runtime}
@@ -284,6 +294,7 @@ function NewThreadComposerFooter({
   onAddAttachments,
   onSubmit,
 }: NewThreadComposerFooterProps) {
+  useLocale();
   return (
     <>
       <div className="composer__footer">
@@ -295,14 +306,14 @@ function NewThreadComposerFooter({
                 type="button"
                 onClick={() => onSelectEnvironment("local")}
               >
-                <span>本地</span>
+                <span>{t("Local", "本地")}</span>
               </button>
               <button
                 className={`new-thread__environment ${environment === "worktree" ? "new-thread__environment--active" : ""}`}
                 type="button"
                 onClick={() => onSelectEnvironment("worktree")}
               >
-                <span>工作树</span>
+                <span>{t("Worktree", "工作树")}</span>
               </button>
             </div>
             <span className="new-thread__hint-separator">·</span>
@@ -314,7 +325,7 @@ function NewThreadComposerFooter({
               dropdownPlacement="below"
               showEmptyModelControl
               unselectedModelLabel={modelOnboarding.unselectedModelLabel}
-              emptyModelLabel={MODEL_OPTIONS_EMPTY_TITLE}
+              emptyModelLabel={modelOptionsEmptyTitle()}
               emptyModelTitle={modelOnboarding.emptyModelTitle}
               onSetModel={onSetModel}
               onSetThinking={onSetThinking}
@@ -341,7 +352,7 @@ function NewThreadComposerFooter({
               }}
             />
             <button
-              aria-label="添加文件"
+              aria-label={t("Attach files", "添加文件")}
               className="icon-button composer__attach"
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -349,7 +360,7 @@ function NewThreadComposerFooter({
               <PlusIcon />
             </button>
             <button
-              aria-label="开始会话"
+              aria-label={t("Start thread", "开始会话")}
               className="button button--primary button--cta-icon"
               type="button"
               disabled={!hasContent || modelOnboarding.requiresModelSelection}

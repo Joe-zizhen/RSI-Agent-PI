@@ -1,9 +1,13 @@
+import { t } from "./t";
+
 export const SCHEDULED_TASKS_FILE_VERSION = 1;
 export const MIN_SCHEDULE_INTERVAL_MS = 60_000;
 export const MAX_SCHEDULE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_SCHEDULED_TASK_RUNS = 40;
-export const SCHEDULED_TASK_INTERVIEW_PROMPT =
-  "Let's set up a scheduled task together. First, explain how scheduled tasks work in pi-gui. Then interview me to figure out what I need scheduled and when it should run.";
+export const SCHEDULED_TASK_INTERVIEW_PROMPT = t(
+  "Let's set up a scheduled task together. First, explain how scheduled tasks work in RSI-Agent-PI. Then interview me to figure out what I need scheduled and when it should run.",
+  "我们一起来设置计划任务。首先说明计划任务在 RSI-Agent-PI 中的工作方式。然后通过提问弄清我需要计划什么任务、何时运行。",
+);
 
 export type ScheduledTaskStatus = "active" | "paused" | "completed";
 export type ScheduledTaskFilter = "all" | ScheduledTaskStatus;
@@ -312,45 +316,53 @@ function joinNames(names: readonly string[]): string {
     return names[0]!;
   }
   if (names.length === 2) {
-    return `${names[0]}、${names[1]}`;
+    return t(`${names[0]} and ${names[1]}`, `${names[0]}、${names[1]}`);
   }
-  return `${names.slice(0, -1).join("、")}、${names[names.length - 1]}`;
+  return t(
+    `${names.slice(0, -1).join(", ")}, and ${names[names.length - 1]}`,
+    `${names.slice(0, -1).join("、")}、${names[names.length - 1]}`,
+  );
 }
 
 export function formatScheduledTaskRecurrence(schedule: ScheduledTaskSchedule): string {
   if (schedule.kind === "once") {
     const at = Date.parse(schedule.at);
     if (Number.isNaN(at)) {
-      return "一次";
+      return t("Once", "一次");
     }
-    return `${new Date(at).toLocaleString(undefined, {
+    const formatted = new Date(at).toLocaleString(undefined, {
       month: "short",
       day: "numeric",
       year: "numeric",
       hour: "numeric",
       minute: "2-digit",
-    })} 一次性`;
+    });
+    return t(`Once at ${formatted}`, `${formatted} 一次性`);
   }
   if (schedule.kind === "interval") {
     const minutes = Math.round(schedule.everyMs / 60_000);
     if (minutes % (24 * 60) === 0) {
       const days = minutes / (24 * 60);
-      return days === 1 ? "每天" : `每 ${days} 天`;
+      return days === 1 ? t("Every day", "每天") : t(`Every ${days} days`, `每 ${days} 天`);
     }
     if (minutes % 60 === 0) {
       const hours = minutes / 60;
-      return hours === 1 ? "每小时" : `每 ${hours} 小时`;
+      return hours === 1
+        ? t("Every hour", "每小时")
+        : t(`Every ${hours} hours`, `每 ${hours} 小时`);
     }
-    return minutes === 1 ? "每分钟" : `每 ${minutes} 分钟`;
+    return minutes === 1
+      ? t("Every minute", "每分钟")
+      : t(`Every ${minutes} minutes`, `每 ${minutes} 分钟`);
   }
   const time = formatClockTime(schedule.hour, schedule.minute);
   if (schedule.kind === "daily") {
-    return `每天 ${time}`;
+    return t(`Daily at ${time}`, `每天 ${time}`);
   }
   const names = [...schedule.days]
     .sort((left, right) => left - right)
     .map((day) => WEEKDAY_SHORT[day]!);
-  return `${joinNames(names)} ${time}`;
+  return t(`${joinNames(names)} at ${time}`, `${joinNames(names)} ${time}`);
 }
 
 export function formatScheduledTaskNextRun(nextRunAt: string, now = new Date()): string {
@@ -360,21 +372,27 @@ export function formatScheduledTaskNextRun(nextRunAt: string, now = new Date()):
   }
   const diffMs = timestamp - now.getTime();
   if (diffMs <= 0) {
-    return "现在到期";
+    return t("Due now", "现在到期");
   }
   const diffMinutes = Math.floor(diffMs / 60_000);
   if (diffMinutes < 1) {
-    return "不足一分钟后运行";
+    return t("Next run in under a minute", "不足一分钟后运行");
   }
   if (diffMinutes < 60) {
-    return `${diffMinutes} 分钟后运行`;
+    return t(
+      `Next run in ${diffMinutes} minute${diffMinutes === 1 ? "" : "s"}`,
+      `${diffMinutes} 分钟后运行`,
+    );
   }
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) {
-    return `${diffHours} 小时后运行`;
+    return t(
+      `Next run in ${diffHours} hour${diffHours === 1 ? "" : "s"}`,
+      `${diffHours} 小时后运行`,
+    );
   }
   const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} 天后运行`;
+  return t(`Next run in ${diffDays} day${diffDays === 1 ? "" : "s"}`, `${diffDays} 天后运行`);
 }
 
 export function formatScheduledTaskRowMeta(task: ScheduledTaskRecord, now = new Date()): string {
@@ -383,7 +401,7 @@ export function formatScheduledTaskRowMeta(task: ScheduledTaskRecord, now = new 
     return recurrence;
   }
   if (task.status === "paused") {
-    return `${recurrence} · 已暂停`;
+    return t(`${recurrence} · Paused`, `${recurrence} · 已暂停`);
   }
   if (!task.nextRunAt) {
     return recurrence;

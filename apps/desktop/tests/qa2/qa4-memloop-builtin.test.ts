@@ -20,7 +20,10 @@ test("memloop 注册为 builtin extension，随应用自动加载", () => {
     "builtinExtensions 未注册 memloop",
   );
   assert.ok(main.includes("factory: memloopExtensionFactory"), "memloop factory 未挂上");
-  assert.ok(main.includes('displayName: "memloop 长期记忆"'), "memloop 显示名缺失或未中文化");
+  assert.ok(
+    /displayName:\s*t\("memloop long-term memory",\s*"memloop 长期记忆"\)/.test(main),
+    "memloop 显示名缺失或未中文化",
+  );
 
   const ipc = read("apps/desktop/contracts/ipc.ts");
   assert.ok(ipc.includes('MEMLOOP_BUILTIN_EXTENSION_NAME = "memloop"'), "扩展名常量不是 memloop");
@@ -60,10 +63,13 @@ test("memloop 设置开关默认开启（零手动）", () => {
 test("设置「记忆」节：启用开关 + verdictCmd 输入", () => {
   const sections = read("apps/desktop/src/features/settings/settings-sections.tsx");
   assert.ok(/id:\s*"memory"/.test(sections), "设置节 id=memory 不存在");
-  assert.ok(/title:\s*"记忆"/.test(sections), "记忆节标题不是「记忆」");
+  assert.ok(
+    /id:\s*"memory",\s*get title\(\)\s*\{\s*return t\("Memory",\s*"记忆"\);/.test(sections),
+    "记忆节标题不是「记忆」",
+  );
 
   const memory = read("apps/desktop/src/features/settings/settings-memory-section.tsx");
-  assert.ok(memory.includes('title="启用记忆"'), "缺「启用记忆」行");
+  assert.ok(memory.includes('title={t("Enable memory", "启用记忆")}'), "缺「启用记忆」行");
   assert.ok(memory.includes("<SettingsSwitch"), "启用记忆不是开关控件");
   assert.ok(memory.includes("verdictCmd"), "缺 verdictCmd 输入");
   assert.ok(/api\s*\.setMemloopSettings\(/.test(memory), "verdictCmd 未持久化");

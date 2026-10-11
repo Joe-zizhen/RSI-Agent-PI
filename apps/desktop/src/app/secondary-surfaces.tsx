@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
-import type { AppView, DesktopAppState, WorkspaceRecord } from "../../contracts/desktop-state";
+import type {
+  AppLocale,
+  AppView,
+  DesktopAppState,
+  WorkspaceRecord,
+} from "../../contracts/desktop-state";
+import { setLocale, t, useLocale } from "../t";
 import { updateSnapshot } from "./desktop-app-state";
 import { getEffectiveModelRuntime } from "../features/settings/model-settings";
 import {
@@ -57,6 +63,7 @@ export function SecondarySurfaces({
   onSelectView,
   onTrySkill,
 }: SecondarySurfacesProps) {
+  useLocale();
   const [notificationPermissionStatus, setNotificationPermissionStatus] =
     useState<DesktopNotificationPermissionStatus>("unknown");
   const [notificationPermissionPending, setNotificationPermissionPending] = useState(false);
@@ -194,7 +201,7 @@ export function SecondarySurfaces({
     apiKey: string,
   ): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "请先选择一个项目。";
+      return t("Select a workspace first.", "请先选择一个项目。");
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.setProviderApiKey(settingsWorkspace.id, providerId, apiKey),
@@ -204,7 +211,7 @@ export function SecondarySurfaces({
 
   const handleRemoveProviderApiKey = async (providerId: string): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "请先选择一个项目。";
+      return t("Select a workspace first.", "请先选择一个项目。");
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.logoutProvider(settingsWorkspace.id, providerId),
@@ -216,7 +223,7 @@ export function SecondarySurfaces({
     config: CustomProviderConfig,
   ): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "请先选择一个项目。";
+      return t("Select a workspace first.", "请先选择一个项目。");
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.setCustomProvider(settingsWorkspace.id, config),
@@ -226,7 +233,7 @@ export function SecondarySurfaces({
 
   const handleDeleteCustomProvider = async (providerId: string): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "请先选择一个项目。";
+      return t("Select a workspace first.", "请先选择一个项目。");
     }
     const state = await updateSnapshot(setSnapshot, () =>
       api.deleteCustomProvider(settingsWorkspace.id, providerId),
@@ -238,7 +245,7 @@ export function SecondarySurfaces({
     update: (workspaceId: string) => Promise<DesktopAppState>,
   ): Promise<string | undefined> => {
     if (!settingsWorkspace) {
-      return "请先选择一个项目。";
+      return t("Select a workspace first.", "请先选择一个项目。");
     }
     const state = await updateSnapshot(setSnapshot, () => update(settingsWorkspace.id));
     return state.lastError;
@@ -345,6 +352,19 @@ export function SecondarySurfaces({
     );
   };
 
+  const handleSetLocale = (locale: AppLocale) => {
+    setLocale(locale);
+    void updateSnapshot(setSnapshot, () => api.setLocale(locale)).catch((error: unknown) => {
+      console.error("[renderer] setLocale failed", error);
+    });
+  };
+
+  const handleRelaunch = () => {
+    void api.relaunchApplication().catch((error: unknown) => {
+      console.error("[renderer] relaunchApplication failed", error);
+    });
+  };
+
   const handleRequestNotificationPermission = () => {
     if (!api.requestNotificationPermission) {
       return;
@@ -386,7 +406,7 @@ export function SecondarySurfaces({
   ) =>
     rootWorkspaceOptions.length > 0 ? (
       <SettingsSelect
-        label="项目"
+        label={t("Project", "项目")}
         options={rootWorkspaceOptions.map((workspace) => ({
           value: workspace.id,
           label: workspace.name,
@@ -412,7 +432,7 @@ export function SecondarySurfaces({
         if (customizeTab) onSelectView("settings");
       }}
       testId={customizeTab ? `${customizeTab}-surface` : "settings-surface"}
-      title="设置"
+      title={t("Settings", "设置")}
     >
       {customizeTab ? (
         <CustomizePage
@@ -465,6 +485,7 @@ export function SecondarySurfaces({
           notificationPermissionPending={notificationPermissionPending}
           modelSettingsScopeMode={snapshot.modelSettingsScopeMode}
           integratedTerminalShell={snapshot.integratedTerminalShell}
+          locale={snapshot.locale}
           themeMode={snapshot.themeMode}
           themePresetId={snapshot.themePresetId}
           enableTransparency={snapshot.enableTransparency}
@@ -479,6 +500,8 @@ export function SecondarySurfaces({
           onSetDefaultModel={handleSetDefaultModel}
           onSetNotificationPreferences={handleSetNotificationPreferences}
           onSetIntegratedTerminalShell={handleSetIntegratedTerminalShell}
+          onSetLocale={handleSetLocale}
+          onRelaunch={handleRelaunch}
           onRequestNotificationPermission={handleRequestNotificationPermission}
           onOpenSystemNotificationSettings={handleOpenSystemNotificationSettings}
           onSetScopedModelPatterns={handleSetScopedModelPatterns}

@@ -7,6 +7,7 @@ import type {
 } from "@rsi-agent-pi/session-driver/runtime-types";
 import type { ExtensionCommandCompatibilityRecord } from "../../../contracts/desktop-state";
 import { titleCase } from "../../lib/string-utils";
+import { t } from "../../t";
 
 export type ComposerSlashCommandKind =
   | "runtime"
@@ -63,8 +64,15 @@ export interface ComposerProviderOption extends ComposerSlashOption {
   readonly providerId: string;
 }
 
-export const MODEL_OPTIONS_EMPTY_TITLE = "无可用模型";
-export const MODEL_OPTIONS_EMPTY_DESCRIPTION = "打开设置以启用模型或登录提供商。";
+export function modelOptionsEmptyTitle(): string {
+  return t("No models available", "无可用模型");
+}
+export function modelOptionsEmptyDescription(): string {
+  return t(
+    "Open settings to enable models or sign in to a provider.",
+    "打开设置以启用模型或登录提供商。",
+  );
+}
 
 const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
   {
@@ -72,8 +80,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "model",
     command: "/model",
     template: "/model",
-    title: "模型",
-    description: "选择本会话记录使用的模型",
+    get title() {
+      return t("Model", "模型");
+    },
+    get description() {
+      return t("Choose the model for this session", "选择本会话记录使用的模型");
+    },
     submitMode: "pick-option",
     section: "host",
   },
@@ -82,8 +94,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "thinking",
     command: "/thinking",
     template: "/thinking",
-    title: "推理",
-    description: "设置本会话记录的思考力度",
+    get title() {
+      return t("Reasoning", "推理");
+    },
+    get description() {
+      return t("Set thinking level for this session", "设置本会话记录的思考力度");
+    },
     submitMode: "pick-option",
     section: "host",
   },
@@ -92,8 +108,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "tree",
     command: "/tree",
     template: "/tree",
-    title: "树",
-    description: "浏览本会话记录的分支并跳转",
+    get title() {
+      return t("Tree", "树");
+    },
+    get description() {
+      return t("Browse and jump between branches in this session", "浏览本会话记录的分支并跳转");
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -102,8 +122,15 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "status",
     command: "/status",
     template: "/status",
-    title: "状态",
-    description: "在时间线中显示当前会话记录的覆盖设置",
+    get title() {
+      return t("Status", "状态");
+    },
+    get description() {
+      return t(
+        "Show current session overrides in the timeline",
+        "在时间线中显示当前会话记录的覆盖设置",
+      );
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -112,8 +139,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "login",
     command: "/login",
     template: "/login",
-    title: "登录",
-    description: "为本项目登录提供商",
+    get title() {
+      return t("Login", "登录");
+    },
+    get description() {
+      return t("Authenticate a provider for this workspace", "为本项目登录提供商");
+    },
     submitMode: "pick-option",
     section: "host",
   },
@@ -122,8 +153,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "logout",
     command: "/logout",
     template: "/logout",
-    title: "退出登录",
-    description: "移除本项目的提供商登录",
+    get title() {
+      return t("Logout", "退出登录");
+    },
+    get description() {
+      return t("Remove a provider login from this workspace", "移除本项目的提供商登录");
+    },
     submitMode: "pick-option",
     section: "host",
   },
@@ -132,8 +167,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "settings",
     command: "/settings",
     template: "/settings",
-    title: "设置",
-    description: "打开模型、技能与通知设置",
+    get title() {
+      return t("Settings", "设置");
+    },
+    get description() {
+      return t("Open model, skill, and notification settings", "打开模型、技能与通知设置");
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -142,8 +181,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "scoped-models",
     command: "/scoped-models",
     template: "/scoped-models",
-    title: "启用的模型",
-    description: "选择选择器中显示的模型",
+    get title() {
+      return t("Enabled models", "启用的模型");
+    },
+    get description() {
+      return t("Choose which models appear in pickers", "选择选择器中显示的模型");
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -152,8 +195,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "session",
     command: "/session",
     template: "/session",
-    title: "会话记录",
-    description: "在时间线中显示当前会话记录详情",
+    get title() {
+      return t("Session", "会话记录");
+    },
+    get description() {
+      return t("Show current session details in the timeline", "在时间线中显示当前会话记录详情");
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -161,9 +208,15 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     id: "host:name",
     kind: "name",
     command: "/name",
-    template: "/name 新会话标题",
-    title: "重命名",
-    description: "重命名当前会话记录",
+    get template() {
+      return t("/name New thread title", "/name 新会话标题");
+    },
+    get title() {
+      return t("Rename", "重命名");
+    },
+    get description() {
+      return t("Rename the current session", "重命名当前会话记录");
+    },
     submitMode: "prefill",
     section: "host",
   },
@@ -172,8 +225,12 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "compact",
     command: "/compact",
     template: "/compact",
-    title: "上下文压缩",
-    description: "立即对会话记录进行上下文压缩",
+    get title() {
+      return t("Compaction", "上下文压缩");
+    },
+    get description() {
+      return t("Compact session context now", "立即对会话记录进行上下文压缩");
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -182,8 +239,15 @@ const HOST_ACTION_SLASH_COMMANDS: readonly ComposerSlashCommand[] = [
     kind: "reload",
     command: "/reload",
     template: "/reload",
-    title: "重新加载",
-    description: "重新加载提示词、技能与会话记录资源",
+    get title() {
+      return t("Reload", "重新加载");
+    },
+    get description() {
+      return t(
+        "Reload prompts, skills, and session resources",
+        "重新加载提示词、技能与会话记录资源",
+      );
+    },
     submitMode: "immediate",
     section: "host",
   },
@@ -193,27 +257,40 @@ export const THINKING_OPTIONS: readonly ComposerSlashOption[] = [
   {
     value: "low",
     label: "Low",
-    description: "响应更快，推理更轻量",
+    get description() {
+      return t("Faster responses, lighter reasoning", "响应更快，推理更轻量");
+    },
   },
   {
     value: "medium",
     label: "Medium",
-    description: "适合日常任务，兼顾速度与推理深度",
+    get description() {
+      return t(
+        "Good for everyday tasks, balancing speed and reasoning depth",
+        "适合日常任务，兼顾速度与推理深度",
+      );
+    },
   },
   {
     value: "high",
     label: "High",
-    description: "适合复杂问题，推理更深",
+    get description() {
+      return t("For complex problems, deeper reasoning", "适合复杂问题，推理更深");
+    },
   },
   {
     value: "xhigh",
     label: "Extra High",
-    description: "适合复杂问题，推理非常深",
+    get description() {
+      return t("For complex problems, very deep reasoning", "适合复杂问题，推理非常深");
+    },
   },
   {
     value: "max",
     label: "Max",
-    description: "支持的模型可用的最大推理深度",
+    get description() {
+      return t("The deepest reasoning the model supports", "支持的模型可用的最大推理深度");
+    },
   },
 ] as const;
 
@@ -265,12 +342,12 @@ export function buildSlashCommandSections(
   );
   const runtimeSection: ComposerSlashCommandSection = {
     id: "runtime",
-    title: runtimeMatches.length > 0 ? "运行时命令" : undefined,
+    title: runtimeMatches.length > 0 ? t("Runtime Commands", "运行时命令") : undefined,
     items: runtimeMatches,
   };
   const hostSection: ComposerSlashCommandSection = {
     id: "host",
-    title: hostMatches.length > 0 ? "宿主操作" : undefined,
+    title: hostMatches.length > 0 ? t("Host Actions", "宿主操作") : undefined,
     items: hostMatches,
   };
   const sections: ComposerSlashCommandSection[] =
@@ -376,8 +453,8 @@ export function slashOptionEmptyState(
 
   if (command.kind === "model" && buildModelOptions(runtime).length === 0) {
     return {
-      title: MODEL_OPTIONS_EMPTY_TITLE,
-      description: MODEL_OPTIONS_EMPTY_DESCRIPTION,
+      title: modelOptionsEmptyTitle(),
+      description: modelOptionsEmptyDescription(),
     };
   }
 
@@ -425,24 +502,24 @@ function buildSlashSearchAliases(command: ComposerSlashCommand): readonly string
 
 function describeProvider(provider: RuntimeProviderRecord): string {
   if (provider.authSource === "oauth") {
-    return "OAuth 已连接";
+    return t("OAuth connected", "OAuth 已连接");
   }
   if (provider.authSource === "auth_file") {
-    return "已保存 API key";
+    return t("Saved API key", "已保存 API key");
   }
   if (provider.authSource === "env") {
-    return "通过环境变量配置";
+    return t("Configured via environment", "通过环境变量配置");
   }
   if (provider.authSource === "external") {
-    return "在外部配置";
+    return t("Configured externally", "在外部配置");
   }
   if (provider.oauthSupported) {
-    return "可使用 OAuth";
+    return t("OAuth available", "可使用 OAuth");
   }
   if (provider.apiKeySetupSupported) {
-    return "需要 API key";
+    return t("Needs API key", "需要 API key");
   }
-  return "可用";
+  return t("Available", "可用");
 }
 
 function compareProviders(left: RuntimeProviderRecord, right: RuntimeProviderRecord): number {
@@ -478,7 +555,7 @@ function providerRankForId(
 function summarizeSkillDescription(value: string): string {
   const trimmed = value.trim().replace(/\s+/g, " ");
   if (!trimmed) {
-    return "可复用的工作流";
+    return t("Reusable workflow", "可复用的工作流");
   }
 
   const firstSentence = trimmed.match(/^[^.!?]+[.!?]?/)?.[0]?.trim() ?? trimmed;
@@ -497,20 +574,20 @@ function formatRuntimeCommandDescription(command: RuntimeCommandRecord): string 
     return command.description.trim();
   }
   if (command.source === "prompt") {
-    return "提示词模板";
+    return t("Prompt template", "提示词模板");
   }
   if (command.source === "skill") {
-    return "技能命令";
+    return t("Skill command", "技能命令");
   }
-  return "扩展命令";
+  return t("Extension command", "扩展命令");
 }
 
 function formatRuntimeSourceLabel(command: RuntimeCommandRecord): string {
   if (command.source === "skill") {
-    return "技能";
+    return t("Skill", "技能");
   }
   if (command.source === "prompt") {
-    return "提示词";
+    return t("Prompt", "提示词");
   }
   return command.sourceInfo.source.replace(/^extension:/, "");
 }
@@ -535,7 +612,7 @@ export function parseTreeComposerCommand(
   if (rest.length > 0) {
     return {
       type: "error",
-      message: "/tree 不接受参数。",
+      message: t("/tree does not take arguments.", "/tree 不接受参数。"),
     };
   }
 

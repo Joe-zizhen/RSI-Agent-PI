@@ -27,6 +27,8 @@ tmp-sample-design.png
 !/apps/**/*.css
 !/packages/**/*.js
 !/packages/**/*.css
+# Shared plugin i18n helper is vendored source, not a build artifact.
+!/vendor/plugins/i18n-shim.js
 index.html
 !apps/**/index.html
 

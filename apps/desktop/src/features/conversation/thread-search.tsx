@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { t, useLocale } from "../../t";
 
 interface ThreadSearchBarProps {
   readonly query: string;
@@ -21,13 +22,14 @@ export function ThreadSearchBar({
   onPrev,
   onClose,
 }: ThreadSearchBarProps) {
+  useLocale();
   return (
     <div className="thread-search-bar" data-testid="thread-search-bar">
       <input
         ref={inputRef}
         className="thread-search-bar__input"
         type="text"
-        placeholder="搜索会话…"
+        placeholder={t("Search thread...", "搜索会话…")}
         value={query}
         onChange={(e) => onSearch(e.target.value)}
         onKeyDown={(e) => {
@@ -45,11 +47,15 @@ export function ThreadSearchBar({
         }}
       />
       <span className="thread-search-bar__count">
-        {query ? (matchCount > 0 ? `${activeIndex + 1} / ${matchCount}` : "0 条结果") : ""}
+        {query
+          ? matchCount > 0
+            ? `${activeIndex + 1} / ${matchCount}`
+            : t("0 results", "0 条结果")
+          : ""}
       </span>
       <div className="thread-search-bar__actions">
         <button
-          aria-label="上一个匹配"
+          aria-label={t("Previous match", "上一个匹配")}
           className="icon-button"
           type="button"
           disabled={matchCount === 0}
@@ -58,7 +64,7 @@ export function ThreadSearchBar({
           &#x25B2;
         </button>
         <button
-          aria-label="下一个匹配"
+          aria-label={t("Next match", "下一个匹配")}
           className="icon-button"
           type="button"
           disabled={matchCount === 0}
@@ -66,7 +72,12 @@ export function ThreadSearchBar({
         >
           &#x25BC;
         </button>
-        <button aria-label="关闭搜索" className="icon-button" type="button" onClick={onClose}>
+        <button
+          aria-label={t("Close search", "关闭搜索")}
+          className="icon-button"
+          type="button"
+          onClick={onClose}
+        >
           &#x2715;
         </button>
       </div>

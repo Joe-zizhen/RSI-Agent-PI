@@ -13,6 +13,7 @@ import {
   type FileLineMark,
   type FileWorkbenchTabs,
 } from "./file-workbench-state";
+import { t, useLocale } from "../../t";
 
 interface FileEditorPaneProps {
   readonly api: PiDesktopApi;
@@ -39,7 +40,9 @@ const FILE_MARKDOWN_COMPONENTS = {
     </div>
   ),
   img: ({ alt }: { alt?: string }) => (
-    <span className="file-editor__blocked-image">{alt ? `[图片: ${alt}]` : "[图片]"}</span>
+    <span className="file-editor__blocked-image">
+      {alt ? t(`[image: ${alt}]`, `[图片: ${alt}]`) : t("[image]", "[图片]")}
+    </span>
   ),
 };
 
@@ -53,6 +56,7 @@ export function FileEditorPane({
   onActivate,
   onClose,
 }: FileEditorPaneProps) {
+  useLocale();
   const activePath = tabs.active;
   const lineMark = tabs.line;
   const [preview, setPreview] = useState<WorkspaceFilePreview | null>(null);
@@ -107,7 +111,11 @@ export function FileEditorPane({
   const showSource = !markdown || sourceMode;
 
   return (
-    <section className="file-editor" data-testid="file-editor" aria-label="打开文件">
+    <section
+      className="file-editor"
+      data-testid="file-editor"
+      aria-label={t("Open file", "打开文件")}
+    >
       <div className="file-editor__tab-strip">
         {worktreeLabel ? (
           <span className="file-editor__worktree-chip" data-testid="file-editor-worktree-chip">
@@ -133,7 +141,10 @@ export function FileEditorPane({
                   {fileNameFromPath(path)}
                 </button>
                 <button
-                  aria-label={`关闭 ${fileNameFromPath(path)}`}
+                  aria-label={t(
+                    `Close ${fileNameFromPath(path)}`,
+                    `关闭 ${fileNameFromPath(path)}`,
+                  )}
                   className="file-editor__tab-close"
                   type="button"
                   onClick={() => onClose(path)}
@@ -157,11 +168,11 @@ export function FileEditorPane({
                 type="button"
                 onClick={() => setSourceMode((current) => !current)}
               >
-                查看源码
+                {t("View source", "查看源码")}
               </button>
             ) : null}
             <button
-              aria-label="复制文件"
+              aria-label={t("Copy file", "复制文件")}
               className="icon-button"
               disabled={!preview || preview.binary || Boolean(viewerError)}
               type="button"
@@ -185,14 +196,14 @@ export function FileEditorPane({
                 });
               }}
             >
-              打开
+              {t("Open", "打开")}
             </button>
           </div>
         ) : null}
       </div>
       {activePath ? (
         <nav
-          aria-label="文件路径"
+          aria-label={t("File path", "文件路径")}
           className="file-editor__breadcrumb"
           data-testid="file-editor-breadcrumb"
         >
@@ -239,19 +250,29 @@ function renderEditorBody({
   readonly viewerLoading: boolean;
 }): ReactNode {
   if (!activePath) {
-    return <div className="diff-panel__empty">请从文件浏览器中选择一个文件。</div>;
+    return (
+      <div className="diff-panel__empty">
+        {t("Select a file from the file explorer.", "请从文件浏览器中选择一个文件。")}
+      </div>
+    );
   }
   if (viewerLoading) {
-    return <div className="diff-panel__empty">正在加载文件...</div>;
+    return <div className="diff-panel__empty">{t("Loading files…", "正在加载文件...")}</div>;
   }
   if (viewerError) {
     return <div className="diff-panel__empty">{viewerError}</div>;
   }
   if (!preview) {
-    return <div className="diff-panel__empty">没有可用的预览。</div>;
+    return (
+      <div className="diff-panel__empty">{t("No preview available.", "没有可用的预览。")}</div>
+    );
   }
   if (preview.binary) {
-    return <div className="diff-panel__empty">二进制文件或目录的预览不可用。</div>;
+    return (
+      <div className="diff-panel__empty">
+        {t("diff-panel__empty", "二进制文件或目录的预览不可用。")}
+      </div>
+    );
   }
   return (
     <>
@@ -262,7 +283,7 @@ function renderEditorBody({
       )}
       {preview.truncated ? (
         <div className="file-editor__truncated" role="status">
-          预览已截断
+          {t("Preview truncated", "预览已截断")}
         </div>
       ) : null}
     </>

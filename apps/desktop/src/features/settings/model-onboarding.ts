@@ -1,5 +1,6 @@
 import type { RuntimeSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import { buildModelOptions } from "../conversation/composer-commands";
+import { t } from "../../t";
 
 export type ModelOnboardingSettingsSection = "models" | "providers";
 
@@ -48,24 +49,33 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: false,
       requiresModelSelection: true,
-      unselectedModelLabel: "无可用模型",
-      emptyModelTitle: "无可用模型",
+      unselectedModelLabel: t("No models available", "无可用模型"),
+      emptyModelTitle: t("No models available", "无可用模型"),
       emptyModelDescription:
         connectedProviderCount > 0
-          ? "打开“设置 > 模型”以启用模型。"
-          : "打开“设置 > 提供商”以连接提供商并获得可用模型。",
+          ? t("Open Settings > Models to enable models.", "打开“设置 > 模型”以启用模型。")
+          : t(
+              "Open Settings > Providers to connect a provider and make models available.",
+              "打开“设置 > 提供商”以连接提供商并获得可用模型。",
+            ),
       notice:
         connectedProviderCount > 0
           ? {
-              title: "无可用模型",
-              description: "当前所有可用模型都已禁用。打开“设置 > 模型”以启用模型。",
-              actionLabel: "打开“设置 > 模型”",
+              title: t("No models available", "无可用模型"),
+              description: t(
+                "All available models are currently disabled. Open Settings > Models to enable models.",
+                "当前所有可用模型都已禁用。打开“设置 > 模型”以启用模型。",
+              ),
+              actionLabel: t("Open Settings > Models", "打开“设置 > 模型”"),
               actionSection: "models",
             }
           : {
-              title: "无可用模型",
-              description: "请先在“设置 > 提供商”中连接提供商，然后再选择模型或设置默认模型。",
-              actionLabel: "打开“设置 > 提供商”",
+              title: t("No models available", "无可用模型"),
+              description: t(
+                "Connect a provider in Settings > Providers before choosing a model or setting a default.",
+                "请先在“设置 > 提供商”中连接提供商，然后再选择模型或设置默认模型。",
+              ),
+              actionLabel: t("Open Settings > Providers", "打开“设置 > 提供商”"),
               actionSection: "providers",
             },
     };
@@ -75,15 +85,21 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: true,
       requiresModelSelection: true,
-      unselectedModelLabel: "选择模型",
-      emptyModelTitle: "无可用模型",
-      emptyModelDescription: "请选择模型。",
+      unselectedModelLabel: t("Choose model", "选择模型"),
+      emptyModelTitle: t("No models available", "无可用模型"),
+      emptyModelDescription: t("Choose a model.", "请选择模型。"),
       notice: {
-        title: "所选模型不可用",
+        title: t("Selected model unavailable", "所选模型不可用"),
         description: hasDefaultModel
-          ? "为本会话选择的模型已不可用。请另选一个模型，然后打开“设置 > 模型”更新默认模型。"
-          : "为本会话选择的模型已不可用。请另选一个模型，然后打开“设置 > 模型”选择应用默认模型。",
-        actionLabel: "打开“设置 > 模型”",
+          ? t(
+              "The model selected for this thread is no longer available. Choose another model, then open Settings > Models to update the default.",
+              "为本会话选择的模型已不可用。请另选一个模型，然后打开“设置 > 模型”更新默认模型。",
+            )
+          : t(
+              "The model selected for this thread is no longer available. Choose another model, then open Settings > Models to choose the app default.",
+              "为本会话选择的模型已不可用。请另选一个模型，然后打开“设置 > 模型”选择应用默认模型。",
+            ),
+        actionLabel: t("Open Settings > Models", "打开“设置 > 模型”"),
         actionSection: "models",
       },
     };
@@ -93,15 +109,18 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: true,
       requiresModelSelection: !currentSelectionUsable,
-      unselectedModelLabel: "选择模型",
-      emptyModelTitle: "未设置默认模型",
-      emptyModelDescription: "请选择模型。",
+      unselectedModelLabel: t("Choose model", "选择模型"),
+      emptyModelTitle: t("No default model set", "未设置默认模型"),
+      emptyModelDescription: t("Choose a model.", "请选择模型。"),
       notice: currentSelectionUsable
         ? undefined
         : {
-            title: "未设置默认模型",
-            description: "请在“设置 > 模型”中设置默认模型。",
-            actionLabel: "打开“设置 > 模型”",
+            title: t("No default model set", "未设置默认模型"),
+            description: t(
+              "Set a default model in Settings > Models.",
+              "请在“设置 > 模型”中设置默认模型。",
+            ),
+            actionLabel: t("Open Settings > Models", "打开“设置 > 模型”"),
             actionSection: "models",
           },
     };
@@ -112,15 +131,21 @@ export function deriveModelOnboardingState(
     return {
       hasSelectableModels: true,
       requiresModelSelection: !currentSelectionUsable,
-      unselectedModelLabel: "选择模型",
-      emptyModelTitle: "默认模型不可用",
-      emptyModelDescription: "请选择模型。",
+      unselectedModelLabel: t("Choose model", "选择模型"),
+      emptyModelTitle: t("Default model unavailable", "默认模型不可用"),
+      emptyModelDescription: t("Choose a model.", "请选择模型。"),
       notice: {
-        title: "默认模型不可用",
+        title: t("Default model unavailable", "默认模型不可用"),
         description: currentSelectionUsable
-          ? `你保存的默认模型（${defaultLabel}）已不可用。打开“设置 > 模型”以更新。`
-          : `你保存的默认模型（${defaultLabel}）已不可用。请为本会话选择一个模型，然后打开“设置 > 模型”以更新。`,
-        actionLabel: "打开“设置 > 模型”",
+          ? t(
+              `Your saved default (${defaultLabel}) is no longer available. Open Settings > Models to update it.`,
+              `你保存的默认模型（${defaultLabel}）已不可用。打开“设置 > 模型”以更新。`,
+            )
+          : t(
+              `Your saved default (${defaultLabel}) is no longer available. Choose a model for this thread, then open Settings > Models to update it.`,
+              `你保存的默认模型（${defaultLabel}）已不可用。请为本会话选择一个模型，然后打开“设置 > 模型”以更新。`,
+            ),
+        actionLabel: t("Open Settings > Models", "打开“设置 > 模型”"),
         actionSection: "models",
       },
     };
@@ -129,9 +154,9 @@ export function deriveModelOnboardingState(
   return {
     hasSelectableModels: true,
     requiresModelSelection: false,
-    unselectedModelLabel: "选择模型",
-    emptyModelTitle: "无可用模型",
-    emptyModelDescription: "请选择模型。",
+    unselectedModelLabel: t("Choose model", "选择模型"),
+    emptyModelTitle: t("No models available", "无可用模型"),
+    emptyModelDescription: t("Choose a model.", "请选择模型。"),
   };
 }
 

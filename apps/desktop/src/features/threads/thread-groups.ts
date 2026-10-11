@@ -11,6 +11,7 @@ import {
   sessionLastInteractedAt,
   type RecencyBucketId,
 } from "../../../contracts/thread-recency";
+import { t } from "../../t";
 
 export interface ThreadEnvironmentMeta {
   readonly kind: "local" | "worktree";
@@ -53,10 +54,18 @@ export interface RecencyThreadSection {
 
 /** Chinese labels for the recency buckets shown in the sidebar. */
 const RECENCY_BUCKET_LABELS_ZH: Readonly<Record<RecencyBucketId, string>> = {
-  today: "今天",
-  "last-7-days": "最近 7 天",
-  "last-30-days": "最近 30 天",
-  older: "更早",
+  get today() {
+    return t("Today", "今天");
+  },
+  get "last-7-days"() {
+    return t("Last 7 days", "最近 7 天");
+  },
+  get "last-30-days"() {
+    return t("Last 30 days", "最近 30 天");
+  },
+  get older() {
+    return t("Older", "更早");
+  },
 };
 
 export interface ThreadSidebarModel {
@@ -172,7 +181,7 @@ function collectThreadEntries(state: DesktopAppState): ThreadListEntry[] {
         session,
         environment: {
           kind: "local" as const,
-          label: "本地",
+          label: t("Local", "本地"),
         },
         contextLabel: folder.name,
       })),

@@ -43,7 +43,12 @@ test("补丁产物：用户可见 shell 文案已中文化，结构未变", () =
   );
   assert.ok(bash.includes("工作目录不存在"), "工作目录错误未中文化");
   // appendStatus 签名与调用形态保持：文案进 throw，不进哨兵。
-  assert.ok(/appendStatus\(text, "命令已中止"\)/.test(bash), "中止文案未走 appendStatus 包装");
+  assert.ok(
+    /appendStatus\(text, \(process\.env\.RSI_LOCALE === "en" \? "Command aborted" : "命令已中止"\)\)/.test(
+      bash,
+    ),
+    "中止文案未走 appendStatus 包装",
+  );
 });
 
 test("补丁只动 dist 用户可见层，不动 API/类型面", () => {

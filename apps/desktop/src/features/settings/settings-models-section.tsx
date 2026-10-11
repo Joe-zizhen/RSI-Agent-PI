@@ -13,6 +13,7 @@ import {
   SettingsRow,
   THINKING_LEVELS,
 } from "./settings-utils";
+import { t, useLocale } from "../../t";
 
 interface SettingsModelsSectionProps {
   readonly runtime?: RuntimeSnapshot;
@@ -41,6 +42,7 @@ export function SettingsModelsSection({
   onSetScopedModelPatterns,
   onOpenProviders,
 }: SettingsModelsSectionProps) {
+  useLocale();
   const [query, setQuery] = useState("");
   const [showUnconnected, setShowUnconnected] = useState(false);
 
@@ -77,9 +79,12 @@ export function SettingsModelsSection({
   return (
     <>
       <SettingsGroup>
-        <SettingsRow title="默认模型" description="用于新建会话。">
+        <SettingsRow
+          title={t("Default model", "默认模型")}
+          description={t("Used for new threads.", "用于新建会话。")}
+        >
           <SettingsSelect
-            label="默认模型"
+            label={t("Default model", "默认模型")}
             options={enabledModels.map((model) => ({
               value: `${model.providerId}:${model.modelId}`,
               label: `${model.providerName} · ${model.label}`,
@@ -91,9 +96,12 @@ export function SettingsModelsSection({
             }}
           />
         </SettingsRow>
-        <SettingsRow title="推理" description="新建会话的默认思考力度。">
+        <SettingsRow
+          title={t("Reasoning", "推理")}
+          description={t("Default reasoning effort for new threads.", "新建会话的默认思考力度。")}
+        >
           <SettingsSelect
-            label="推理"
+            label={t("Reasoning", "推理")}
             options={THINKING_OPTIONS}
             value={runtime?.settings.defaultThinkingLevel ?? undefined}
             onChange={onSetThinkingLevel}
@@ -102,8 +110,10 @@ export function SettingsModelsSection({
         {defaultValue && !defaultIsEnabled ? (
           <div className="settings-row">
             <span className="settings-warning">
-              你的默认模型（{defaultProvider}/{defaultModelId}
-              ）已关闭，或其提供商未连接。请选择新的默认模型。
+              {t(
+                `Your default model (${defaultProvider}/${defaultModelId}) is disabled, or its provider is not connected. Choose a new default model.`,
+                `你的默认模型（${defaultProvider}/${defaultModelId}）已关闭，或其提供商未连接。请选择新的默认模型。`,
+              )}
             </span>
           </div>
         ) : null}
@@ -112,7 +122,7 @@ export function SettingsModelsSection({
       <section className="settings-section">
         <div className="settings-section__header">
           <h3 className="settings-section__title">
-            启用的模型{" "}
+            {t("Enabled models", "启用的模型")}{" "}
             <span className="resource-list__count">
               {enabledModels.length} / {availableModels.length}
             </span>
@@ -120,8 +130,8 @@ export function SettingsModelsSection({
           <label className="resource-search">
             <SearchIcon />
             <input
-              aria-label="搜索模型"
-              placeholder="搜索模型"
+              aria-label={t("Search models", "搜索模型")}
+              placeholder={t("Search models", "搜索模型")}
               spellCheck={false}
               type="search"
               value={query}
@@ -129,14 +139,25 @@ export function SettingsModelsSection({
             />
           </label>
         </div>
-        <p className="settings-section__description">只有启用的模型会出现在模型选择器中。</p>
+        <p className="settings-section__description">
+          {t(
+            "Only enabled models appear in model pickers.",
+            "只有启用的模型会出现在模型选择器中。",
+          )}
+        </p>
         <div className="settings-group" data-testid="settings-model-list">
           {visibleAvailable.length === 0 ? (
             <div className="settings-row">
               <span className="settings-row__description">
                 {availableModels.length === 0
-                  ? "暂无已连接的可用模型。请连接提供商以添加模型。"
-                  : `没有已连接的模型匹配“${query.trim()}”。`}
+                  ? t(
+                      "No connected models available yet. Connect a provider to add models.",
+                      "暂无已连接的可用模型。请连接提供商以添加模型。",
+                    )
+                  : t(
+                      `No connected models match “${query.trim()}”.`,
+                      `没有已连接的模型匹配“${query.trim()}”。`,
+                    )}
               </span>
             </div>
           ) : (
@@ -154,7 +175,7 @@ export function SettingsModelsSection({
                   <SettingsSwitch
                     checked={enabled}
                     disabled={enabled && activePatterns.length <= 1}
-                    label={`启用 ${pattern}`}
+                    label={t(`Enable ${pattern}`, `启用 ${pattern}`)}
                     onChange={(next) => setEnabled(pattern, next)}
                   />
                 </ModelRow>
@@ -168,13 +189,19 @@ export function SettingsModelsSection({
         <section className="settings-section">
           <div className="settings-section__header">
             <h3 className="settings-section__title">
-              未连接 <span className="resource-list__count">{visibleUnconnected.length}</span>
+              {t("Not connected", "未连接")}
+              <span className="resource-list__count">{visibleUnconnected.length}</span>
             </h3>
             <button className="button button--secondary" type="button" onClick={onOpenProviders}>
-              连接提供商
+              {t("Connect a provider", "连接提供商")}
             </button>
           </div>
-          <p className="settings-section__description">来自你尚未登录的提供商的模型。</p>
+          <p className="settings-section__description">
+            {t(
+              "Models from providers you have not signed in to.",
+              "来自你尚未登录的提供商的模型。",
+            )}
+          </p>
           {searching || showUnconnected ? (
             <div className="settings-group" data-testid="settings-unconnected-model-list">
               {visibleUnconnected.map((model) => (
@@ -187,7 +214,8 @@ export function SettingsModelsSection({
               type="button"
               onClick={() => setShowUnconnected(true)}
             >
-              显示 {unconnectedModels.length} 个模型
+              {t("Show", "显示")}
+              {unconnectedModels.length} {t("models", "个模型")}
             </button>
           )}
         </section>
@@ -205,17 +233,22 @@ function ModelRow({
   readonly isDefault: boolean;
   readonly children?: ReactNode;
 }) {
+  useLocale();
   return (
     <div className="settings-row model-row">
       <div className="settings-row__label">
         <div className="settings-row__title">
           {model.label}
-          {isDefault ? <span className="model-row__badge">默认</span> : null}
+          {isDefault ? <span className="model-row__badge">{t("Default", "默认")}</span> : null}
         </div>
         <div className="settings-row__description">
           {model.providerName} · {modelPattern(model)}
-          {model.reasoning ? <span className="model-row__tag">推理</span> : null}
-          {model.supportsImages ? <span className="model-row__tag">图像</span> : null}
+          {model.reasoning ? (
+            <span className="model-row__tag">{t("Reasoning", "推理")}</span>
+          ) : null}
+          {model.supportsImages ? (
+            <span className="model-row__tag">{t("Images", "图像")}</span>
+          ) : null}
         </div>
       </div>
       {children ? <div className="settings-row__control">{children}</div> : null}

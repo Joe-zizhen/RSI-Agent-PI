@@ -1,4 +1,5 @@
 import { SettingsGroup, SettingsRow } from "./settings-utils";
+import { t } from "../../t";
 
 /**
  * "Mod" is Cmd on macOS and Ctrl elsewhere; "Ctrl" is Control on every platform.
@@ -20,41 +21,157 @@ const SHORTCUT_GROUPS: readonly {
   readonly shortcuts: readonly Shortcut[];
 }[] = [
   {
-    title: "应用",
+    get title() {
+      return t("App", "应用");
+    },
     shortcuts: [
-      { title: "命令面板", modifiers: ["Mod"], key: "K" },
-      { title: "跳转到文件", modifiers: ["Mod"], key: "P" },
-      { title: "打开设置", modifiers: ["Mod"], key: "," },
-      { title: "切换侧边栏", modifiers: ["Mod"], key: "B" },
-      { title: "切换侧边面板", modifiers: ["Mod", "Alt"], key: "B" },
-      { title: "新建窗口", modifiers: ["Mod", "Shift"], key: "N" },
+      {
+        get title() {
+          return t("Command palette", "命令面板");
+        },
+        modifiers: ["Mod"],
+        key: "K",
+      },
+      {
+        get title() {
+          return t("Go to file", "跳转到文件");
+        },
+        modifiers: ["Mod"],
+        key: "P",
+      },
+      {
+        get title() {
+          return t("Open settings", "打开设置");
+        },
+        modifiers: ["Mod"],
+        key: ",",
+      },
+      {
+        get title() {
+          return t("Toggle sidebar", "切换侧边栏");
+        },
+        modifiers: ["Mod"],
+        key: "B",
+      },
+      {
+        get title() {
+          return t("Toggle side panel", "切换侧边面板");
+        },
+        modifiers: ["Mod", "Alt"],
+        key: "B",
+      },
+      {
+        get title() {
+          return t("New window", "新建窗口");
+        },
+        modifiers: ["Mod", "Shift"],
+        key: "N",
+      },
     ],
   },
   {
-    title: "会话",
+    get title() {
+      return t("Threads", "会话");
+    },
     shortcuts: [
-      { title: "新建会话", modifiers: ["Mod"], key: "N" },
-      { title: "切换到最近会话", modifiers: ["Mod"], key: "1–9" },
-      { title: "在会话间循环切换", modifiers: ["Ctrl"], key: "Tab" },
-      { title: "在会话中查找", modifiers: ["Mod"], key: "F" },
+      {
+        get title() {
+          return t("New thread", "新建会话");
+        },
+        modifiers: ["Mod"],
+        key: "N",
+      },
+      {
+        get title() {
+          return t("Switch to recent thread", "切换到最近会话");
+        },
+        modifiers: ["Mod"],
+        key: "1–9",
+      },
+      {
+        get title() {
+          return t("Cycle through threads", "在会话间循环切换");
+        },
+        modifiers: ["Ctrl"],
+        key: "Tab",
+      },
+      {
+        get title() {
+          return t("Find in thread", "在会话中查找");
+        },
+        modifiers: ["Mod"],
+        key: "F",
+      },
     ],
   },
   {
-    title: "输入框",
+    get title() {
+      return t("Composer", "输入框");
+    },
     shortcuts: [
-      { title: "发送消息，运行期间则排队", modifiers: [], key: "Enter" },
-      { title: "引导运行中的智能体", modifiers: ["Mod"], key: "Enter" },
-      { title: "换行", modifiers: ["Shift"], key: "Enter" },
+      {
+        get title() {
+          return t("Send message, or queue it during a run", "发送消息，运行期间则排队");
+        },
+        modifiers: [],
+        key: "Enter",
+      },
+      {
+        get title() {
+          return t("Steer the running agent", "引导运行中的智能体");
+        },
+        modifiers: ["Mod"],
+        key: "Enter",
+      },
+      {
+        get title() {
+          return t("New line", "换行");
+        },
+        modifiers: ["Shift"],
+        key: "Enter",
+      },
     ],
   },
   {
-    title: "工作台",
+    get title() {
+      return t("Workbench", "工作台");
+    },
     shortcuts: [
-      { title: "切换终端", modifiers: ["Mod"], key: "J" },
-      { title: "新建终端标签页", modifiers: ["Mod"], key: "T" },
-      { title: "切换审查面板", modifiers: ["Mod"], key: "R" },
-      { title: "切换到侧边面板标签页", modifiers: ["TabMod"], key: "1–9" },
-      { title: "关闭工作台标签页", modifiers: ["Mod"], key: "W" },
+      {
+        get title() {
+          return t("Toggle terminal", "切换终端");
+        },
+        modifiers: ["Mod"],
+        key: "J",
+      },
+      {
+        get title() {
+          return t("New terminal tab", "新建终端标签页");
+        },
+        modifiers: ["Mod"],
+        key: "T",
+      },
+      {
+        get title() {
+          return t("Toggle review", "切换审查面板");
+        },
+        modifiers: ["Mod"],
+        key: "R",
+      },
+      {
+        get title() {
+          return t("Switch to side panel tab", "切换到侧边面板标签页");
+        },
+        modifiers: ["TabMod"],
+        key: "1–9",
+      },
+      {
+        get title() {
+          return t("Close workbench tab", "关闭工作台标签页");
+        },
+        modifiers: ["Mod"],
+        key: "W",
+      },
     ],
   },
 ];

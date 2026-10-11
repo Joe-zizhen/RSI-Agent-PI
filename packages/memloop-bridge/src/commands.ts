@@ -10,6 +10,7 @@ import type {
 } from "@earendil-works/pi-coding-agent";
 import type { ClaimRegistry, MemloopSidecar, RunDreamResult, UsedClaim } from "./sidecar.ts";
 import { formatClaim } from "./tools.ts";
+import { t } from "./t.ts";
 
 type EnsureClient = (ctx: ExtensionContext) => Promise<MemloopSidecar | undefined>;
 
@@ -17,18 +18,30 @@ function formatUsed(claim: UsedClaim): string {
   const confidence = claim.confidence !== undefined ? claim.confidence.toFixed(2) : "??";
   const verify =
     claim.verify_cmd !== undefined && claim.verify_cmd !== ""
-      ? `验证命令: ${claim.verify_cmd}`
-      : "无验证命令";
-  return `- [${claim.key}] 置信度 ${confidence}\n  ${claim.text}\n  ${verify}`;
+      ? t(`verify: ${claim.verify_cmd}`, `验证命令: ${claim.verify_cmd}`)
+      : t("no verify command", "无验证命令");
+  return t(
+    `- [${claim.key}] confidence ${confidence}\n  ${claim.text}\n  ${verify}`,
+    `- [${claim.key}] 置信度 ${confidence}\n  ${claim.text}\n  ${verify}`,
+  );
 }
 
 async function showList(ctx: ExtensionCommandContext, registry: ClaimRegistry): Promise<void> {
   const used = registry.list();
   if (used.length === 0) {
-    ctx.ui.notify("本会话还没有使用过记忆卡。", "info");
+    ctx.ui.notify(
+      t("No Memory cards used in this session yet.", "本会话还没有使用过记忆卡。"),
+      "info",
+    );
     return;
   }
-  ctx.ui.notify(`本会话用卡 ${used.length} 条：\n${used.map(formatUsed).join("\n")}`, "info");
+  ctx.ui.notify(
+    t(
+      `Used ${used.length} cards this session:\n${used.map(formatUsed).join("\n")}`,
+      `本会话用卡 ${used.length} 条：\n${used.map(formatUsed).join("\n")}`,
+    ),
+    "info",
+  );
 }
 
 async function showDetail(
@@ -39,12 +52,12 @@ async function showDetail(
   try {
     const result = await client.getClaim({ claim_id: id });
     if (result.claim === null) {
-      ctx.ui.notify(`未找到记忆卡：${id}`, "warning");
+      ctx.ui.notify(t(`Memory card not found: ${id}`, `未找到记忆卡：${id}`), "warning");
       return;
     }
     ctx.ui.notify(formatClaim(result.claim), "info");
   } catch (err) {
-    ctx.ui.notify(`查询失败：${String(err)}`, "warning");
+    ctx.ui.notify(t(`Query failed: ${String(err)}`, `查询失败：${String(err)}`), "warning");
   }
 }
 
@@ -57,18 +70,24 @@ async function forgetClaim(
   try {
     const existing = await client.getClaim({ claim_id: id });
     if (existing.claim === null) {
-      ctx.ui.notify(`未找到记忆卡：${id}`, "warning");
+      ctx.ui.notify(t(`Memory card not found: ${id}`, `未找到记忆卡：${id}`), "warning");
       return;
     }
-    ctx.ui.notify(`将删除：\n${formatClaim(existing.claim)}`, "info");
+    ctx.ui.notify(
+      t(`Will delete:\n${formatClaim(existing.claim)}`, `将删除：\n${formatClaim(existing.claim)}`),
+      "info",
+    );
     const result = await client.deleteClaim({ claim_id: id });
     if (result.deleted) {
-      ctx.ui.notify(`已物理删除：${id}`, "info");
+      ctx.ui.notify(t(`Deleted permanently: ${id}`, `已物理删除：${id}`), "info");
     } else {
-      ctx.ui.notify(`删除失败：sidecar 未删除 ${id}`, "warning");
+      ctx.ui.notify(
+        t(`Delete failed: the sidecar did not delete ${id}`, `删除失败：sidecar 未删除 ${id}`),
+        "warning",
+      );
     }
   } catch (err) {
-    ctx.ui.notify(`删除失败：${String(err)}`, "warning");
+    ctx.ui.notify(t(`Delete failed: ${String(err)}`, `删除失败：${String(err)}`), "warning");
   }
 }
 
@@ -106,14 +125,20 @@ function renderPolicyDiff(
   winner: Record<string, unknown> | undefined,
 ): string[] {
   const keys = [...new Set([...Object.keys(incumbent ?? {}), ...Object.keys(winner ?? {})])].sort();
-  if (keys.length === 0) return ["参数差异: 结果未携带 policy 字段"];
-  const lines = ["参数差异 (incumbent → winner):"];
+  if (keys.length === 0)
+    return [
+      t("policy diff: the result carries no policy fields", "参数差异: 结果未携带 policy 字段"),
+    ];
+  const lines = [t("policy diff (incumbent → winner):", "参数差异 (incumbent → winner):")];
   for (const key of keys) {
     const before = incumbent?.[key];
     const after = winner?.[key];
     lines.push(
       JSON.stringify(before) === JSON.stringify(after)
-        ? `  ${key}: ${formatField(before)} （未变）`
+        ? t(
+            `  ${key}: ${formatField(before)} (unchanged)`,
+            `  ${key}: ${formatField(before)} （未变）`,
+          )
         : `  ${key}: ${formatField(before)} -> ${formatField(after)}`,
     );
   }
@@ -138,7 +163,13 @@ export function registerMemloopCommands(
     handler: async (args, ctx) => {
       const active = await ensureClient(ctx);
       if (active === undefined) {
-        ctx.ui.notify("记忆系统不可用（sidecar 未运行）。", "warning");
+        ctx.ui.notify(
+          t(
+            "Memory system unavailable (sidecar not running).",
+            "记忆系统不可用（sidecar 未运行）。",
+          ),
+          "warning",
+        );
         return;
       }
       const [sub = "list", ...rest] = args.trim().split(/\s+/);
@@ -147,37 +178,52 @@ export function registerMemloopCommands(
         await showList(ctx, registry);
       } else if (sub === "show") {
         if (id === "") {
-          ctx.ui.notify("用法：/memory show <id>", "warning");
+          ctx.ui.notify(t("Usage: /memory show <id>", "用法：/memory show <id>"), "warning");
           return;
         }
         await showDetail(ctx, active, id);
       } else if (sub === "forget") {
         if (id === "") {
-          ctx.ui.notify("用法：/memory forget <id>", "warning");
+          ctx.ui.notify(t("Usage: /memory forget <id>", "用法：/memory forget <id>"), "warning");
           return;
         }
         await forgetClaim(ctx, active, id);
       } else {
-        ctx.ui.notify("用法：/memory list | show <id> | forget <id>", "warning");
+        ctx.ui.notify(
+          t(
+            "Usage: /memory list | show <id> | forget <id>",
+            "用法：/memory list | show <id> | forget <id>",
+          ),
+          "warning",
+        );
       }
     },
   });
 
   pi.registerCommand("dreaming", {
-    description: "memloop 梦境回放：/dreaming | /dreaming rollback",
+    description: t(
+      "memloop Dream replay: /dreaming | /dreaming rollback",
+      "memloop 梦境回放：/dreaming | /dreaming rollback",
+    ),
     handler: async (args, ctx) => {
       const active = await ensureClient(ctx);
       if (active === undefined) {
-        ctx.ui.notify("记忆系统不可用（sidecar 未运行）。", "warning");
+        ctx.ui.notify(
+          t(
+            "Memory system unavailable (sidecar not running).",
+            "记忆系统不可用（sidecar 未运行）。",
+          ),
+          "warning",
+        );
         return;
       }
       if (args.trim() === "rollback") {
         const result = await active.runDream({ rollback: true });
         const restored = resolveRestored(result);
         const lines = [
-          "/dreaming 回滚完成",
-          `已变更: ${String(result.changed)}`,
-          "恢复后的 policy 字段：",
+          t("/dreaming rollback complete", "/dreaming 回滚完成"),
+          t(`changed: ${String(result.changed)}`, `已变更: ${String(result.changed)}`),
+          t("Restored policy fields:", "恢复后的 policy 字段："),
         ];
         if (restored !== undefined) {
           for (const key of Object.keys(restored).sort())
@@ -191,12 +237,12 @@ export function registerMemloopCommands(
       const result = await active.runDream({ force: true });
       const { incumbent, winner } = resolvePolicySides(result);
       const lines = [
-        `/dreaming 审计报告`,
-        `已执行: ${String(result.ran)}`,
-        `胜出: ${JSON.stringify(result.winner)}`,
-        `已变更: ${String(result.changed)}`,
+        t(`/dreaming audit report`, `/dreaming 审计报告`),
+        t(`ran: ${String(result.ran)}`, `已执行: ${String(result.ran)}`),
+        t(`winner: ${JSON.stringify(result.winner)}`, `胜出: ${JSON.stringify(result.winner)}`),
+        t(`changed: ${String(result.changed)}`, `已变更: ${String(result.changed)}`),
         ...renderPolicyDiff(incumbent, winner),
-        `得分: ${JSON.stringify(result.scores)}`,
+        t(`scores: ${JSON.stringify(result.scores)}`, `得分: ${JSON.stringify(result.scores)}`),
       ];
       ctx.ui.notify(lines.join("\n"), "info");
     },

@@ -20,6 +20,7 @@ import {
   makeTranscriptMessage,
   makeTranscriptMessageWithAttachments,
 } from "../application/app-store-utils";
+import { t } from "../t";
 import {
   createChildThreadToolName,
   listThreadsToolName,
@@ -193,7 +194,9 @@ export function applyTimelineEvent(
     case "sessionOpened":
       state.pendingAssistantMessageBySession.delete(key);
       transcript.push(
-        makeActivityItem("已恢复会话记录", { metadata: relativeDetail(event.timestamp) }),
+        makeActivityItem(t("Resumed session", "已恢复会话记录"), {
+          metadata: relativeDetail(event.timestamp),
+        }),
       );
       break;
     case "sessionUpdated":
@@ -209,7 +212,7 @@ export function applyTimelineEvent(
           searchCount: 0,
           fileCount: 0,
         });
-        const activity = makeActivityItem("处理中…");
+        const activity = makeActivityItem(t("Working…", "处理中…"));
         state.activeWorkingActivityBySession.set(key, activity.id);
         transcript.push(activity);
       }
@@ -284,7 +287,7 @@ export function applyTimelineEvent(
         // timestamps and places it above the turn's final reply.
       } else {
         transcript.push(
-          makeSummaryItem("已完成", {
+          makeSummaryItem(t("Completed", "已完成"), {
             presentation: "divider",
             metadata: relativeDetail(event.timestamp),
           }),
@@ -311,7 +314,9 @@ export function applyTimelineEvent(
     }
     case "sessionClosed":
       clearRunState(transcript, key, event.sessionRef, state);
-      transcript.push(makeActivityItem("已停止", { metadata: relativeDetail(event.timestamp) }));
+      transcript.push(
+        makeActivityItem(t("Stopped", "已停止"), { metadata: relativeDetail(event.timestamp) }),
+      );
       break;
     case "transcriptItemAppended": {
       // A pin shows above the composer, so it never ends or moves a streaming reply.
@@ -392,7 +397,7 @@ function upsertToolRow(
     callId,
     toolName ?? existingTool?.toolName ?? "tool",
     status ?? existingTool?.status ?? "running",
-    label ?? existingTool?.label ?? "处理中",
+    label ?? existingTool?.label ?? t("Working", "处理中"),
     {
       detail: detail ?? existingTool?.detail,
       metadata: existingTool?.metadata,
@@ -442,27 +447,39 @@ function clearRunState(
 function toolLabel(toolName: string, input: unknown): string {
   const detail = toolInputSummary(input);
   if (toolName === createChildThreadToolName) {
-    return detail ? `已启动子会话：${detail}` : "已启动子会话";
+    return detail
+      ? t(`Started child thread: ${detail}`, `已启动子会话：${detail}`)
+      : t("Started child thread", "已启动子会话");
   }
   if (toolName === listThreadsToolName) {
-    return "已列出会话";
+    return t("Listed threads", "已列出会话");
   }
   if (toolName === readThreadToolName) {
-    return detail ? `已读取会话：${detail}` : "已读取会话";
+    return detail
+      ? t(`Read thread: ${detail}`, `已读取会话：${detail}`)
+      : t("Read thread", "已读取会话");
   }
   if (toolName === sendMessageToThreadToolName) {
-    return detail ? `已向会话发送消息：${detail}` : "已向会话发送消息";
+    return detail
+      ? t(`Sent message to thread: ${detail}`, `已向会话发送消息：${detail}`)
+      : t("Sent message to thread", "已向会话发送消息");
   }
   if (looksLikeSearch(toolName, input)) {
-    return detail ? `已搜索 ${detail}` : `已使用 ${toolName} 搜索`;
+    return detail
+      ? t(`Searched ${detail}`, `已搜索 ${detail}`)
+      : t(`Searched with ${toolName}`, `已使用 ${toolName} 搜索`);
   }
   if (looksLikeFileExplore(toolName, input)) {
     if (toolName.toLowerCase() === "read") {
-      return detail ? `已读取 ${detail}` : "已读取文件";
+      return detail ? t(`Read ${detail}`, `已读取 ${detail}`) : t("Read a file", "已读取文件");
     }
-    return detail ? `已浏览 ${detail}` : `已使用 ${toolName} 浏览文件`;
+    return detail
+      ? t(`Explored ${detail}`, `已浏览 ${detail}`)
+      : t(`Explored files with ${toolName}`, `已使用 ${toolName} 浏览文件`);
   }
-  return detail ? `已运行 ${toolName}：${detail}` : `已运行 ${toolName}`;
+  return detail
+    ? t(`Ran ${toolName}: ${detail}`, `已运行 ${toolName}：${detail}`)
+    : t(`Ran ${toolName}`, `已运行 ${toolName}`);
 }
 
 function progressLabel(progress: number | undefined): string | undefined {
@@ -498,7 +515,7 @@ function detailFromOutput(output: unknown): string | undefined {
     // The row shows a tool's images itself, so the detail names them rather than dump their data.
     const images = output.content.flatMap((part) =>
       isRecord(part) && part.type === "image"
-        ? [`[${stringProperty(part, "mimeType") ?? "image"} image]`]
+        ? [`[${stringProperty(part, "mimeType") ?? "image"} ${t("image", "图片")}]`]
         : [],
     );
     if (images.length > 0) {
@@ -531,19 +548,35 @@ function looksLikeFileExplore(toolName: string, input: unknown): boolean {
 function summaryLabel(metrics: RunMetrics): string | undefined {
   const parts: string[] = [];
   if (metrics.fileCount > 0) {
-    parts.push(`浏览了 ${metrics.fileCount} 个文件`);
+    parts.push(
+      t(
+        `Explored ${metrics.fileCount} file${metrics.fileCount === 1 ? "" : "s"}`,
+        `浏览了 ${metrics.fileCount} 个文件`,
+      ),
+    );
   }
   if (metrics.searchCount > 0) {
-    parts.push(`${metrics.searchCount} 次搜索`);
+    parts.push(
+      t(
+        `${metrics.searchCount} search${metrics.searchCount === 1 ? "" : "es"}`,
+        `${metrics.searchCount} 次搜索`,
+      ),
+    );
   }
   if (parts.length === 0 && metrics.toolCount > 0) {
-    parts.push(`使用了 ${metrics.toolCount} 个工具`);
+    parts.push(
+      t(
+        `Used ${metrics.toolCount} tool${metrics.toolCount === 1 ? "" : "s"}`,
+        `使用了 ${metrics.toolCount} 个工具`,
+      ),
+    );
   }
-  return parts.length > 0 ? parts.join("，") : undefined;
+  return parts.length > 0 ? parts.join(t(", ", "，")) : undefined;
 }
 
 function workedForLabel(startedAt: string, endedAt: string): string {
-  return `耗时 ${formatElapsedDuration(startedAt, endedAt)}`;
+  const duration = formatElapsedDuration(startedAt, endedAt);
+  return t(`Worked for ${duration}`, `耗时 ${duration}`);
 }
 
 function relativeDetail(timestamp: string): string {

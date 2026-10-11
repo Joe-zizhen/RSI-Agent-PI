@@ -7,8 +7,10 @@ import type { ExtensionActionRequest } from "../../contracts/extension-actions";
 import type { NavigateSessionTreeOptions } from "@rsi-agent-pi/session-driver/types";
 import type { RuntimeSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import {
+  isAppLocale,
   isThemeMode,
   isThemePresetId,
+  type AppLocale,
   type AppView,
   type ComposerAttachment,
   type CreateSessionInput,
@@ -163,6 +165,13 @@ export function expectThemeMode(value: unknown, name = "mode"): ThemeMode {
 export function expectThemePresetId(value: unknown, name = "presetId"): ThemePresetId {
   if (!isThemePresetId(value)) {
     throw new TypeError(`${name} must be a supported theme preset`);
+  }
+  return value;
+}
+
+export function expectAppLocale(value: unknown, name = "locale"): AppLocale {
+  if (!isAppLocale(value)) {
+    throw new TypeError(`${name} must be zh or en`);
   }
   return value;
 }

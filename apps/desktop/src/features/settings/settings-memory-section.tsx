@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { SettingsSwitch } from "./settings-controls";
 import { SettingsGroup, SettingsRow } from "./settings-utils";
+import { t, useLocale } from "../../t";
 
 interface SettingsMemorySectionProps {
   readonly workspaceId: string;
@@ -14,6 +15,7 @@ export function SettingsMemorySection({
   memoryEnabled,
   onToggleMemory,
 }: SettingsMemorySectionProps) {
+  useLocale();
   const [loaded, setLoaded] = useState<
     { readonly workspaceId: string; readonly verdictCmd: string } | undefined
   >();
@@ -58,24 +60,34 @@ export function SettingsMemorySection({
   };
 
   return (
-    <SettingsGroup title="记忆">
+    <SettingsGroup title={t("Memory", "记忆")}>
       {error ? (
         <div className="settings-row">
           <span className="settings-row__description settings-warning">{error}</span>
         </div>
       ) : null}
       <SettingsRow
-        title="启用记忆"
-        description="开启后，自动捕获会话经验，在任务开始时注入相关记忆，并对已验证的失败模式发出提醒或拦截。"
+        title={t("Enable memory", "启用记忆")}
+        description={t(
+          "When on, capture session experience automatically, inject relevant memory at task start, and warn or block on verified failure patterns.",
+          "开启后，自动捕获会话经验，在任务开始时注入相关记忆，并对已验证的失败模式发出提醒或拦截。",
+        )}
       >
-        <SettingsSwitch checked={memoryEnabled} label="启用记忆" onChange={onToggleMemory} />
+        <SettingsSwitch
+          checked={memoryEnabled}
+          label={t("Enable memory", "启用记忆")}
+          onChange={onToggleMemory}
+        />
       </SettingsRow>
       <SettingsRow
-        title="verdictCmd 世界判决命令"
-        description="会话结束时运行的判决命令。退出码 0 记为成功，非 0 记为失败。留空表示不判决。"
+        title={t("verdictCmd world verdict command", "verdictCmd 世界判决命令")}
+        description={t(
+          "The verdict command that runs at session end. Exit code 0 counts as success, non-0 as failure. Leave empty for no verdict.",
+          "会话结束时运行的判决命令。退出码 0 记为成功，非 0 记为失败。留空表示不判决。",
+        )}
       >
         <input
-          aria-label="verdictCmd 世界判决命令"
+          aria-label={t("verdictCmd world verdict command", "verdictCmd 世界判决命令")}
           className="settings-text-input"
           placeholder="npm test"
           spellCheck={false}

@@ -4,6 +4,7 @@ import { SettingsGroup, SettingsRow } from "./settings-utils";
 import type { CSSProperties } from "react";
 import { themePreset, themePresets, themeSwatches, themeTokensFor } from "../../../contracts/theme";
 import { useActiveTheme } from "../../ui/active-theme";
+import { t, useLocale } from "../../t";
 
 interface SettingsAppearanceSectionProps {
   readonly themeMode: ThemeMode;
@@ -15,9 +16,24 @@ interface SettingsAppearanceSectionProps {
 }
 
 const THEME_MODES: readonly { readonly mode: ThemeMode; readonly label: string }[] = [
-  { mode: "system", label: "系统" },
-  { mode: "light", label: "浅色" },
-  { mode: "dark", label: "深色" },
+  {
+    mode: "system",
+    get label() {
+      return t("System", "系统");
+    },
+  },
+  {
+    mode: "light",
+    get label() {
+      return t("Light", "浅色");
+    },
+  },
+  {
+    mode: "dark",
+    get label() {
+      return t("Dark", "深色");
+    },
+  },
 ];
 
 export function SettingsAppearanceSection({
@@ -28,13 +44,14 @@ export function SettingsAppearanceSection({
   enableTransparency,
   onSetEnableTransparency,
 }: SettingsAppearanceSectionProps) {
+  useLocale();
   const activePreset = themePreset(themePresetId);
   const { variant } = useActiveTheme();
   return (
     <>
-      <SettingsGroup title="主题" plain>
+      <SettingsGroup title={t("Theme", "主题")} plain>
         <div
-          aria-label="主题"
+          aria-label={t("Theme", "主题")}
           className="theme-mode-tiles"
           role="radiogroup"
           style={tilePalette(themePresetId)}
@@ -64,7 +81,7 @@ export function SettingsAppearanceSection({
       </SettingsGroup>
 
       <SettingsGroup>
-        <SettingsRow title="颜色预设" description={activePreset.description}>
+        <SettingsRow title={t("Color preset", "颜色预设")} description={activePreset.description}>
           <span className="settings-preset-control">
             <span aria-hidden="true" className="settings-preset-swatches">
               {themeSwatches(themePresetId, variant).map((swatch, index) => (
@@ -72,17 +89,23 @@ export function SettingsAppearanceSection({
               ))}
             </span>
             <SettingsSelect
-              label="颜色预设"
+              label={t("Color preset", "颜色预设")}
               options={themePresets.map((preset) => ({ value: preset.id, label: preset.name }))}
               value={themePresetId}
               onChange={onSetThemePresetId}
             />
           </span>
         </SettingsRow>
-        <SettingsRow title="窗口透明" description="让桌面颜色透过受支持的界面显示。">
+        <SettingsRow
+          title={t("Window transparency", "窗口透明")}
+          description={t(
+            "Let desktop colors show through supported surfaces.",
+            "让桌面颜色透过受支持的界面显示。",
+          )}
+        >
           <SettingsSwitch
             checked={enableTransparency}
-            label="窗口透明"
+            label={t("Window transparency", "窗口透明")}
             onChange={onSetEnableTransparency}
           />
         </SettingsRow>

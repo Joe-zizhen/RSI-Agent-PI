@@ -53,6 +53,7 @@ import type {
 import type { HostUiResponse } from "@rsi-agent-pi/session-driver";
 import type { RuntimeSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
+  AppLocale,
   AppView,
   ComposerAttachment,
   CreateSessionInput,
@@ -444,6 +445,9 @@ contextBridge.exposeInMainWorld("piApp", {
     ipcRenderer.invoke(desktopIpc.setEnableTransparency, enabled) as Promise<DesktopAppState>,
   setThemePresetId: (presetId: ThemePresetId) =>
     ipcRenderer.invoke(desktopIpc.setThemePresetId, presetId) as Promise<DesktopAppState>,
+  getLocale: () => ipcRenderer.invoke(desktopIpc.getLocale) as Promise<AppLocale>,
+  setLocale: (locale: AppLocale) =>
+    ipcRenderer.invoke(desktopIpc.setLocale, locale) as Promise<DesktopAppState>,
   ensureTerminalPanel: (
     workspaceId: string,
     terminalScopeId: string,

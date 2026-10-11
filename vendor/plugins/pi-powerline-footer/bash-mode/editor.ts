@@ -1,3 +1,4 @@
+import { t } from "../../i18n-shim.js";
 import { fileURLToPath } from "node:url";
 import { CustomEditor, type KeybindingsManager } from "@earendil-works/pi-coding-agent";
 import { isKeyRelease, matchesKey, visibleWidth, truncateToWidth } from "@earendil-works/pi-tui";
@@ -293,7 +294,7 @@ export class BashModeEditor extends CustomEditor {
 
       if (bashMode && this.keybindingsRef.matches(data, "tui.input.submit") && !this.keybindingsRef.matches(data, "tui.input.newLine")) {
         if (this.optionsRef.isShellRunning()) {
-          this.optionsRef.onNotify("shell 命令已在运行", "warning");
+          this.optionsRef.onNotify(t("Shell command already running", "shell 命令已在运行"), "warning");
           return;
         }
 

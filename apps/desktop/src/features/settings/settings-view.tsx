@@ -4,6 +4,7 @@ import type {
   RuntimeSnapshot,
 } from "@rsi-agent-pi/session-driver/runtime-types";
 import type {
+  AppLocale,
   ModelSettingsScopeMode,
   NotificationPreferences,
   ThemePresetId,
@@ -23,6 +24,7 @@ import { SettingsProvidersSection } from "./settings-providers-section";
 import { type SettingsSection, settingsSectionDefinition } from "./settings-sections";
 import { SettingsShortcutsSection } from "./settings-shortcuts-section";
 import { SettingsUpdateSection } from "./settings-update-section";
+import { t, useLocale } from "../../t";
 
 export type { SettingsSection } from "./settings-sections";
 
@@ -39,6 +41,7 @@ interface SettingsViewProps {
   readonly notificationPermissionPending: boolean;
   readonly modelSettingsScopeMode: ModelSettingsScopeMode;
   readonly integratedTerminalShell: string;
+  readonly locale: AppLocale;
   readonly themeMode: "system" | "light" | "dark";
   readonly themePresetId: ThemePresetId;
   readonly enableTransparency: boolean;
@@ -57,6 +60,8 @@ interface SettingsViewProps {
   readonly onDeleteCustomProvider: (providerId: string) => Promise<string | undefined>;
   readonly onSetNotificationPreferences: (preferences: Partial<NotificationPreferences>) => void;
   readonly onSetIntegratedTerminalShell: (shellPath: string) => void;
+  readonly onSetLocale: (locale: AppLocale) => void;
+  readonly onRelaunch: () => void;
   readonly onRequestNotificationPermission: () => void;
   readonly onOpenSystemNotificationSettings: () => void;
   readonly onSetThemeMode: (mode: "system" | "light" | "dark") => void;
@@ -79,6 +84,7 @@ export function SettingsView({
   notificationPermissionPending,
   modelSettingsScopeMode,
   integratedTerminalShell,
+  locale,
   themeMode,
   themePresetId,
   enableTransparency,
@@ -95,6 +101,8 @@ export function SettingsView({
   onDeleteCustomProvider,
   onSetNotificationPreferences,
   onSetIntegratedTerminalShell,
+  onSetLocale,
+  onRelaunch,
   onRequestNotificationPermission,
   onOpenSystemNotificationSettings,
   onSetThemeMode,
@@ -104,12 +112,15 @@ export function SettingsView({
   onToggleMemory,
   mcpActions,
 }: SettingsViewProps) {
+  useLocale();
   const definition = settingsSectionDefinition(section);
   const header = (
     <header className="view-header">
       <div>
         <h1 className="view-header__title">{definition.title}</h1>
-        <p className="view-header__body">{definition.description(workspace?.name ?? "当前项目")}</p>
+        <p className="view-header__body">
+          {definition.description(workspace?.name ?? t("this workspace", "当前项目"))}
+        </p>
       </div>
       {headerAccessory ? <div className="view-header__actions">{headerAccessory}</div> : null}
     </header>
@@ -123,9 +134,12 @@ export function SettingsView({
           <div className="settings-group">
             <div className="settings-row">
               <div className="settings-row__label">
-                <div className="settings-row__title">选择项目</div>
+                <div className="settings-row__title">{t("Select a workspace", "选择项目")}</div>
                 <div className="settings-row__description">
-                  提供商与模型按项目设置。请选择一个项目，或先打开一个文件夹。
+                  {t(
+                    "Providers and models are set per workspace. Choose one, or open a folder first.",
+                    "提供商与模型按项目设置。请选择一个项目，或先打开一个文件夹。",
+                  )}
                 </div>
               </div>
             </div>
@@ -157,9 +171,12 @@ export function SettingsView({
               runtime={runtime}
               modelSettingsScopeMode={modelSettingsScopeMode}
               integratedTerminalShell={integratedTerminalShell}
+              locale={locale}
               onSetModelSettingsScopeMode={onSetModelSettingsScopeMode}
               onSetIntegratedTerminalShell={onSetIntegratedTerminalShell}
               onToggleSkillCommands={onToggleSkillCommands}
+              onSetLocale={onSetLocale}
+              onRelaunch={onRelaunch}
             />
           ) : null}
 

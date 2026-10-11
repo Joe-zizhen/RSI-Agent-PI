@@ -2,6 +2,7 @@
 // AI-generated contextual working messages that match a user's preferred theme/vibe.
 // Uses module-level state (matching powerline-footer pattern).
 
+import { t } from "../i18n-shim.js";
 import type { AssistantMessage, Context, Model, ProviderStreamOptions } from "@earendil-works/pi-ai";
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
@@ -236,7 +237,7 @@ function loadConfig(): VibeConfig {
     theme,
     mode,
     modelSpec: typeof settings.workingVibeModel === "string" ? settings.workingVibeModel : DEFAULT_MODEL,
-    fallback: typeof settings.workingVibeFallback === "string" ? settings.workingVibeFallback : "工作中",
+    fallback: typeof settings.workingVibeFallback === "string" ? settings.workingVibeFallback : t("Working", "工作中"),
     timeout: 3000,
     refreshInterval: refreshSeconds * 1000,
     promptTemplate: typeof settings.workingVibePrompt === "string" ? settings.workingVibePrompt : DEFAULT_PROMPT,
@@ -715,11 +716,11 @@ export async function generateVibesBatch(
   const safeCount = Number.isFinite(count) ? Math.min(Math.max(Math.floor(count), 1), 500) : 100;
   
   if (!extensionCtx) {
-    return { success: false, count: 0, filePath, error: "扩展未初始化" };
+    return { success: false, count: 0, filePath, error: t("Extension not initialized", "扩展未初始化") };
   }
   
   if (!parseModelSpec(config.modelSpec)) {
-    return { success: false, count: 0, filePath, error: "无效的模型规格" };
+    return { success: false, count: 0, filePath, error: t("Invalid model spec", "无效的模型规格") };
   }
   const resolvedModel = resolveModelSpec(config.modelSpec);
   if (!resolvedModel) {
@@ -768,7 +769,7 @@ export async function generateVibesBatch(
       .filter(vibe => vibe.length > 3 && vibe !== "...");  // Filter invalid
     
     if (vibes.length === 0) {
-      return { success: false, count: 0, filePath, error: "未生成有效的 vibe" };
+      return { success: false, count: 0, filePath, error: t("No valid vibes generated", "未生成有效的 vibe") };
     }
     
     // Save to file
@@ -782,7 +783,7 @@ export async function generateVibesBatch(
     
     return { success: true, count: vibes.length, filePath };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "未知错误";
+    const message = error instanceof Error ? error.message : t("Unknown error", "未知错误");
     return { success: false, count: 0, filePath, error: message };
   }
 }

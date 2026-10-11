@@ -2,6 +2,7 @@ import { ipcMain, shell, type BrowserWindow, type IpcMainInvokeEvent } from "ele
 import path from "node:path";
 import type { SessionRef } from "@rsi-agent-pi/session-driver";
 import type {
+  AppLocale,
   ComposerAttachment,
   DesktopAppState,
   WorkspaceSessionTarget,
@@ -17,6 +18,7 @@ import {
   type CustomProviderProbeResult,
 } from "../../contracts/ipc";
 import type { DesktopAppStore } from "../application/app-store";
+import { t } from "../t";
 import type { NotificationPermissionService } from "../platform/notification-permission";
 import type { TerminalService } from "../platform/terminal-service";
 import type { ThemeManager } from "../platform/theme-manager";
@@ -29,6 +31,7 @@ import { registerReviewRequests, type ReviewRequestsOwner } from "./review-reque
 import { mainFrameHandler } from "./main-frame-ipc";
 import { assertComposerAttachmentPixels } from "./composer-attachment-pixels";
 import {
+  expectAppLocale,
   expectAppView,
   expectBoolean,
   expectComposerAttachments,
@@ -162,6 +165,8 @@ type SettingsOwner = Pick<
   | "setCodemodeAlwaysOn"
   | "getMemloopSettings"
   | "setMemloopSettings"
+  | "getLocale"
+  | "setLocale"
   | "setNotificationPreferences"
   | "setIntegratedTerminalShell"
   | "setEnableTransparency"
@@ -185,6 +190,8 @@ export interface DesktopIpcOwners {
 export interface DesktopIpcCapabilities {
   readonly ping: () => string;
   readonly theme: ThemeManager;
+  /** Applies the persisted locale to the main process and its spawned children. */
+  readonly applyLocale: (locale: AppLocale) => void;
   readonly openExternal: (url: string) => Promise<void>;
   readonly checkForUpdates: (window: BrowserWindow | null) => Promise<void>;
   readonly pickWorkspace: (window: BrowserWindow) => Promise<DesktopAppState>;
@@ -305,6 +312,16 @@ export function registerDesktopIpc({
     const presetId = expectThemePresetId(rawPresetId);
     return run(event, () => owners.state.setThemePresetId(presetId));
   });
+  ipcMain.handle(desktopIpc.getLocale, (event) => {
+    windows.windowForSender(event.sender);
+    return owners.settings.getLocale();
+  });
+  ipcMain.handle(desktopIpc.setLocale, (event, rawLocale: unknown) => {
+    windows.windowForSender(event.sender);
+    const locale = expectAppLocale(rawLocale);
+    capabilities.applyLocale(locale);
+    return run(event, () => owners.settings.setLocale(locale));
+  });
   ipcMain.handle(desktopIpc.openExternal, (event, rawUrl: unknown) => {
     windows.windowForSender(event.sender);
     return capabilities.openExternal(expectString(rawUrl, "url"));
@@ -359,7 +376,7 @@ export function registerDesktopIpc({
     const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
     const workspacePath = owners.workspace.getWorkspacePath(workspaceId);
     if (!workspacePath) {
-      throw new Error(`未知项目：${workspaceId}`);
+      throw new Error(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     await shell.openPath(workspacePath);
   });
@@ -861,7 +878,7 @@ export function registerDesktopIpc({
             workspace.sessions.some((session) => session.id === target.sessionId),
         )
       ) {
-        throw new Error("草稿的任务不可用");
+        throw new Error(t("The draft's task is unavailable", "草稿的任务不可用"));
       }
       await windows.withComposerDraftPersistOrigin(event.sender, () =>
         owners.conversation.updateComposerDraft(target, draft),
@@ -911,7 +928,9 @@ export function registerDesktopIpc({
           selected?.workspaceId !== target.workspaceId ||
           selected.sessionId !== target.sessionId
         ) {
-          throw new Error("请返回卡片所属的会话以使用其按钮");
+          throw new Error(
+            t("Return to the card's thread to use its buttons", "请返回卡片所属的会话以使用其按钮"),
+          );
         }
       };
       requireCardThread();
@@ -1102,7 +1121,7 @@ function registerWorkspaceFileIpc(
       const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
       const workspacePath = workspace.getWorkspacePath(workspaceId);
       if (!workspacePath) {
-        throw new Error(`未知项目：${workspaceId}`);
+        throw new Error(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
       }
       return capabilities.readWorkspaceFile(workspacePath, expectString(rawFilePath, "filePath"));
     },
@@ -1114,7 +1133,7 @@ function registerWorkspaceFileIpc(
       const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
       const workspacePath = workspace.getWorkspacePath(workspaceId);
       if (!workspacePath) {
-        throw new Error(`未知项目：${workspaceId}`);
+        throw new Error(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
       }
       await capabilities.revealWorkspaceFile(workspacePath, expectString(rawFilePath, "filePath"));
     },
@@ -1129,7 +1148,10 @@ function registerWorkspaceFileIpc(
         state: "unavailable",
         error: {
           code: "workspace-unavailable",
-          message: "未找到此项目，变更文件不可用。",
+          message: t(
+            "Changed files are unavailable because this workspace could not be found.",
+            "未找到此项目，变更文件不可用。",
+          ),
         },
       } satisfies ChangedFilesResult;
     }
@@ -1154,7 +1176,7 @@ function registerWorkspaceFileIpc(
       const workspaceId = expectNonEmptyString(rawWorkspaceId, "workspaceId");
       const workspacePath = workspace.getWorkspacePath(workspaceId);
       if (!workspacePath) {
-        throw new Error(`未知项目：${workspaceId}`);
+        throw new Error(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
       }
       await capabilities.stageFile(workspacePath, expectString(rawFilePath, "filePath"), {
         sourcePath: expectOptionalString(rawStagingSourcePath, "stagingSourcePath"),
@@ -1169,7 +1191,7 @@ async function openOwnedFileInFinder(
   kind: "skill" | "extension",
 ): Promise<void> {
   if (!resolvedPath) {
-    throw new Error(`未知的 ${kind}：${requestedPath}`);
+    throw new Error(t(`Unknown ${kind}: ${requestedPath}`, `未知的 ${kind}：${requestedPath}`));
   }
   await shell.openPath(path.dirname(resolvedPath));
 }

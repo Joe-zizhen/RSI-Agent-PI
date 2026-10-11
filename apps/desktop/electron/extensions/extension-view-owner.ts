@@ -7,6 +7,7 @@ import type { DesktopHostAction } from "@rsi-agent-pi/extension-ui/browser";
 import { createChordServerConnection } from "@rsi-agent-pi/extension-ui/transport";
 import { sessionKey, type SessionRef } from "@rsi-agent-pi/session-driver";
 import type { DesktopExtensionViewInfo } from "../../contracts/extension-views";
+import { t } from "../t";
 import {
   resolveDesktopExtensionAsset,
   validateDesktopExtensionIdentity,
@@ -96,7 +97,9 @@ function validateDeclaration(declaration: DesktopViewDeclaration): void {
     throw new Error("Desktop view ID must be a lowercase identifier of at most 64 characters");
   }
   if (!declaration.title.trim() || declaration.title.length > 120) {
-    throw new Error("Desktop view title must be 1–120 characters");
+    throw new Error(
+      t("Desktop view title must be 1–120 characters", "桌面视图标题必须为 1–120 个字符"),
+    );
   }
   if (typeof declaration.backend !== "function") {
     throw new Error("Desktop view must declare a backend facet factory");

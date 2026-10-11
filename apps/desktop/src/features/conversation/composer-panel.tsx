@@ -36,6 +36,7 @@ import { ModelSelector } from "./model-selector";
 import { ExtensionNotices } from "../extensions/extension-notices";
 import { ExtensionFlagsBadge } from "../threads/extension-flags-selector";
 import type { ExtensionDockModel } from "../extensions/extension-session-ui";
+import { t, useLocale } from "../../t";
 
 interface ComposerPanelProps {
   readonly preparingTaskDraft?: boolean;
@@ -153,6 +154,7 @@ export function ComposerPanel({
   extensionNotices,
   annotations,
 }: ComposerPanelProps) {
+  useLocale();
   const hasComposerInput =
     composerDraft.trim().length > 0 || attachments.length > 0 || annotations.list.length > 0;
   const primaryActionIsStop = selectedSession.status === "running" && !hasComposerInput;
@@ -200,9 +202,12 @@ export function ComposerPanel({
           selectedMentionIndex={selectedMentionIndex}
           onSelectMention={onSelectMention}
           onEnableMentionExtension={onEnableMentionExtension}
-          textareaLabel="输入框"
+          textareaLabel={t("Composer", "输入框")}
           textareaTestId="composer"
-          textareaPlaceholder="让 pi 检查仓库、执行修复，或继续当前会话…"
+          textareaPlaceholder={t(
+            "Ask pi to inspect the repo, run a fix, or continue the current thread...",
+            "让 pi 检查仓库、执行修复，或继续当前会话…",
+          )}
           pinnedCards={pinnedCards}
           extensionDock={extensionDock}
           extensionDockExpanded={extensionDockExpanded}
@@ -231,7 +236,7 @@ export function ComposerPanel({
                 </div>
                 <div className="composer__actions">
                   <button
-                    aria-label="添加文件"
+                    aria-label={t("Attach files", "添加文件")}
                     className="icon-button composer__attach"
                     type="button"
                     onClick={onPickAttachments}
@@ -239,7 +244,11 @@ export function ComposerPanel({
                     <PlusIcon />
                   </button>
                   <button
-                    aria-label={primaryActionIsStop ? "停止运行" : "发送消息"}
+                    aria-label={
+                      primaryActionIsStop
+                        ? t("Stop run", "停止运行")
+                        : t("Send message", "发送消息")
+                    }
                     className="button button--primary button--cta-icon"
                     data-testid="send"
                     type="button"
@@ -260,11 +269,14 @@ export function ComposerPanel({
       {preparingTaskDraft ? (
         <div className="composer__footer-row">
           <p className="composer__hint" role="status" data-testid="composer-prepare-task-status">
-            正在准备任务…打开前会保存你当前的草稿。
+            {t(
+              "Preparing the task… Your current draft is saved before it opens.",
+              "正在准备任务…打开前会保存你当前的草稿。",
+            )}
           </p>
           {selectedSession.status === "running" ? (
             <button
-              aria-label="停止运行"
+              aria-label={t("Stop run", "停止运行")}
               className="button button--primary button--cta-icon"
               data-testid="stop-while-preparing-task"
               onClick={onStop}

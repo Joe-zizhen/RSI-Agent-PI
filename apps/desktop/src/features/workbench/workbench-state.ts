@@ -6,6 +6,7 @@ import {
   type ToolRef,
 } from "../../../contracts/workbench";
 import { EMPTY_FILE_TABS, openFile, openFileAtLine } from "./file-workbench-state";
+import { t } from "../../t";
 
 export interface WorkspaceFileReference {
   readonly workspaceId: string;
@@ -59,14 +60,17 @@ function actionLimitError(view: TaskWorkbenchTemplate, action: WorkbenchAction):
       view.files.tabs.tabs.length >= MAX_WORKBENCH_FILE_TABS &&
       !view.files.tabs.tabs.includes(action.file.path))
   ) {
-    return `已打开 ${MAX_WORKBENCH_FILE_TABS} 个文件标签页。请先关闭一个文件标签页再打开新的。`;
+    return t(
+      `${MAX_WORKBENCH_FILE_TABS} file tabs are open. Close one before opening another.`,
+      `已打开 ${MAX_WORKBENCH_FILE_TABS} 个文件标签页。请先关闭一个文件标签页再打开新的。`,
+    );
   }
   if (
     action.type === "open-tool" &&
     view.tools.length >= MAX_WORKBENCH_TOOLS &&
     !view.tools.some((tool) => toolRefId(tool) === toolRefId(action.tool))
   ) {
-    return "请先关闭一个工具标签页再打开新的。";
+    return t("Close a tool tab before opening another.", "请先关闭一个工具标签页再打开新的。");
   }
   return "";
 }

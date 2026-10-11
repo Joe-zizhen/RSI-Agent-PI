@@ -1,5 +1,6 @@
 import { Component, Fragment, type ReactNode } from "react";
 import type { DesktopAppView, StateHydrationFailure } from "./desktop-app-state";
+import { t, useLocale } from "../t";
 
 export type DesktopStartupSurfaceState =
   | { readonly kind: "loading" }
@@ -17,26 +18,54 @@ export interface DesktopStartupCopy {
 }
 
 const LOADING_COPY: DesktopStartupCopy = {
-  title: "正在加载会话记录",
-  body: "桌面外壳正在从主进程恢复文件夹和会话状态。",
+  get title() {
+    return t("Loading sessions", "正在加载会话记录");
+  },
+  get body() {
+    return t(
+      "The desktop shell is restoring folder and thread state from the main process.",
+      "桌面外壳正在从主进程恢复文件夹和会话状态。",
+    );
+  },
   status: "loading",
 };
 
 const STATE_FAILED_COPY: DesktopStartupCopy = {
-  title: "无法恢复会话记录",
-  body: "桌面外壳无法读取文件夹和会话状态。请重试，或重新启动应用。",
+  get title() {
+    return t("Couldn't restore sessions", "无法恢复会话记录");
+  },
+  get body() {
+    return t(
+      "The desktop shell couldn't read folder and thread state. Retry, or relaunch the app.",
+      "桌面外壳无法读取文件夹和会话状态。请重试，或重新启动应用。",
+    );
+  },
   status: "failed",
 };
 
 const BRIDGE_FAILED_COPY: DesktopStartupCopy = {
-  title: "无法恢复会话记录",
-  body: "桌面外壳未连接。请退出 RSI-Agent-PI 并重新打开。",
+  get title() {
+    return t("Couldn't restore sessions", "无法恢复会话记录");
+  },
+  get body() {
+    return t(
+      "The desktop shell isn't connected. Quit RSI-Agent-PI and reopen it.",
+      "桌面外壳未连接。请退出 RSI-Agent-PI 并重新打开。",
+    );
+  },
   status: "failed",
 };
 
 const CRASHED_COPY: DesktopStartupCopy = {
-  title: "出现问题",
-  body: "桌面窗口遇到意外错误。请重试以重新挂载，或重新启动应用。",
+  get title() {
+    return t("Something went wrong", "出现问题");
+  },
+  get body() {
+    return t(
+      "The desktop window hit an unexpected error. Retry to remount, or relaunch the app.",
+      "桌面窗口遇到意外错误。请重试以重新挂载，或重新启动应用。",
+    );
+  },
   status: "crashed",
 };
 
@@ -64,6 +93,7 @@ interface DesktopStartupSurfaceProps {
 }
 
 export function DesktopStartupSurface({ state, onRetry, onRelaunch }: DesktopStartupSurfaceProps) {
+  useLocale();
   const copy = startupSurfaceCopy(state);
   const retrying = state.kind === "failed" ? state.retrying : false;
   const showActions = copy.status !== "loading";
@@ -93,7 +123,7 @@ export function DesktopStartupSurface({ state, onRetry, onRelaunch }: DesktopSta
               disabled={retrying}
               onClick={onRetry}
             >
-              {retrying ? "正在重试…" : "重试"}
+              {retrying ? t("Retrying…", "正在重试…") : t("Retry", "重试")}
             </button>
             {showRelaunch ? (
               <button
@@ -102,7 +132,7 @@ export function DesktopStartupSurface({ state, onRetry, onRelaunch }: DesktopSta
                 type="button"
                 onClick={onRelaunch}
               >
-                重新启动 RSI-Agent-PI
+                {t("Relaunch RSI-Agent-PI", "重新启动 RSI-Agent-PI")}
               </button>
             ) : null}
           </div>

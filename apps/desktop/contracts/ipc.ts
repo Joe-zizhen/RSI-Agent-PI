@@ -29,6 +29,7 @@ import type {
   ChangeReviewFileStageResult,
 } from "./review";
 import type {
+  AppLocale,
   AppView,
   ComposerAttachment,
   CreateSessionInput,
@@ -245,6 +246,8 @@ export const desktopIpc = {
   setThemeMode: "pi-gui:set-theme-mode",
   setThemePresetId: "pi-gui:set-theme-preset-id",
   themeChanged: "pi-gui:theme-changed",
+  getLocale: "pi-gui:get-locale",
+  setLocale: "pi-gui:set-locale",
   windowFocused: "pi-gui:window-focused",
   ping: "app:ping",
   openExternal: "app:open-external",
@@ -823,6 +826,8 @@ export interface PiDesktopApi {
   setIntegratedTerminalShell(shell: string): Promise<DesktopAppState>;
   setEnableTransparency(enabled: boolean): Promise<DesktopAppState>;
   setThemePresetId(presetId: ThemePresetId): Promise<DesktopAppState>;
+  getLocale(): Promise<AppLocale>;
+  setLocale(locale: AppLocale): Promise<DesktopAppState>;
   ensureTerminalPanel(
     workspaceId: string,
     terminalScopeId: string,

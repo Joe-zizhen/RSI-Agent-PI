@@ -5,6 +5,7 @@ import type {
   RuntimeSnapshot,
 } from "@rsi-agent-pi/session-driver/runtime-types";
 import { SettingsSwitch } from "../settings/settings-controls";
+import { t, useLocale } from "../../t";
 
 interface FlagGroup {
   readonly title: string;
@@ -25,7 +26,7 @@ function setFlagEntries(values: ExtensionFlagValues | undefined): [string, true 
 }
 
 function flagsBadgeLabel(count: number): string {
-  return count > 0 ? `标志 · ${count}` : "标志";
+  return count > 0 ? t(`Flags · ${count}`, `标志 · ${count}`) : t("Flags", "标志");
 }
 
 /**
@@ -41,6 +42,7 @@ export function ExtensionFlagsSelector({
   readonly values: ExtensionFlagValues;
   readonly onSetFlag: (name: string, value: boolean | string) => void;
 }) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLSpanElement | null>(null);
   const groups = flagGroups(runtime);
@@ -109,7 +111,9 @@ export function ExtensionFlagsSelector({
                           type="text"
                           className="extension-flags__input"
                           aria-label={`--${flag.name}`}
-                          placeholder={typeof flag.default === "string" ? flag.default : "值"}
+                          placeholder={
+                            typeof flag.default === "string" ? flag.default : t("value", "值")
+                          }
                           spellCheck={false}
                           value={typeof value === "string" ? value : ""}
                           onChange={(event) => onSetFlag(flag.name, event.target.value)}
@@ -133,6 +137,7 @@ export function ExtensionFlagsBadge({
 }: {
   readonly values: ExtensionFlagValues | undefined;
 }) {
+  useLocale();
   const entries = setFlagEntries(values);
   if (entries.length === 0) return null;
   const summary = entries
@@ -142,7 +147,7 @@ export function ExtensionFlagsBadge({
     <span
       className="model-selector__badge extension-flags__badge--readonly"
       data-testid="extension-flags-session-badge"
-      title={`启动参数：\n${summary}`}
+      title={t(`Started with:\n${summary}`, `启动参数：\n${summary}`)}
     >
       {flagsBadgeLabel(entries.length)}
     </span>

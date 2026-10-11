@@ -7,6 +7,7 @@ import type {
 } from "../../../contracts/ipc";
 import { SettingsSegmented, SettingsSwitch } from "./settings-controls";
 import { SettingsGroup, SettingsRow } from "./settings-utils";
+import { t, useLocale } from "../../t";
 
 /** Each returns the error to show, or undefined when the change was saved. */
 export interface McpSettingsActions {
@@ -26,6 +27,7 @@ interface SettingsMcpSectionProps {
 }
 
 export function SettingsMcpSection({ workspaceId, actions }: SettingsMcpSectionProps) {
+  useLocale();
   // Tagged with its workspace: after a switch, the old list (whose buttons would act on the new
   // workspace) is gone at once, until the new one loads.
   const [loaded, setLoaded] = useState<
@@ -84,13 +86,17 @@ export function SettingsMcpSection({ workspaceId, actions }: SettingsMcpSectionP
 
   const servers = snapshot?.servers ?? [];
   const problems = [...(error ? [error] : []), ...(snapshot?.errors ?? [])];
-  const globalConfigPath = snapshot?.globalConfigPath ?? "pi 的全局 mcp.json";
+  const globalConfigPath =
+    snapshot?.globalConfigPath ?? t("pi's global mcp.json", "pi 的全局 mcp.json");
 
   return (
     <>
       <SettingsGroup
-        title="服务器"
-        description={`与终端里的 pi 共用：${globalConfigPath}，以及本项目的 .pi/mcp.json。`}
+        title={t("Servers", "服务器")}
+        description={t(
+          `Shared with pi in the terminal: ${globalConfigPath}, plus this project's .pi/mcp.json.`,
+          `与终端里的 pi 共用：${globalConfigPath}，以及本项目的 .pi/mcp.json。`,
+        )}
       >
         {problems.map((problem) => (
           <div className="settings-row" key={problem}>
@@ -100,8 +106,10 @@ export function SettingsMcpSection({ workspaceId, actions }: SettingsMcpSectionP
         {snapshot && servers.length === 0 ? (
           <div className="settings-row" data-testid="mcp-servers-empty">
             <span className="settings-row__description">
-              暂无 MCP 服务器。服务器来自 {globalConfigPath}，终端里的 pi
-              也使用该文件。连接状态与登录情况在会话中查看：输入 /mcp。
+              {t(
+                `No MCP servers yet. Servers come from ${globalConfigPath}, and the pi in your terminal uses the same file. Connection status and sign-in are shown in a session: type /mcp.`,
+                `暂无 MCP 服务器。服务器来自 ${globalConfigPath}，终端里的 pi 也使用该文件。连接状态与登录情况在会话中查看：输入 /mcp。`,
+              )}
             </span>
           </div>
         ) : null}
@@ -128,15 +136,18 @@ export function SettingsMcpSection({ workspaceId, actions }: SettingsMcpSectionP
         onAdd={(server) => apply(() => actions.onAddServer(server))}
       />
 
-      <SettingsGroup title="代码模式">
+      <SettingsGroup title={t("Code mode", "代码模式")}>
         <SettingsRow
-          title="始终开启"
-          description="允许模型运行调用工具的脚本。开启后对已打开的会话同样生效；关闭后仅对新建会话生效。关闭时，pi 会在 MCP 服务器需要时自动开启。"
+          title={t("Always on", "始终开启")}
+          description={t(
+            "Lets the model run scripts that call tools. Turning it on also applies to open threads; turning it off applies to new threads. Off, pi turns it on when an MCP server needs it.",
+            "允许模型运行调用工具的脚本。开启后对已打开的会话同样生效；关闭后仅对新建会话生效。关闭时，pi 会在 MCP 服务器需要时自动开启。",
+          )}
         >
           <SettingsSwitch
             checked={snapshot?.codemodeAlwaysOn ?? false}
             disabled={pending || !snapshot}
-            label="始终开启代码模式"
+            label={t("Code mode always on", "始终开启代码模式")}
             onChange={(alwaysOn) => run(() => actions.onSetCodemodeAlwaysOn(alwaysOn))}
           />
         </SettingsRow>
@@ -156,6 +167,7 @@ function McpServerRow({
   readonly onToggle: (enabled: boolean) => void;
   readonly onRemove: () => void;
 }) {
+  useLocale();
   const target =
     server.transport === "http"
       ? (server.url ?? "")
@@ -168,7 +180,9 @@ function McpServerRow({
           <div className="settings-row__description">{server.description}</div>
         ) : null}
         <div className="settings-row__description">
-          {server.scope === "project" ? `本项目 · ${target}` : target}
+          {server.scope === "project"
+            ? t(`This project · ${target}`, `本项目 · ${target}`)
+            : target}
         </div>
       </div>
       <div className="settings-row__actions">
@@ -179,13 +193,13 @@ function McpServerRow({
             type="button"
             onClick={onRemove}
           >
-            移除
+            {t("Remove", "移除")}
           </button>
         ) : null}
         <SettingsSwitch
           checked={server.enabled}
           disabled={disabled}
-          label={`启用 ${server.name}`}
+          label={t(`Enable ${server.name}`, `启用 ${server.name}`)}
           onChange={onToggle}
         />
       </div>
@@ -195,9 +209,15 @@ function McpServerRow({
 
 /** Removing deletes the whole entry, including the settings the list never shows. */
 export function removeServerQuestion(server: McpServerRecord): string {
-  const question = `移除 MCP 服务器“${server.name}”？终端里的 pi 也会停止使用它。`;
+  const question = t(
+    `Remove the MCP server “${server.name}”? The pi in your terminal stops using it too.`,
+    `移除 MCP 服务器“${server.name}”？终端里的 pi 也会停止使用它。`,
+  );
   return server.hasHiddenSettings
-    ? `${question} 其隐藏设置（环境变量、请求头、登录配置）也会被删除。`
+    ? t(
+        `${question} Its hidden settings (environment variables, headers, sign-in config) are deleted too.`,
+        `${question} 其隐藏设置（环境变量、请求头、登录配置）也会被删除。`,
+      )
     : question;
 }
 
@@ -212,6 +232,7 @@ function AddMcpServerForm({
   readonly disabled: boolean;
   readonly onAdd: (server: NewMcpServerInput) => Promise<string | undefined>;
 }) {
+  useLocale();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [kind, setKind] = useState<ServerKind>("command");
@@ -239,10 +260,13 @@ function AddMcpServerForm({
   };
 
   return (
-    <SettingsGroup title="添加服务器" description={`保存到 ${configPath}。`}>
-      <SettingsRow title="名称">
+    <SettingsGroup
+      title={t("Add server", "添加服务器")}
+      description={t(`Saved to ${configPath}.`, `保存到 ${configPath}。`)}
+    >
+      <SettingsRow title={t("Name", "名称")}>
         <input
-          aria-label="服务器名称"
+          aria-label={t("Server name", "服务器名称")}
           className="settings-text-input"
           disabled={disabled}
           placeholder="docs"
@@ -250,21 +274,27 @@ function AddMcpServerForm({
           onChange={(event) => setName(event.target.value)}
         />
       </SettingsRow>
-      <SettingsRow title="用途说明" description="可选。pi 会用它向模型介绍该服务器。">
+      <SettingsRow
+        title={t("What it does", "用途说明")}
+        description={t(
+          "Optional. pi tells the model about the server with it.",
+          "可选。pi 会用它向模型介绍该服务器。",
+        )}
+      >
         <input
-          aria-label="服务器说明"
+          aria-label={t("Server description", "服务器说明")}
           className="settings-text-input"
           disabled={disabled}
-          placeholder="搜索团队文档"
+          placeholder={t("Searches the team's docs", "搜索团队文档")}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
       </SettingsRow>
-      <SettingsRow title="类型">
+      <SettingsRow title={t("Type", "类型")}>
         <SettingsSegmented<ServerKind>
-          label="服务器类型"
+          label={t("Server type", "服务器类型")}
           options={[
-            { value: "command", label: "命令" },
+            { value: "command", label: t("Command", "命令") },
             { value: "url", label: "URL" },
           ]}
           value={kind}
@@ -273,9 +303,12 @@ function AddMcpServerForm({
       </SettingsRow>
       {kind === "command" ? (
         <>
-          <SettingsRow title="命令" description="在本机为每个会话启动。">
+          <SettingsRow
+            title={t("Command", "命令")}
+            description={t("Started on this machine for each thread.", "在本机为每个会话启动。")}
+          >
             <input
-              aria-label="服务器命令"
+              aria-label={t("Server command", "服务器命令")}
               className="settings-text-input"
               disabled={disabled}
               placeholder="npx"
@@ -283,9 +316,15 @@ function AddMcpServerForm({
               onChange={(event) => setCommand(event.target.value)}
             />
           </SettingsRow>
-          <SettingsRow title="参数" description="以空格分隔；含空格的参数请加引号。">
+          <SettingsRow
+            title={t("Arguments", "参数")}
+            description={t(
+              "Separated by spaces; quote an argument that contains spaces.",
+              "以空格分隔；含空格的参数请加引号。",
+            )}
+          >
             <input
-              aria-label="服务器参数"
+              aria-label={t("Server arguments", "服务器参数")}
               className="settings-text-input"
               disabled={disabled}
               placeholder="-y @modelcontextprotocol/server-filesystem ."
@@ -297,10 +336,13 @@ function AddMcpServerForm({
       ) : (
         <SettingsRow
           title="URL"
-          description="可流式传输的 HTTP 服务器。如需登录，请在会话中输入 /mcp login。"
+          description={t(
+            "A streamable HTTP server. If it needs a sign-in, type /mcp login in a thread.",
+            "可流式传输的 HTTP 服务器。如需登录，请在会话中输入 /mcp login。",
+          )}
         >
           <input
-            aria-label="服务器 URL"
+            aria-label={t("Server URL", "服务器 URL")}
             className="settings-text-input"
             disabled={disabled}
             placeholder="https://example.com/mcp"
@@ -311,7 +353,10 @@ function AddMcpServerForm({
       )}
       <div className="settings-row">
         <span className="settings-row__description">
-          已打开的会话会重新加载以启动它。环境变量或请求头请在文件中自行添加。
+          {t(
+            "Open threads reload to start it. Add env or headers in the file itself.",
+            "已打开的会话会重新加载以启动它。环境变量或请求头请在文件中自行添加。",
+          )}
         </span>
         <div className="settings-row__control">
           <button
@@ -322,7 +367,7 @@ function AddMcpServerForm({
               submit().catch(() => undefined);
             }}
           >
-            添加服务器
+            {t("Add server", "添加服务器")}
           </button>
         </div>
       </div>

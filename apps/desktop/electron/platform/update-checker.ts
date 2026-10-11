@@ -1,4 +1,5 @@
 import { app, net, Notification, shell } from "electron";
+import { t } from "../t";
 
 /**
  * Release source for the RSI-Agent-PI fork. Replace the placeholder owner and
@@ -44,8 +45,11 @@ export function showUpdateNotification(
     return;
   }
   const notification = new Notification({
-    title: "RSI-Agent-PI 有新版本",
-    body: `版本 ${latestVersion} 可用（你正在使用 ${currentVersion}）。点击查看发布页。`,
+    title: t("RSI-Agent-PI Release Available", "RSI-Agent-PI 有新版本"),
+    body: t(
+      `Version ${latestVersion} is available (you have ${currentVersion}). Click to view the release.`,
+      `版本 ${latestVersion} 可用（你正在使用 ${currentVersion}）。点击查看发布页。`,
+    ),
   });
   notification.on("click", () => {
     void openReleasesPage(releaseUrl).catch((error: unknown) => {
@@ -72,22 +76,28 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
   } catch (error) {
     const message =
       error instanceof Error && error.name === "AbortError"
-        ? "更新检查超时。"
+        ? t("The update check timed out.", "更新检查超时。")
         : error instanceof Error
           ? error.message
-          : "更新检查无法连接 GitHub。";
+          : t("The update check could not reach GitHub.", "更新检查无法连接 GitHub。");
     return { status: "error", message };
   } finally {
     clearTimeout(timeout);
   }
 
   if (res.status === 404) {
-    return { status: "error", message: "尚未发布稳定的 RSI-Agent-PI 版本。" };
+    return {
+      status: "error",
+      message: t(
+        "No stable RSI-Agent-PI release has been published yet.",
+        "尚未发布稳定的 RSI-Agent-PI 版本。",
+      ),
+    };
   }
   if (!res.ok) {
     return {
       status: "error",
-      message: `GitHub Releases 返回 ${res.status}。`,
+      message: t(`GitHub Releases returned ${res.status}.`, `GitHub Releases 返回 ${res.status}。`),
     };
   }
 
@@ -95,13 +105,22 @@ export async function checkForUpdate(): Promise<UpdateCheckResult> {
   try {
     release = (await res.json()) as GitHubRelease;
   } catch {
-    return { status: "error", message: "GitHub Releases 返回了无法读取的响应。" };
+    return {
+      status: "error",
+      message: t(
+        "GitHub Releases returned an unreadable response.",
+        "GitHub Releases 返回了无法读取的响应。",
+      ),
+    };
   }
 
   if (!release?.tag_name) {
     return {
       status: "error",
-      message: "GitHub Releases 未返回任何已发布版本。",
+      message: t(
+        "GitHub Releases did not return any published versions.",
+        "GitHub Releases 未返回任何已发布版本。",
+      ),
     };
   }
 

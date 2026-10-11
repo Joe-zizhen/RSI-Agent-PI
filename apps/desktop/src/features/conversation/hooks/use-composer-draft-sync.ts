@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type SetStateAction } from "r
 import type { SessionRef } from "@rsi-agent-pi/session-driver/types";
 import type { ComposerDraftSyncSource, DesktopAppState } from "../../../../contracts/desktop-state";
 import type { PiDesktopApi } from "../../../../contracts/ipc";
+import { t, useLocale } from "../../../t";
 
 /** Persist/state/command restore saved or submitted text. They must not overwrite a newer local edit. */
 export function shouldAdoptComposerSnapshot(
@@ -34,6 +35,7 @@ interface PendingComposerDraftWrite {
  * flush so a pending write lands before the active session changes.
  */
 export function useComposerDraftSync(params: UseComposerDraftSyncParams) {
+  useLocale();
   const { api, snapshot, selectedSession } = params;
   const selectedSessionKey = selectedSession
     ? `${selectedSession.workspaceId}:${selectedSession.sessionId}`
@@ -219,14 +221,16 @@ export function useComposerDraftSync(params: UseComposerDraftSyncParams) {
 
   const flushComposerDraftAsync = useCallback(
     async (target: SessionRef): Promise<void> => {
-      if (!api) throw new Error("桌面连接不可用。");
+      if (!api) throw new Error(t("The desktop connection is unavailable.", "桌面连接不可用。"));
       const sessionKey = `${target.workspaceId}:${target.sessionId}`;
       const requireCurrentSession = () => {
         if (
           currentSessionKeyRef.current !== sessionKey ||
           hydratedComposerSessionKeyRef.current !== sessionKey
         )
-          throw new Error("任务在草稿保存前已发生变更。");
+          throw new Error(
+            t("The task changed before its draft could be saved.", "任务在草稿保存前已发生变更。"),
+          );
       };
       const cancelPendingWrite = () => {
         if (composerDraftWriteTimerRef.current !== null) {

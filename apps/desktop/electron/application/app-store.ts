@@ -39,6 +39,7 @@ import type {
   RuntimeSnapshot,
 } from "@rsi-agent-pi/session-driver/runtime-types";
 import {
+  type AppLocale,
   type AppView,
   type ComposerAttachment,
   type ComposerDraftSyncSource,
@@ -65,6 +66,7 @@ import {
   type TranscriptMessage,
   type WorkspaceRecord,
   type WorkspaceSessionTarget,
+  isAppLocale,
   isThemeMode,
   isThemePresetId,
   type CreateScheduledTaskInput,
@@ -83,6 +85,7 @@ import {
   updateSessionRecord,
 } from "../conversation/app-store-session-state";
 import { StreamingUiPublisher } from "../conversation/streaming-ui-publisher";
+import { t } from "../t";
 import type { RefreshStateOptions } from "./refresh-state-options";
 import {
   readPersistedUiState,
@@ -610,8 +613,16 @@ export class DesktopAppStore {
 
   private requireWorkbenchTask(target: SessionRef): void {
     if (this.persistenceReadiness !== "ready")
-      throw new Error("已保存的 UI 状态不可用，请先修复或恢复后再保存布局。");
-    if (!this.sessionFromState(target)) throw new Error("工作台任务不在此项目中。");
+      throw new Error(
+        t(
+          "Saved UI state is unavailable; repair or restore it before saving layouts.",
+          "已保存的 UI 状态不可用，请先修复或恢复后再保存布局。",
+        ),
+      );
+    if (!this.sessionFromState(target))
+      throw new Error(
+        t("Workbench task does not exist in this workspace.", "工作台任务不在此项目中。"),
+      );
   }
 
   snapshot(): DesktopAppState {
@@ -979,7 +990,12 @@ export class DesktopAppStore {
     await this.initialize();
     const sessionRef = toSessionRef(target);
     if (!this.sessionFromState(sessionRef)) {
-      return this.withError(`未知会话记录：${target.workspaceId}:${target.sessionId}`);
+      return this.withError(
+        t(
+          `Unknown session: ${target.workspaceId}:${target.sessionId}`,
+          `未知会话记录：${target.workspaceId}:${target.sessionId}`,
+        ),
+      );
     }
     if (!this.markSessionViewed(sessionRef)) {
       return structuredClone(this.state);
@@ -1001,10 +1017,20 @@ export class DesktopAppStore {
     const sessionRef = toSessionRef(target);
     const session = this.sessionFromState(sessionRef);
     if (!session) {
-      return this.withError(`未知会话记录：${target.workspaceId}:${target.sessionId}`);
+      return this.withError(
+        t(
+          `Unknown session: ${target.workspaceId}:${target.sessionId}`,
+          `未知会话记录：${target.workspaceId}:${target.sessionId}`,
+        ),
+      );
     }
     if (pinned && session.archivedAt) {
-      return this.withError(`不能置顶已归档的会话记录：${target.workspaceId}:${target.sessionId}`);
+      return this.withError(
+        t(
+          `Cannot pin archived session: ${target.workspaceId}:${target.sessionId}`,
+          `不能置顶已归档的会话记录：${target.workspaceId}:${target.sessionId}`,
+        ),
+      );
     }
 
     const key = sessionKey(sessionRef);
@@ -1121,7 +1147,7 @@ export class DesktopAppStore {
     this.addExtensionNotice(sessionRef, {
       id: `action-failure:${randomUUID()}`,
       level: "error",
-      message: `无法运行该按钮：${message}`,
+      message: t(`Couldn't run that button: ${message}`, `无法运行该按钮：${message}`),
       createdAt: new Date().toISOString(),
     });
     this.state = this.syncDerivedSessionState(
@@ -1418,7 +1444,9 @@ export class DesktopAppStore {
   async setThemeMode(themeMode: ThemeMode): Promise<DesktopAppState> {
     await this.initialize();
     if (!isThemeMode(themeMode)) {
-      throw new Error(`不支持的主题模式：${String(themeMode)}`);
+      throw new Error(
+        t(`Unsupported theme mode: ${String(themeMode)}`, `不支持的主题模式：${String(themeMode)}`),
+      );
     }
     if (this.state.themeMode === themeMode) {
       return structuredClone(this.state);
@@ -1436,7 +1464,12 @@ export class DesktopAppStore {
   async setThemePresetId(themePresetId: ThemePresetId): Promise<DesktopAppState> {
     await this.initialize();
     if (!isThemePresetId(themePresetId)) {
-      throw new Error(`不支持的主题预设：${String(themePresetId)}`);
+      throw new Error(
+        t(
+          `Unsupported theme preset: ${String(themePresetId)}`,
+          `不支持的主题预设：${String(themePresetId)}`,
+        ),
+      );
     }
     if (this.state.themePresetId === themePresetId) {
       return structuredClone(this.state);
@@ -1444,6 +1477,34 @@ export class DesktopAppStore {
     this.state = {
       ...this.state,
       themePresetId,
+      lastError: undefined,
+      revision: this.state.revision + 1,
+    };
+    await this.persistUiState();
+    return this.emit();
+  }
+
+  async getLocale(): Promise<AppLocale> {
+    await this.initialize();
+    return this.state.locale;
+  }
+
+  async setLocale(locale: AppLocale): Promise<DesktopAppState> {
+    await this.initialize();
+    if (!isAppLocale(locale)) {
+      throw new Error(
+        t(
+          `Unsupported interface language: ${String(locale)}`,
+          `不支持的界面语言：${String(locale)}`,
+        ),
+      );
+    }
+    if (this.state.locale === locale) {
+      return structuredClone(this.state);
+    }
+    this.state = {
+      ...this.state,
+      locale,
       lastError: undefined,
       revision: this.state.revision + 1,
     };
@@ -1489,7 +1550,12 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError("部分打开的会话未能重新加载，重新打开后将应用更改。");
+        : this.withError(
+            t(
+              "Some open threads could not reload; they pick up the change when reopened.",
+              "部分打开的会话未能重新加载，重新打开后将应用更改。",
+            ),
+          );
     });
   }
 
@@ -1515,7 +1581,9 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(targetWorkspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${targetWorkspaceId}`);
+      return this.withError(
+        t(`Unknown workspace: ${targetWorkspaceId}`, `未知项目：${targetWorkspaceId}`),
+      );
     }
     return this.withErrorHandling(async () => {
       const snapshot = await this.driver.runtimeSupervisor.setProjectDefaultModel(ws, {
@@ -1541,7 +1609,9 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(targetWorkspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${targetWorkspaceId}`);
+      return this.withError(
+        t(`Unknown workspace: ${targetWorkspaceId}`, `未知项目：${targetWorkspaceId}`),
+      );
     }
     return this.withErrorHandling(async () => {
       const snapshot = await this.driver.runtimeSupervisor.setProjectDefaultThinkingLevel(
@@ -1570,7 +1640,7 @@ export class DesktopAppStore {
     const targetWorkspaceId = this.resolveModelSettingsWorkspaceId(workspaceId);
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${workspaceId}`);
+      return this.withError(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
 
     return this.withErrorHandling(async () => {
@@ -1661,7 +1731,9 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(targetWorkspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${targetWorkspaceId}`);
+      return this.withError(
+        t(`Unknown workspace: ${targetWorkspaceId}`, `未知项目：${targetWorkspaceId}`),
+      );
     }
     return this.withErrorHandling(async () => {
       const snapshot = await this.driver.runtimeSupervisor.setProjectScopedModelPatterns(
@@ -1764,7 +1836,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${workspaceId}`);
+      return this.withError(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     const wasDisabled = this.disabledBuiltinExtensions.has(name);
     const setDisabled = (disabled: boolean) =>
@@ -1790,7 +1862,12 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError("部分打开的会话未能重新加载，重新打开后将应用 RSI-Agent-PI 工具更改。");
+        : this.withError(
+            t(
+              "Some open threads could not reload; they pick up the RSI-Agent-PI tools change when reopened.",
+              "部分打开的会话未能重新加载，重新打开后将应用 RSI-Agent-PI 工具更改。",
+            ),
+          );
     });
   }
 
@@ -1820,7 +1897,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      throw new Error(`未知项目：${workspaceId}`);
+      throw new Error(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     const listing = this.driver.runtimeSupervisor.listMcpServers(ws);
     return {
@@ -1871,7 +1948,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${workspaceId}`);
+      return this.withError(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     return this.withErrorHandling(async () => {
       await this.driver.runtimeSupervisor.setCodemodeAlwaysOn(ws, alwaysOn);
@@ -1884,7 +1961,12 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError("部分打开的会话未能重新加载，重新打开后将获得代码模式。");
+        : this.withError(
+            t(
+              "Some open threads could not reload; they get code mode when reopened.",
+              "部分打开的会话未能重新加载，重新打开后将获得代码模式。",
+            ),
+          );
     });
   }
 
@@ -1896,7 +1978,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      throw new Error(`未知项目：${workspaceId}`);
+      throw new Error(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     const record = await readGlobalSettingsRecord();
     const section = record.memloop;
@@ -1912,7 +1994,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${workspaceId}`);
+      return this.withError(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     return this.withErrorHandling(async () => {
       const record = await readGlobalSettingsRecord();
@@ -1942,7 +2024,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${workspaceId}`);
+      return this.withError(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
     return this.withErrorHandling(async () => {
       await change(ws);
@@ -1953,7 +2035,12 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError("部分打开的会话未能重新加载，重新打开后将应用 MCP 更改。");
+        : this.withError(
+            t(
+              "Some open threads could not reload; they pick up the MCP change when reopened.",
+              "部分打开的会话未能重新加载，重新打开后将应用 MCP 更改。",
+            ),
+          );
     });
   }
 
@@ -1968,7 +2055,7 @@ export class DesktopAppStore {
     await this.initialize();
     const ws = this.workspaceRefFromState(workspaceId);
     if (!ws) {
-      return this.withError(`未知项目：${workspaceId}`);
+      return this.withError(t(`Unknown workspace: ${workspaceId}`, `未知项目：${workspaceId}`));
     }
 
     return this.withErrorHandling(async () => {
@@ -1996,7 +2083,12 @@ export class DesktopAppStore {
       const state = await this.refreshState({ clearLastError: true });
       return reloaded
         ? state
-        : this.withError("部分打开的会话未能重新加载，重新打开后将应用更改。");
+        : this.withError(
+            t(
+              "Some open threads could not reload; they pick up the change when reopened.",
+              "部分打开的会话未能重新加载，重新打开后将应用更改。",
+            ),
+          );
     });
   }
 
@@ -2083,7 +2175,10 @@ export class DesktopAppStore {
       this.blockPersistence();
       startupDiagnostics.push({
         scope: "application",
-        message: `无法完整恢复已保存的 UI 状态：${message}`,
+        message: t(
+          `Persisted UI state could not be fully restored: ${message}`,
+          `无法完整恢复已保存的 UI 状态：${message}`,
+        ),
       });
       this.state = {
         ...this.state,
@@ -2108,7 +2203,10 @@ export class DesktopAppStore {
       this.blockPersistence();
       startupDiagnostics.push({
         scope: "application",
-        message: `无法验证已保存的附件：${message}`,
+        message: t(
+          `Saved attachments could not be validated: ${message}`,
+          `无法验证已保存的附件：${message}`,
+        ),
       });
       this.state = {
         ...this.state,
@@ -2133,7 +2231,10 @@ export class DesktopAppStore {
       this.blockPersistence();
       startupDiagnostics.push({
         scope: "application",
-        message: `无法完整迁移旧版 UI 状态：${message}`,
+        message: t(
+          `Legacy UI state could not be fully migrated: ${message}`,
+          `无法完整迁移旧版 UI 状态：${message}`,
+        ),
       });
       this.state = {
         ...this.state,
@@ -2160,7 +2261,10 @@ export class DesktopAppStore {
       this.state = { ...this.state, scheduledTasks: [] };
       startupDiagnostics.push({
         scope: "application",
-        message: `无法加载计划任务：${message}`,
+        message: t(
+          `Scheduled tasks could not be loaded: ${message}`,
+          `无法加载计划任务：${message}`,
+        ),
       });
     }
 
@@ -2259,6 +2363,7 @@ export class DesktopAppStore {
       workspaceOrder: persisted.workspaceOrder ?? [],
       themeMode: persisted.themeMode ?? this.state.themeMode,
       themePresetId: persisted.themePresetId ?? this.state.themePresetId,
+      locale: persisted.locale ?? this.state.locale,
       sidebarCollapsed: persisted.sidebarCollapsed ?? this.state.sidebarCollapsed,
       threadGrouping: persisted.threadGrouping ?? "time",
       collapsedWorkspaceIds: persisted.collapsedWorkspaceIds ?? [],
@@ -2317,7 +2422,7 @@ export class DesktopAppStore {
     try {
       const workspaceStat = await stat(workspacePath);
       if (!workspaceStat.isDirectory()) {
-        throw new Error("路径不是目录。");
+        throw new Error(t("Path is not a directory.", "路径不是目录。"));
       }
       await this.driver.syncWorkspace(workspacePath, displayName);
       return undefined;
@@ -3216,7 +3321,10 @@ export class DesktopAppStore {
     const key = sessionKey(sessionRef);
     const pending = this.pendingRuntimeCommandsBySession.get(key);
     if (pending) {
-      const message = `/${pending.command.name} 需要终端专属的 ${formatCapabilityLabel(issue.capability)}，RSI-Agent-PI 暂不支持。请在终端中使用 pi 执行该命令。`;
+      const message = t(
+        `/${pending.command.name} requires terminal-only ${formatCapabilityLabel(issue.capability)} and is not supported in RSI-Agent-PI yet. Use pi in the terminal for this command.`,
+        `/${pending.command.name} 需要终端专属的 ${formatCapabilityLabel(issue.capability)}，RSI-Agent-PI 暂不支持。请在终端中使用 pi 执行该命令。`,
+      );
       pending.blockedMessage = message;
       recordLearnedCommandCompatibility(
         this.extensionCommandCompatibilityByWorkspace,
@@ -4032,6 +4140,7 @@ export class DesktopAppStore {
         : undefined,
       themeMode: this.state.themeMode,
       themePresetId: this.state.themePresetId,
+      locale: this.state.locale,
       sidebarCollapsed: this.state.sidebarCollapsed || undefined,
       threadGrouping: this.state.threadGrouping,
       collapsedWorkspaceIds:
@@ -4811,11 +4920,20 @@ function applyModelSettingsSnapshot(
 function describeStoreError(error: unknown): string {
   if (isSessionLeasedError(error)) {
     const { holder } = error;
-    const where = holder.surface === "pi-cli" ? "pi CLI" : "另一个 pi 实例";
+    const where =
+      holder.surface === "pi-cli"
+        ? t("the pi CLI", "pi CLI")
+        : t("another pi instance", "另一个 pi 实例");
     // A holder on this machine keeps its lease while it runs; one elsewhere
     // may have crashed, and its lease then expires after a few minutes.
-    const next = holder.hostname === hostname() ? "请在那里关闭它" : "请在那里关闭它，或等待几分钟";
-    return `此会话记录当前在 ${where} 打开（${holder.hostname} 主机上的 pid ${holder.pid}）。${next}，即可在此继续。`;
+    const next =
+      holder.hostname === hostname()
+        ? t("Close it there", "请在那里关闭它")
+        : t("Close it there or wait a few minutes", "请在那里关闭它，或等待几分钟");
+    return t(
+      `This session is currently open in ${where} (pid ${holder.pid} on host ${holder.hostname}). ${next} to continue here.`,
+      `此会话记录当前在 ${where} 打开（${holder.hostname} 主机上的 pid ${holder.pid}）。${next}，即可在此继续。`,
+    );
   }
   return error instanceof Error ? error.message : String(error);
 }
@@ -4973,15 +5091,15 @@ function reconcilePinnedSessionOrder(
 function formatCapabilityLabel(capability: string): string {
   switch (capability) {
     case "custom":
-      return "自定义界面";
+      return t("custom UI", "自定义界面");
     case "onTerminalInput":
-      return "终端输入";
+      return t("terminal input", "终端输入");
     case "setEditorComponent":
-      return "自定义编辑器界面";
+      return t("custom editor UI", "自定义编辑器界面");
     case "setFooter":
-      return "底部界面";
+      return t("footer UI", "底部界面");
     case "setHeader":
-      return "顶部界面";
+      return t("header UI", "顶部界面");
     default:
       return capability.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
   }

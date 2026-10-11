@@ -82,7 +82,10 @@ test("白名单：Provider ID 标签被译，API key 与 Base URL 保持英文",
   const endpoints = read(
     "apps/desktop/src/features/settings/settings-custom-endpoints-section.tsx",
   );
-  assert.ok(endpoints.includes("<span>提供商 ID</span>"), "Provider ID 标签未译成「提供商 ID」");
+  assert.ok(
+    /<span>\{t\("Provider ID",\s*"提供商 ID"\)\}<\/span>/.test(endpoints),
+    "Provider ID 标签未译成「提供商 ID」",
+  );
   assert.ok(!/<span>Provider ID<\/span>/.test(endpoints), "Provider ID 标签仍是英文");
   assert.ok(endpoints.includes("<span>API key</span>"), "API key 标签不再是英文 API key");
   assert.ok(endpoints.includes("<span>Base URL</span>"), "Base URL 标签不再是英文 Base URL");

@@ -14,6 +14,7 @@ import type {
   WorkspaceSessionTarget,
 } from "../../contracts/desktop-state";
 import { toSessionRef } from "../application/app-store-utils";
+import { t } from "../t";
 import { assertComposerAttachmentsAccepted } from "../../contracts/composer-attachments";
 import {
   formatSessionConfigStatus,
@@ -470,7 +471,12 @@ async function submitComposer(
     return store.emit();
   }
   if (!sessionRef || !store.sessionFromState(sessionRef)) {
-    return store.withError("发送消息前请先创建或选择会话记录。");
+    return store.withError(
+      t(
+        "Create or select a session before sending a message.",
+        "发送消息前请先创建或选择会话记录。",
+      ),
+    );
   }
 
   return submitComposerToSession(store, sessionRef, textInput, attachments, options);
@@ -683,7 +689,12 @@ async function setSessionModel(
   return store.withErrorHandling(async () => {
     await store.driver.setSessionModel(sessionRef, { provider, modelId });
     syncSessionConfig(store, key, { provider, modelId });
-    return finishSessionChange(store, sessionRef, key, `模型已设置为 ${provider}:${modelId}`);
+    return finishSessionChange(
+      store,
+      sessionRef,
+      key,
+      t(`Model set to ${provider}:${modelId}`, `模型已设置为 ${provider}:${modelId}`),
+    );
   });
 }
 
@@ -697,7 +708,12 @@ async function setSessionThinkingLevel(
   return store.withErrorHandling(async () => {
     await store.driver.setSessionThinkingLevel(sessionRef, thinkingLevel);
     syncSessionConfig(store, key, { thinkingLevel });
-    return finishSessionChange(store, sessionRef, key, `思考力度已设置为 ${thinkingLevel}`);
+    return finishSessionChange(
+      store,
+      sessionRef,
+      key,
+      t(`Thinking set to ${thinkingLevel}`, `思考力度已设置为 ${thinkingLevel}`),
+    );
   });
 }
 
@@ -732,15 +748,20 @@ async function deliverBackgroundInstruction(
 ): Promise<string | undefined> {
   const instruction = text.trim();
   if (!instruction) {
-    throw new Error("计划任务指令为空。");
+    throw new Error(t("Scheduled task instruction is empty.", "计划任务指令为空。"));
   }
   await store.ensureSessionReady(sessionRef);
   const session = store.sessionFromState(sessionRef);
   if (!session) {
-    throw new Error(`未知会话记录：${sessionRef.workspaceId}:${sessionRef.sessionId}`);
+    throw new Error(
+      t(
+        `Unknown session: ${sessionRef.workspaceId}:${sessionRef.sessionId}`,
+        `未知会话记录：${sessionRef.workspaceId}:${sessionRef.sessionId}`,
+      ),
+    );
   }
   if (session.archivedAt) {
-    throw new Error("计划任务的目标会话已归档。");
+    throw new Error(t("Scheduled task target thread is archived.", "计划任务的目标会话已归档。"));
   }
 
   store.recordUserMessageRecency(sessionRef);
@@ -898,7 +919,10 @@ async function runComposerCommand(
       store,
       sessionRef,
       key,
-      `模型已设置为 ${parsed.provider}:${parsed.modelId}`,
+      t(
+        `Model set to ${parsed.provider}:${parsed.modelId}`,
+        `模型已设置为 ${parsed.provider}:${parsed.modelId}`,
+      ),
     );
   }
 
@@ -909,7 +933,7 @@ async function runComposerCommand(
       store,
       sessionRef,
       key,
-      `思考力度已设置为 ${parsed.thinkingLevel}`,
+      t(`Thinking set to ${parsed.thinkingLevel}`, `思考力度已设置为 ${parsed.thinkingLevel}`),
     );
   }
 
@@ -925,10 +949,15 @@ async function runComposerCommand(
   if (parsed.type === "session") {
     const session = store.describeSession(sessionRef);
     const parts = [
-      `会话记录 ${session?.title ?? sessionRef.sessionId}`,
+      t(
+        `Session ${session?.title ?? sessionRef.sessionId}`,
+        `会话记录 ${session?.title ?? sessionRef.sessionId}`,
+      ),
       `ID ${sessionRef.sessionId}`,
-      session ? `项目 ${session.workspaceName}` : undefined,
-      session ? `状态 ${session.status}` : undefined,
+      session
+        ? t(`Workspace ${session.workspaceName}`, `项目 ${session.workspaceName}`)
+        : undefined,
+      session ? t(`Status ${session.status}`, `状态 ${session.status}`) : undefined,
     ].filter(Boolean);
     return finishComposerCommand(store, sessionRef, key, parts.join(" · "));
   }
@@ -936,25 +965,44 @@ async function runComposerCommand(
   if (parsed.type === "name") {
     store.clearPendingAutoTitle(sessionRef);
     await store.driver.renameSession(sessionRef, parsed.title);
-    return finishComposerCommand(store, sessionRef, key, `会话记录已重命名为 ${parsed.title}`, {
-      sessionTitle: parsed.title,
-    });
+    return finishComposerCommand(
+      store,
+      sessionRef,
+      key,
+      t(`Session renamed to ${parsed.title}`, `会话记录已重命名为 ${parsed.title}`),
+      {
+        sessionTitle: parsed.title,
+      },
+    );
   }
 
   if (parsed.type === "compact") {
     await store.driver.compactSession(sessionRef, parsed.customInstructions);
     await store.reloadTranscriptFromDriver(sessionRef);
-    return finishComposerCommand(store, sessionRef, key, "已压缩会话记录上下文");
+    return finishComposerCommand(
+      store,
+      sessionRef,
+      key,
+      t("Compacted session context", "已压缩会话记录上下文"),
+    );
   }
 
   if (parsed.type === "reload") {
     store.clearExtensionUiForSession(sessionRef);
     await store.driver.reloadSession(sessionRef);
     await store.refreshSessionCommandsFor(sessionRef);
-    return finishComposerCommand(store, sessionRef, key, "已重新加载会话记录资源");
+    return finishComposerCommand(
+      store,
+      sessionRef,
+      key,
+      t("Reloaded session resources", "已重新加载会话记录资源"),
+    );
   }
 
-  return store.withSessionError(sessionRef, `不支持的斜杠命令：${commandText}`);
+  return store.withSessionError(
+    sessionRef,
+    t(`Unsupported slash command: ${commandText}`, `不支持的斜杠命令：${commandText}`),
+  );
 }
 
 function appendLocalActivity(store: ComposerStore, sessionRef: SessionRef, label: string): void {

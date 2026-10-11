@@ -1,4 +1,5 @@
 import type {
+  AppLocale,
   AppView,
   ExtensionCommandCompatibilityRecord,
   ModelSettingsScopeMode,
@@ -11,8 +12,14 @@ import type {
   ThemePresetId,
   ThreadGrouping,
 } from "../../contracts/desktop-state";
-import { isThemeMode, isThemePresetId, isThreadGrouping } from "../../contracts/desktop-state";
+import {
+  isAppLocale,
+  isThemeMode,
+  isThemePresetId,
+  isThreadGrouping,
+} from "../../contracts/desktop-state";
 import type { ExtensionFlagValues } from "@rsi-agent-pi/session-driver";
+import { t } from "../t";
 import type { ModelSettingsSnapshot } from "@rsi-agent-pi/session-driver/runtime-types";
 import { readJsonWithBackup, writeFileAtomicQueued } from "./atomic-file-write";
 import { decodeAttachments } from "./attachment-store";
@@ -55,6 +62,7 @@ export interface PersistedUiState {
   readonly enableTransparency?: boolean;
   readonly themeMode?: ThemeMode;
   readonly themePresetId?: ThemePresetId;
+  readonly locale?: AppLocale;
   readonly orchestrationChildren?: readonly OrchestrationChildThread[];
 }
 
@@ -79,7 +87,9 @@ export async function readPersistedUiState(
     // the operator sees that the primary file needs attention.
     console.error(
       `[app-store] corrupt ui-state at ${uiStateFilePath}` +
-        (result.recovered ? " — recovered from backup" : " — no usable backup"),
+        (result.recovered
+          ? t(" — recovered from backup", " — 已从备份恢复")
+          : t(" — no usable backup", " — 无可用备份")),
     );
   }
   return result.value === undefined ? {} : decodePersistedUiState(result.value);
@@ -133,6 +143,7 @@ export function decodePersistedUiState(parsed: unknown): LegacyPersistedUiState 
       typeof candidate.enableTransparency === "boolean" ? candidate.enableTransparency : undefined,
     themeMode: toThemeMode(candidate.themeMode),
     themePresetId: toThemePresetId(candidate.themePresetId),
+    locale: isAppLocale(candidate.locale) ? candidate.locale : undefined,
     orchestrationChildren: toPersistedOrchestrationChildren(candidate.orchestrationChildren),
     composerAttachmentsBySession: toObjectArrayRecord(candidate.composerAttachmentsBySession),
     transcripts: toObjectArrayRecord(candidate.transcripts),
@@ -227,6 +238,7 @@ function validateUiState(value: unknown): Record<string, unknown> {
       "enableTransparency",
       "themeMode",
       "themePresetId",
+      "locale",
       "orchestrationChildren",
       "composerAttachmentsBySession",
       "transcripts",
@@ -282,6 +294,7 @@ function validateUiState(value: unknown): Record<string, unknown> {
   optional(root, "threadGrouping", isThreadGrouping);
   optional(root, "themeMode", isThemeMode);
   optional(root, "themePresetId", isThemePresetId);
+  optional(root, "locale", isAppLocale);
   optional(root, "modelSettingsScopeMode", (v) => v === "per-repo" || v === "app-global");
   if (root.notificationPreferences !== undefined) {
     const preferences =

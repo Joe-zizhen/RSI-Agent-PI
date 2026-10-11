@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { SettingsSwitch } from "../settings/settings-controls";
+import { t, useLocale } from "../../t";
 
 export interface ResourceListItem {
   readonly id: string;
@@ -58,6 +59,7 @@ function ResourceGroup({
   readonly expanded: boolean;
   readonly onOpen: (id: string) => void;
 }) {
+  useLocale();
   const [showAll, setShowAll] = useState(false);
   const visible = expanded || showAll ? group.items : group.items.slice(0, COLLAPSED_ROW_COUNT);
   const hiddenCount = group.items.length - visible.length;
@@ -87,7 +89,7 @@ function ResourceGroup({
             <SettingsSwitch
               checked={item.enabled}
               disabled={!item.onToggle}
-              label={`启用 ${item.title}`}
+              label={t(`Enable ${item.title}`, `启用 ${item.title}`)}
               onChange={(enabled) => item.onToggle?.(enabled)}
             />
           </div>
@@ -95,7 +97,7 @@ function ResourceGroup({
       </div>
       {hiddenCount > 0 ? (
         <button className="resource-list__more" type="button" onClick={() => setShowAll(true)}>
-          再显示 {hiddenCount} 项
+          {t(`Show ${hiddenCount} more`, `再显示 ${hiddenCount} 项`)}
         </button>
       ) : null}
     </section>

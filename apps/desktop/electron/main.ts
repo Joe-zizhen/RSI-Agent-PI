@@ -56,6 +56,7 @@ import { NotificationPermissionService } from "./platform/notification-permissio
 import { initUpdateChecker } from "./platform/update-checker";
 import { runManualUpdateCheck } from "./platform/manual-update-check";
 import { ThemeManager } from "./platform/theme-manager";
+import { applyLocale, t } from "./t";
 import { windowBackgroundFor } from "../contracts/theme";
 import { memloopExtensionFactory } from "@rsi-agent-pi/memloop-bridge";
 import { TerminalService } from "./platform/terminal-service";
@@ -362,12 +363,21 @@ function openMcpSignInUrl(url: string): void {
     console.error(
       `Refusing to open an MCP sign-in URL${parsed ? ` on ${parsed.origin}` : " that is not http or https"}`,
     );
-    showMcpSignInUrl(url, "RSI-Agent-PI 仅打开 https 链接，或本机上的 http 链接。");
+    showMcpSignInUrl(
+      url,
+      t(
+        "RSI-Agent-PI opens only https links, or http links on this computer.",
+        "RSI-Agent-PI 仅打开 https 链接，或本机上的 http 链接。",
+      ),
+    );
     return;
   }
   shell.openExternal(parsed.toString()).catch((error: unknown) => {
     console.error(`Failed to open an MCP sign-in URL on ${parsed.origin}`, error);
-    showMcpSignInUrl(parsed.toString(), "RSI-Agent-PI 无法打开你的浏览器。");
+    showMcpSignInUrl(
+      parsed.toString(),
+      t("RSI-Agent-PI could not open your browser.", "RSI-Agent-PI 无法打开你的浏览器。"),
+    );
   });
 }
 
@@ -377,9 +387,9 @@ function showMcpSignInUrl(url: string, reason: string): void {
   const options: MessageBoxOptions = {
     type: "warning",
     title: "RSI-Agent-PI",
-    message: "请自行打开此 MCP 登录链接",
-    detail: `${reason} 打开前请检查链接：\n\n${url}`,
-    buttons: ["复制链接", "关闭"],
+    message: t("Open this MCP sign-in link yourself", "请自行打开此 MCP 登录链接"),
+    detail: `${reason} ${t("Check the link before you open it:", "打开前请检查链接：")}\n\n${url}`,
+    buttons: [t("Copy link", "复制链接"), t("Close", "关闭")],
     defaultId: 0,
     cancelId: 1,
   };
@@ -732,11 +742,11 @@ async function pickWorkspacePathViaDialog(
   const result = window
     ? await dialog.showOpenDialog(window, {
         properties: ["openDirectory"],
-        title: "打开项目文件夹",
+        title: t("Open workspace folder", "打开项目文件夹"),
       })
     : await dialog.showOpenDialog({
         properties: ["openDirectory"],
-        title: "打开项目文件夹",
+        title: t("Open workspace folder", "打开项目文件夹"),
       });
   if (result.canceled || result.filePaths.length === 0) {
     return undefined;
@@ -784,7 +794,7 @@ function installApplicationMenu(): void {
         { type: "separator" },
         {
           id: CHECK_FOR_UPDATES_MENU_ITEM_ID,
-          label: "检查更新…",
+          label: t("Check for Updates…", "检查更新…"),
           click: () => {
             void runManualUpdateCheck(
               mainWindow && canPublishToWindow(mainWindow) ? mainWindow : undefined,
@@ -804,10 +814,10 @@ function installApplicationMenu(): void {
       ],
     },
     {
-      label: "文件",
+      label: t("File", "文件"),
       submenu: [
         {
-          label: "新建会话",
+          label: t("New Thread", "新建会话"),
           accelerator: "CommandOrControl+N",
           click: () => {
             const window = BrowserWindow.getFocusedWindow() ?? mainWindow;
@@ -816,7 +826,7 @@ function installApplicationMenu(): void {
         },
         {
           id: NEW_WINDOW_MENU_ITEM_ID,
-          label: "新建窗口",
+          label: t("New Window", "新建窗口"),
           accelerator: "CommandOrControl+Shift+N",
           click: () => {
             createAppWindow(windowOwner.foregroundView());
@@ -825,7 +835,7 @@ function installApplicationMenu(): void {
         { type: "separator" },
         {
           id: OPEN_FOLDER_MENU_ITEM_ID,
-          label: "打开文件夹…",
+          label: t("Open Folder…", "打开文件夹…"),
           accelerator: "Command+O",
           click: () => {
             void pickWorkspaceViaDialog(mainWindow).catch((error: unknown) => {
@@ -839,16 +849,16 @@ function installApplicationMenu(): void {
     },
     { role: "editMenu" },
     {
-      label: "视图",
+      label: t("View", "视图"),
       submenu: [
         // Cmd+R toggles Review and Shift+Cmd+R renames the thread, so neither
         // reload has a shortcut.
         {
-          label: "重新加载",
+          label: t("Reload", "重新加载"),
           click: () => BrowserWindow.getFocusedWindow()?.webContents.reload(),
         },
         {
-          label: "强制重新加载",
+          label: t("Force Reload", "强制重新加载"),
           click: () => BrowserWindow.getFocusedWindow()?.webContents.reloadIgnoringCache(),
         },
         { role: "toggleDevTools" },
@@ -997,14 +1007,20 @@ app
       builtinExtensions: [
         {
           name: "pi-gui-thread-orchestration",
-          displayName: "会话编排",
-          description: "让 pi 启动、读取并向其他 RSI-Agent-PI 会话发消息",
+          displayName: t("Thread orchestration", "会话编排"),
+          description: t(
+            "Lets pi start, read and message other RSI-Agent-PI threads",
+            "让 pi 启动、读取并向其他 RSI-Agent-PI 会话发消息",
+          ),
           factory: createOrchestrationRuntimeExtension(orchestrationRuntimeBridge),
         },
         {
           name: "pi-gui-scheduled-tasks",
-          displayName: "计划任务",
-          description: "让 pi 创建和更新本地 RSI-Agent-PI 计划任务",
+          displayName: t("Scheduled tasks", "计划任务"),
+          description: t(
+            "Lets pi create and update local RSI-Agent-PI scheduled tasks",
+            "让 pi 创建和更新本地 RSI-Agent-PI 计划任务",
+          ),
           factory: createScheduledTaskRuntimeExtension(scheduledTaskRuntimeBridge, (ctx) => {
             try {
               return sessionRefFromExtensionContext(ctx).workspaceId;
@@ -1015,9 +1031,11 @@ app
         },
         {
           name: MEMLOOP_BUILTIN_EXTENSION_NAME,
-          displayName: "memloop 长期记忆",
-          description:
+          displayName: t("memloop long-term memory", "memloop 长期记忆"),
+          description: t(
+            "Captures session experience, injects relevant memory at task start, and warns about or blocks verified failure patterns.",
             "自动捕获会话经验，在任务开始时注入相关记忆，并对已验证的失败模式提醒或拦截。",
+          ),
           factory: memloopExtensionFactory,
         },
       ],
@@ -1041,6 +1059,7 @@ app
     });
     await store.initialize();
     themeManager.setMode(store.snapshot().themeMode);
+    applyLocale(store.snapshot().locale);
     integratedTerminalShell = (await store.getState()).integratedTerminalShell;
     nativeTheme.on("updated", refreshWindowBackgrounds);
     let windowBackgroundPresetId = store.snapshot().themePresetId;
@@ -1157,6 +1176,7 @@ app
             ? `pi desktop ready:${MAIN_DEV_RELOAD_MARKER}`
             : "pi desktop ready",
         theme: themeManager,
+        applyLocale,
         openExternal: openExternalLink,
         checkForUpdates: (window) => runManualUpdateCheck(window),
         pickWorkspace: (window) => pickWorkspaceViaDialog(window),
@@ -1194,11 +1214,11 @@ app
           const result = parent
             ? await dialog.showOpenDialog(parent, {
                 properties: ["openFile", "multiSelections"],
-                title: "添加文件",
+                title: t("Attach files", "添加文件"),
               })
             : await dialog.showOpenDialog({
                 properties: ["openFile", "multiSelections"],
-                title: "添加文件",
+                title: t("Attach files", "添加文件"),
               });
           if (result.canceled || result.filePaths.length === 0) {
             return undefined;
@@ -1454,7 +1474,9 @@ async function showLoginInstructions(
 ): Promise<void> {
   const window = resolveDialogWindow(parentWindow);
   if (!window) {
-    throw new Error("主窗口不可用，无法显示登录说明。");
+    throw new Error(
+      t("Main window is not available for login instructions.", "主窗口不可用，无法显示登录说明。"),
+    );
   }
   window.show();
   window.focus();
@@ -1471,7 +1493,7 @@ async function promptForText(
 ): Promise<string> {
   const parent = resolveDialogWindow(parentWindow);
   if (!parent) {
-    throw new Error("主窗口不可用，无法登录。");
+    throw new Error(t("Main window is not available for login.", "主窗口不可用，无法登录。"));
   }
   parent.show();
   parent.focus();
@@ -1515,11 +1537,11 @@ async function promptForText(
     });
 
     if (result === null) {
-      throw new Error("登录已取消。");
+      throw new Error(t("Login cancelled.", "登录已取消。"));
     }
     const trimmedResult = result.trim();
     if (!allowEmpty && trimmedResult.length === 0) {
-      throw new Error("登录已取消。");
+      throw new Error(t("Login cancelled.", "登录已取消。"));
     }
     return trimmedResult;
   } finally {
@@ -1550,8 +1572,8 @@ function promptDataUrl(message: string, placeholder: string): string {
   <div class="msg">${escapeHtml(message)}</div>
   <input id="pi-prompt-input" type="text" placeholder="${escapeHtml(placeholder)}" autofocus />
   <div class="row">
-    <button id="pi-prompt-cancel" type="button">取消</button>
-    <button id="pi-prompt-ok" type="button">确定</button>
+    <button id="pi-prompt-cancel" type="button">${escapeHtml(t("Cancel", "取消"))}</button>
+    <button id="pi-prompt-ok" type="button">${escapeHtml(t("OK", "确定"))}</button>
   </div>
   <script>
     (function () {
@@ -1596,7 +1618,13 @@ async function probeCustomProviderModels(
 ): Promise<CustomProviderProbeResult> {
   const baseUrl = input.baseUrl?.trim();
   if (!baseUrl || !isValidHttpBaseUrl(baseUrl)) {
-    return { ok: false, error: "Base URL 必须以 http:// 或 https:// 开头" };
+    return {
+      ok: false,
+      error: t(
+        "Base URL must start with http:// or https://",
+        "Base URL 必须以 http:// 或 https:// 开头",
+      ),
+    };
   }
   const target = `${baseUrl.replace(/\/+$/, "")}/models`;
   const apiKey = input.apiKey?.trim();
@@ -1612,7 +1640,13 @@ async function probeCustomProviderModels(
     const payload = (await response.json()) as unknown;
     const data = (payload as { data?: unknown }).data;
     if (!Array.isArray(data)) {
-      return { ok: false, error: `来自 ${target} 的响应缺少 "data" 数组` };
+      return {
+        ok: false,
+        error: t(
+          `Response from ${target} is missing a "data" array`,
+          `来自 ${target} 的响应缺少 "data" 数组`,
+        ),
+      };
     }
     const models = data
       .map((entry) => {
@@ -1634,7 +1668,7 @@ async function probeCustomProviderModels(
 
 function describeProbeError(error: unknown, target: string): string {
   if (error instanceof Error && error.name === "TimeoutError") {
-    return `连接 ${target} 超时（5 秒）`;
+    return t(`Timed out after 5s contacting ${target}`, `连接 ${target} 超时（5 秒）`);
   }
   if (error instanceof Error) {
     return error.message;

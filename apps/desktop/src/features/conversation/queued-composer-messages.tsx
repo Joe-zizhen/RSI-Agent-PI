@@ -2,12 +2,13 @@ import type { ComposerAttachment, QueuedComposerMessage } from "../../../contrac
 import { FileIcon } from "../../ui/icons";
 import { ImageAttachmentThumb } from "./image-attachment-thumb";
 import { parseAnnotatedPrompt } from "./annotations/annotation-prompt";
+import { t, useLocale } from "../../t";
 
 function queuedPreview(text: string): string {
   const annotated = parseAnnotatedPrompt(text);
   if (!annotated) return text;
   const count = annotated.annotations.length;
-  const label = `${count} 条批注`;
+  const label = t(`${count} annotation${count === 1 ? "" : "s"}`, `${count} 条批注`);
   return annotated.body.trim() ? `${annotated.body.trim()} · ${label}` : label;
 }
 
@@ -28,6 +29,7 @@ export function QueuedComposerMessages({
   onSteerMessage,
   onCancelEdit,
 }: QueuedComposerMessagesProps) {
+  useLocale();
   if (messages.length === 0 && !editingQueuedMessageId) {
     return null;
   }
@@ -36,9 +38,9 @@ export function QueuedComposerMessages({
     <div className="queued-composer-messages" data-testid="queued-composer-messages">
       {editingQueuedMessageId ? (
         <div className="queued-composer-messages__editing" data-testid="queued-composer-editing">
-          <span>正在编辑排队消息</span>
+          <span>{t("Editing queued message", "正在编辑排队消息")}</span>
           <button type="button" onClick={onCancelEdit}>
-            取消
+            {t("Cancel", "取消")}
           </button>
         </div>
       ) : null}
@@ -55,21 +57,24 @@ export function QueuedComposerMessages({
             <div className="queued-composer-message__actions">
               {message.mode !== "steer" ? (
                 <button type="button" onClick={() => onSteerMessage(message.id)}>
-                  引导
+                  {t("Steer", "引导")}
                 </button>
               ) : null}
               {/* Its annotations cannot be reattached to the transcript, so it is not editable. */}
               {parseAnnotatedPrompt(message.text) ? null : (
                 <button type="button" onClick={() => onEditMessage(message.id)}>
-                  编辑
+                  {t("Edit", "编辑")}
                 </button>
               )}
               <button
-                aria-label={`删除排队消息 ${message.text || message.id}`}
+                aria-label={t(
+                  `Delete queued message ${message.text || message.id}`,
+                  `删除排队消息 ${message.text || message.id}`,
+                )}
                 type="button"
                 onClick={() => onRemoveMessage(message.id)}
               >
-                删除
+                {t("Delete", "删除")}
               </button>
             </div>
           </div>

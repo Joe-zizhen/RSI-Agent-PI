@@ -6,7 +6,7 @@ import type {
   TranscriptMessage,
 } from "../../contracts/desktop-state";
 import { hasUnseenSessionUpdate, previewFromTranscript } from "../application/app-store-utils";
-import { NEW_THREAD_PLACEHOLDER_TITLE } from "./thread-title-constants";
+import { newThreadPlaceholderTitle } from "./thread-title-constants";
 
 export function applySessionEventState(
   state: DesktopAppState,
@@ -66,7 +66,7 @@ export function updateSessionRecord(
   const snapshotTitle = options.snapshot?.title;
   // Queued session events may predate a rename; the placeholder must not replace a resolved title.
   const title =
-    snapshotTitle === NEW_THREAD_PLACEHOLDER_TITLE && session.title !== NEW_THREAD_PLACEHOLDER_TITLE
+    snapshotTitle === newThreadPlaceholderTitle() && session.title !== newThreadPlaceholderTitle()
       ? session.title
       : (snapshotTitle ?? session.title);
   return {

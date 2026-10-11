@@ -1,6 +1,7 @@
 import { readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { readJsonWithBackup, writeFileAtomicQueued } from "./atomic-file-write";
+import { t } from "../t";
 import type { ComposerAttachment } from "../../contracts/desktop-state";
 
 export class AttachmentStore {
@@ -20,7 +21,9 @@ export class AttachmentStore {
     if (result.corrupted) {
       console.error(
         `[attachment-store] corrupt entry for "${sessionKey}" in ${this.rootDir}` +
-          (result.recovered ? " — recovered from backup" : " — no usable backup"),
+          (result.recovered
+            ? t(" — recovered from backup", " — 已从备份恢复")
+            : t(" — no usable backup", " — 无可用备份")),
       );
     }
     return result.value === undefined ? undefined : decodeAttachments(result.value);

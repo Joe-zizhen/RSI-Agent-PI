@@ -1,3 +1,4 @@
+import { t } from "../i18n-shim.js";
 import { existsSync } from "node:fs";
 import { open, opendir, realpath, stat } from "node:fs/promises";
 import { join, basename } from "node:path";
@@ -102,7 +103,7 @@ function buildLeftColumn(data: WelcomeData, colWidth: number): string[] {
   
   return [
     "",
-    centerText(bold("欢迎回来！"), colWidth),
+    centerText(bold(t("Welcome back!", "欢迎回来！")), colWidth),
     "",
     ...logoColored.map((l) => centerText(l, colWidth)),
     "",
@@ -118,7 +119,7 @@ function buildRightColumn(data: WelcomeData, colWidth: number): string[] {
   // Session lines
   const sessionLines: string[] = [];
   if (data.recentSessions.length === 0) {
-    sessionLines.push(` ${dim("没有最近的会话记录")}`);
+    sessionLines.push(t(` ${dim("No recent sessions")}`, ` ${dim("没有最近的会话记录")}`));
   } else {
     for (const session of data.recentSessions.slice(0, 3)) {
       sessionLines.push(
@@ -134,16 +135,16 @@ function buildRightColumn(data: WelcomeData, colWidth: number): string[] {
   
   if (contextFiles > 0 || skills > 0 || promptTemplates > 0) {
     if (contextFiles > 0) {
-      countLines.push(` ${itemPrefix}${fgOnly("gitClean", `${contextFiles}`)} 个上下文文件`);
+      countLines.push(t(` ${itemPrefix}${fgOnly("gitClean", `${contextFiles}`)} context file${contextFiles !== 1 ? "s" : ""}`, ` ${itemPrefix}${fgOnly("gitClean", `${contextFiles}`)} 个上下文文件`));
     }
     if (skills > 0) {
-      countLines.push(` ${itemPrefix}${fgOnly("gitClean", `${skills}`)} 个技能`);
+      countLines.push(t(` ${itemPrefix}${fgOnly("gitClean", `${skills}`)} skill${skills !== 1 ? "s" : ""}`, ` ${itemPrefix}${fgOnly("gitClean", `${skills}`)} 个技能`));
     }
     if (promptTemplates > 0) {
-      countLines.push(` ${itemPrefix}${fgOnly("gitClean", `${promptTemplates}`)} 个提示词模板`);
+      countLines.push(t(` ${itemPrefix}${fgOnly("gitClean", `${promptTemplates}`)} prompt template${promptTemplates !== 1 ? "s" : ""}`, ` ${itemPrefix}${fgOnly("gitClean", `${promptTemplates}`)} 个提示词模板`));
     }
   } else {
-    countLines.push(` ${dim("未加载上下文文件、技能或提示词模板")}`);
+    countLines.push(t(` ${dim("No context files, skills, or prompts loaded")}`, ` ${dim("未加载上下文文件、技能或提示词模板")}`));
   }
 
   if (
@@ -151,19 +152,19 @@ function buildRightColumn(data: WelcomeData, colWidth: number): string[] {
     && Number.isFinite(data.initialContextTokens)
     && data.initialContextTokens > 0
   ) {
-    countLines.push(` ${itemPrefix}${fgOnly("gitClean", `≈ ${formatTokens(data.initialContextTokens)}`)} 初始提示词令牌`);
+    countLines.push(t(` ${itemPrefix}${fgOnly("gitClean", `≈ ${formatTokens(data.initialContextTokens)}`)} initial prompt tokens`, ` ${itemPrefix}${fgOnly("gitClean", `≈ ${formatTokens(data.initialContextTokens)}`)} 初始提示词令牌`));
   }
   
   return [
-    ` ${bold(fgOnly("accent", "提示"))}`,
-    ` ${dim("/")} 打开命令`,
-    ` ${dim("!")} 运行 bash`,
-    ` ${dim("Shift+Tab")} 切换思考力度`,
+    t(` ${bold(fgOnly("accent", "Tips"))}`, ` ${bold(fgOnly("accent", "提示"))}`),
+    t(` ${dim("/")} for commands`, ` ${dim("/")} 打开命令`),
+    t(` ${dim("!")} to run bash`, ` ${dim("!")} 运行 bash`),
+    t(` ${dim("Shift+Tab")} cycle thinking`, ` ${dim("Shift+Tab")} 切换思考力度`),
     separator,
-    ` ${bold(fgOnly("accent", "已加载"))}`,
+    t(` ${bold(fgOnly("accent", "Loaded"))}`, ` ${bold(fgOnly("accent", "已加载"))}`),
     ...countLines,
     separator,
-    ` ${bold(fgOnly("accent", "最近会话记录"))}`,
+    t(` ${bold(fgOnly("accent", "Recent sessions"))}`, ` ${bold(fgOnly("accent", "最近会话记录"))}`),
     ...sessionLines,
     "",
   ];
@@ -265,7 +266,7 @@ export class WelcomeComponent implements Component {
     const boxWidth = Math.min(termWidth, Math.max(minWidth, Math.min(termWidth - 2, maxWidth)));
     
     // Bottom line with countdown
-    const countdownText = ` 按任意键继续（${this.countdown} 秒） `;
+    const countdownText = t(` Press any key to continue (${this.countdown}s) `, ` 按任意键继续（${this.countdown} 秒） `);
     const countdownStyled = dim(countdownText);
     const bottomContentWidth = boxWidth - 2;
     const countdownVisLen = visibleWidth(countdownText);
@@ -498,8 +499,8 @@ function formatTimeAgo(ms: number): string {
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
 
-  if (days > 0) return `${days} 天前`;
-  if (hours > 0) return `${hours} 小时前`;
-  if (minutes > 0) return `${minutes} 分钟前`;
-  return "刚刚";
+  if (days > 0) return t(`${days}d ago`, `${days} 天前`);
+  if (hours > 0) return t(`${hours}h ago`, `${hours} 小时前`);
+  if (minutes > 0) return t(`${minutes}m ago`, `${minutes} 分钟前`);
+  return t("just now", "刚刚");
 }

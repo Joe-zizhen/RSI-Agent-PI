@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { SettingsSwitch } from "../settings/settings-controls";
+import { t, useLocale } from "../../t";
 
 /** Drill-in page for one skill or extension, in the style of Codex's Hooks detail. */
 export function ResourceDetail({
@@ -24,6 +25,7 @@ export function ResourceDetail({
   readonly onBack: () => void;
   readonly children: ReactNode;
 }) {
+  useLocale();
   const backButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     // The row that opened this page is gone, so keyboard focus starts here instead of the body.
@@ -62,7 +64,7 @@ export function ResourceDetail({
           <SettingsSwitch
             checked={enabled}
             disabled={!onToggle}
-            label="已启用"
+            label={t("Enabled", "已启用")}
             onChange={(next) => onToggle?.(next)}
           />
         </div>

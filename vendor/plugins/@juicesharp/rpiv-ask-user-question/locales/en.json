@@ -1,4 +1,5 @@
 {
+  "_meta.notes": "English source strings. TUI symbols (arrows, warning sign) follow common CLI conventions and stay as-is. Key names such as Enter, Space, Esc, Tab, and Ctrl+n stay in English.",
   "sentinel.other": "Type something.",
   "sentinel.next": "Next",
 

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { TurnChangeSummary, TurnChangedFile } from "../../../contracts/review";
 import { FileDiffIcon } from "../../ui/icons";
+import { t, useLocale } from "../../t";
 
 const COLLAPSED_FILE_COUNT = 5;
 
@@ -14,6 +15,7 @@ export function TurnChangesCard({
   readonly turn: TurnChangeSummary;
   readonly onOpen?: OpenTurnChange;
 }) {
+  useLocale();
   const [expanded, setExpanded] = useState(false);
   const listRef = useRef<HTMLUListElement | null>(null);
   const { files } = turn;
@@ -29,13 +31,22 @@ export function TurnChangesCard({
   const firstFile = files[0];
 
   return (
-    <section className="turn-changes" aria-label="本轮修改的文件" data-testid="turn-changes">
+    <section
+      className="turn-changes"
+      aria-label={t("Files changed in this turn", "本轮修改的文件")}
+      data-testid="turn-changes"
+    >
       <header className="turn-changes__header">
         <span className="turn-changes__glyph" aria-hidden="true">
           <FileDiffIcon />
         </span>
         <div className="turn-changes__summary">
-          <span className="turn-changes__title">{`已编辑 ${files.length} 个文件`}</span>
+          <span className="turn-changes__title">
+            {t(
+              `Edited ${files.length} ${files.length === 1 ? "file" : "files"}`,
+              `已编辑 ${files.length} 个文件`,
+            )}
+          </span>
           <LineStats lines={totals} />
         </div>
         {firstFile && onOpen ? (
@@ -44,7 +55,7 @@ export function TurnChangesCard({
             className="turn-changes__review"
             onClick={() => onOpen(turn, firstFile.path)}
           >
-            审查
+            {t("Review", "审查")}
           </button>
         ) : null}
       </header>
@@ -79,7 +90,7 @@ export function TurnChangesCard({
                 );
               }}
             >
-              {`再显示 ${hidden} 个`}
+              {t(`Show ${hidden} more`, `再显示 ${hidden} 个`)}
             </button>
           </li>
         ) : null}
@@ -99,10 +110,11 @@ function FilePath({ path }: { readonly path: string }) {
 }
 
 function FileStats({ file }: { readonly file: TurnChangedFile }) {
+  useLocale();
   return file.lines ? (
     <LineStats lines={file.lines} />
   ) : (
-    <span className="turn-changes__stats turn-changes__binary">二进制</span>
+    <span className="turn-changes__stats turn-changes__binary">{t("Binary", "二进制")}</span>
   );
 }
 

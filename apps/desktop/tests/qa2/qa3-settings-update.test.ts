@@ -12,7 +12,10 @@ import { read, readJson } from "./helpers";
 test("设置「更新」节真实存在且可从设置导航到达", () => {
   const sections = read("apps/desktop/src/features/settings/settings-sections.tsx");
   assert.ok(/id:\s*"update"/.test(sections), "设置节 id=update 不存在");
-  assert.ok(/title:\s*"更新"/.test(sections), "设置节标题不是「更新」");
+  assert.ok(
+    /id:\s*"update",\s*get title\(\)\s*\{\s*return t\("Update",\s*"更新"\);/.test(sections),
+    "设置节标题不是「更新」",
+  );
 
   const view = read("apps/desktop/src/features/settings/settings-view.tsx");
   assert.ok(
@@ -71,7 +74,12 @@ test("pi 本体版本只读展示且与 package.json 钉版一致", () => {
   assert.equal(pinned[1], "1.0.0", "pi 版本钉死值必须是 1.0.0");
 
   const section = read("apps/desktop/src/features/settings/settings-update-section.tsx");
-  assert.ok(section.includes("{PI_RUNTIME_PINNED_VERSION}（已锁定）"), "pi 版本未以只读文本展示");
+  assert.ok(
+    /<span className="settings-row__value">\s*\{PI_RUNTIME_PINNED_VERSION\}\s*\{t\("\(pinned\)",\s*"（已锁定）"\)\}\s*<\/span>/.test(
+      section,
+    ),
+    "pi 版本未以只读文本展示",
+  );
   assert.ok(!/<input/.test(section.split("pi 运行时")[1] ?? ""), "pi 版本行出现可编辑控件");
 
   for (const pkgPath of ["apps/desktop/package.json", "packages/pi-sdk-driver/package.json"]) {

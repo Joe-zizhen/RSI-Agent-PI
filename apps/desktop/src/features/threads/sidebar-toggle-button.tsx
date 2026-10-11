@@ -1,4 +1,5 @@
 import { SidebarToggleIcon } from "../../ui/icons";
+import { t, useLocale } from "../../t";
 
 interface SidebarToggleButtonProps {
   readonly collapsed: boolean;
@@ -11,10 +12,11 @@ export function SidebarToggleButton({
   shortcutLabel,
   onToggle,
 }: SidebarToggleButtonProps) {
+  useLocale();
   return (
     <div className="shortcut-tooltip-wrap sidebar-toggle">
       <button
-        aria-label="切换侧边栏"
+        aria-label={t("Toggle sidebar", "切换侧边栏")}
         aria-pressed={!collapsed}
         className="icon-button sidebar-toggle__button"
         data-testid="sidebar-toggle"
@@ -24,7 +26,7 @@ export function SidebarToggleButton({
         <SidebarToggleIcon />
       </button>
       <span className="shortcut-tooltip sidebar-toggle__tooltip" role="tooltip">
-        <span>切换侧边栏</span>
+        <span>{t("Toggle sidebar", "切换侧边栏")}</span>
         <kbd>{shortcutLabel}</kbd>
       </span>
     </div>

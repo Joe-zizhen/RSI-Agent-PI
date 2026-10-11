@@ -1,3 +1,4 @@
+import { t } from "../i18n-shim.js";
 import { existsSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
@@ -138,13 +139,13 @@ export async function runCdCommand(args: string, ctx: ExtensionCommandContext): 
     return;
   }
   if (resolved.path === ctx.cwd) {
-    ctx.ui.notify(`已在 ${ctx.cwd}`, "info");
+    ctx.ui.notify(t(`Already in ${ctx.cwd}`, `已在 ${ctx.cwd}`), "info");
     return;
   }
 
   const sessionFile = ctx.sessionManager.getSessionFile();
   if (!sessionFile) {
-    ctx.ui.notify("/cd 需要已持久化的 Pi 会话记录", "error");
+    ctx.ui.notify(t("/cd requires a persisted Pi session", "/cd 需要已持久化的 Pi 会话记录"), "error");
     return;
   }
 
@@ -157,7 +158,7 @@ export async function runCdCommand(args: string, ctx: ExtensionCommandContext): 
       withSession: async (nextCtx) => {
         try {
           process.chdir(nextCtx.cwd);
-          nextCtx.ui.notify(`已切换目录到 ${nextCtx.cwd}`, "info");
+          nextCtx.ui.notify(t(`Changed directory to ${nextCtx.cwd}`, `已切换目录到 ${nextCtx.cwd}`), "info");
           nextCtx.ui.setTitle(`pi - ${basename(nextCtx.cwd) || nextCtx.cwd}`);
         } catch (error) {
           console.debug("[powerline-footer] Failed to update process cwd after /cd:", error);
@@ -166,13 +167,13 @@ export async function runCdCommand(args: string, ctx: ExtensionCommandContext): 
     });
     if (result.cancelled) {
       removeSessionFile(nextSessionFile);
-      ctx.ui.notify("目录切换已取消", "warning");
+      ctx.ui.notify(t("Directory change cancelled", "目录切换已取消"), "warning");
       return;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     try {
-      ctx.ui.notify(`切换目录失败：${message}`, "error");
+      ctx.ui.notify(t(`Failed to change directory: ${message}`, `切换目录失败：${message}`), "error");
     } catch {
       console.debug("[powerline-footer] Failed to report /cd error:", error);
     }
@@ -181,7 +182,7 @@ export async function runCdCommand(args: string, ctx: ExtensionCommandContext): 
 
 export function registerCdCommand(pi: ExtensionAPI, getCwd: () => string): void {
   pi.registerCommand("cd", {
-    description: "切换 Pi 会话工作目录",
+    description: t("Switch the Pi session working directory", "切换 Pi 会话工作目录"),
     getArgumentCompletions(argumentPrefix) {
       return getCdArgumentCompletions(argumentPrefix, getCwd());
     },

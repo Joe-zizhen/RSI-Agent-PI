@@ -10,6 +10,7 @@ import {
   PinIcon,
   RestoreIcon,
 } from "../../ui/icons";
+import { t } from "../../t";
 
 /**
  * The one list of things a thread can do. The thread header menu, the sidebar
@@ -69,7 +70,7 @@ export function buildThreadActions(
   const actions: ThreadAction[] = [
     {
       id: "rename-thread",
-      title: "重命名会话",
+      title: t("Rename thread", "重命名会话"),
       icon: <PencilIcon />,
       hint: renameThreadShortcut(handlers.platform),
       run: () => handlers.startRename(subject),
@@ -78,7 +79,7 @@ export function buildThreadActions(
   if (archived) {
     actions.push({
       id: "restore-thread",
-      title: "恢复会话",
+      title: t("Restore thread", "恢复会话"),
       icon: <RestoreIcon />,
       run: () => handlers.restore(subject),
     });
@@ -86,13 +87,13 @@ export function buildThreadActions(
     actions.push(
       {
         id: "pin-thread",
-        title: pinned ? "取消置顶会话" : "置顶会话",
+        title: pinned ? t("Unpin thread", "取消置顶会话") : t("Pin thread", "置顶会话"),
         icon: <PinIcon filled={pinned} />,
         run: () => handlers.setPinned(subject, !pinned),
       },
       {
         id: "archive-thread",
-        title: "归档会话",
+        title: t("Archive thread", "归档会话"),
         icon: <ArchiveIcon />,
         hint: archiveThreadShortcut(handlers.platform),
         run: () => handlers.archive(subject),
@@ -102,7 +103,7 @@ export function buildThreadActions(
   if (session.hasUnseenUpdate) {
     actions.push({
       id: "mark-read",
-      title: "标为已读",
+      title: t("Mark as read", "标为已读"),
       icon: <CheckIcon />,
       run: () => handlers.markRead(subject),
     });
@@ -110,13 +111,15 @@ export function buildThreadActions(
   actions.push(
     {
       id: "scheduled-task",
-      title: handlers.hasScheduledTask(subject) ? "编辑计划任务…" : "添加计划任务…",
+      title: handlers.hasScheduledTask(subject)
+        ? t("Edit scheduled task…", "编辑计划任务…")
+        : t("Add scheduled task…", "添加计划任务…"),
       icon: <ClockIcon />,
       run: () => handlers.openScheduledTask(subject),
     },
     {
       id: "copy-session-id",
-      title: "复制会话记录 ID",
+      title: t("Copy session ID", "复制会话记录 ID"),
       icon: <CopyIcon />,
       run: () => handlers.copySessionId(subject),
     },

@@ -8,6 +8,7 @@ import { sessionKey } from "@rsi-agent-pi/session-driver";
 import type { SessionDriverEvent, SessionRef } from "@rsi-agent-pi/session-driver";
 import { getSelectedSession } from "../../contracts/desktop-state";
 import { isSessionActivelyViewed } from "../conversation/session-visibility";
+import { t } from "../t";
 
 const MAX_COMPLETED_RUN_KEYS = 500;
 // An extension that throws on a frequent event repeats the same error notice; notify once per window.
@@ -147,7 +148,11 @@ export class NotificationManager {
         }
         this.completedRunKeys.delete(oldest);
       }
-      await this.showNotification(event.sessionRef, event.snapshot.title, "智能体已完成回复");
+      await this.showNotification(
+        event.sessionRef,
+        event.snapshot.title,
+        t("Agent finished responding", "智能体已完成回复"),
+      );
       return;
     }
 
@@ -418,7 +423,7 @@ export class NotificationManager {
   }
 
   private titleForSession(sessionRef: SessionRef): string {
-    return this.sessionFromLatestState(sessionRef)?.title ?? "pi 会话";
+    return this.sessionFromLatestState(sessionRef)?.title ?? t("pi session", "pi 会话");
   }
 }
 
@@ -435,7 +440,7 @@ function requiresAttention(event: Extract<SessionDriverEvent, { type: "hostUiReq
 
 function hostUiBody(event: Extract<SessionDriverEvent, { type: "hostUiRequest" }>): string {
   if (event.request.kind === "notify") {
-    return `${event.request.level === "error" ? "错误" : "警告"}：${event.request.message}`;
+    return `${event.request.level === "error" ? t("Error", "错误") : t("Warning", "警告")}${t(": ", "：")}${event.request.message}`;
   }
   if (
     event.request.kind === "confirm" ||
@@ -444,7 +449,7 @@ function hostUiBody(event: Extract<SessionDriverEvent, { type: "hostUiRequest" }
   ) {
     return event.request.title;
   }
-  return "需要你的输入";
+  return t("Needs your input", "需要你的输入");
 }
 
 function sameSessionRef(left: SessionRef | undefined, right: SessionRef | undefined): boolean {

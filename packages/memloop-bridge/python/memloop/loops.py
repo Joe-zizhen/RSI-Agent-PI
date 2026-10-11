@@ -60,6 +60,10 @@ CARD_DISPLAY_MAX_CHARS = 600
 
 # standing usage rules; injected with every non-empty block so the model is
 # taught how to treat the cards, not just handed data
+# Localized strings on the Python side are intentionally not migrated this
+# round (the TS bridge owns the bilingual surface via packages/memloop-bridge/
+# src/t.ts). USAGE_RULES is an injection block kept in lockstep with
+# memloop.ts; it stays Chinese until the Python sidecar is localized.
 USAGE_RULES = (
     "长期记忆卡。每条带置信度（0 至 1）与验证方式。\n"
     "使用规则：置信度低于 0.70 时先执行 verify 命令确认。hearsay 条目仅作线索。\n"

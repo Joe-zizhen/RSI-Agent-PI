@@ -35,6 +35,7 @@ import type { SettingsSection } from "../../settings/settings-view";
 import { useMentionMenu } from "../../conversation/hooks/use-mention-menu";
 import { useSlashMenu } from "../../conversation/hooks/use-slash-menu";
 import { resolveRepoWorkspaceId } from "../../../../contracts/workspace-roots";
+import { t, useLocale } from "../../../t";
 
 interface UseNewThreadControllerParams {
   readonly api: PiDesktopApi | undefined;
@@ -49,6 +50,7 @@ interface UseNewThreadControllerParams {
 }
 
 export function useNewThreadController(params: UseNewThreadControllerParams) {
+  useLocale();
   const {
     api,
     snapshot,
@@ -301,7 +303,12 @@ export function useNewThreadController(params: UseNewThreadControllerParams) {
       return;
     }
     if (treeCommand?.type === "tree") {
-      setComposerError("/tree 只能在已有会话记录内使用。");
+      setComposerError(
+        t(
+          "/tree is only available inside an existing session.",
+          "/tree 只能在已有会话记录内使用。",
+        ),
+      );
       return;
     }
     const input: StartThreadInput = {

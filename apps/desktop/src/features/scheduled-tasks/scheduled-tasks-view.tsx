@@ -11,6 +11,7 @@ import {
 import type { PiDesktopApi } from "../../../contracts/ipc";
 import type { Dispatch, SetStateAction } from "react";
 import type { ScheduledEditorState } from "./scheduled-task-editor";
+import { t, useLocale } from "../../t";
 
 interface ScheduledTasksViewProps {
   readonly tasks: readonly ScheduledTaskRecord[];
@@ -26,10 +27,30 @@ interface ScheduledTasksViewProps {
 }
 
 const FILTERS: readonly { readonly id: ScheduledTaskFilter; readonly label: string }[] = [
-  { id: "all", label: "全部" },
-  { id: "active", label: "生效中" },
-  { id: "paused", label: "已暂停" },
-  { id: "completed", label: "已完成" },
+  {
+    id: "all",
+    get label() {
+      return t("All", "全部");
+    },
+  },
+  {
+    id: "active",
+    get label() {
+      return t("Active", "生效中");
+    },
+  },
+  {
+    id: "paused",
+    get label() {
+      return t("Paused", "已暂停");
+    },
+  },
+  {
+    id: "completed",
+    get label() {
+      return t("Completed", "已完成");
+    },
+  },
 ];
 
 export function ScheduledTasksView({
@@ -41,6 +62,7 @@ export function ScheduledTasksView({
   onCreateWithPi,
   onOpenEditor,
 }: ScheduledTasksViewProps) {
+  useLocale();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<ScheduledTaskFilter>("all");
   const [createOpen, setCreateOpen] = useState(false);
@@ -51,8 +73,13 @@ export function ScheduledTasksView({
     <section className="canvas scheduled-tasks-view" data-testid="scheduled-tasks-view">
       <header className="view-header">
         <div>
-          <h1 className="view-header__title">计划任务</h1>
-          <p className="view-header__body">让 pi 安排任务、设置提醒或监控更新。</p>
+          <h1 className="view-header__title">{t("Scheduled tasks", "计划任务")}</h1>
+          <p className="view-header__body">
+            {t(
+              "Ask pi to schedule tasks, set reminders, or monitor for updates.",
+              "让 pi 安排任务、设置提醒或监控更新。",
+            )}
+          </p>
         </div>
         <div className="view-header__actions">
           <div className="scheduled-create">
@@ -64,7 +91,7 @@ export function ScheduledTasksView({
               aria-expanded={createOpen}
               onClick={() => setCreateOpen((open) => !open)}
             >
-              创建
+              {t("Create", "创建")}
             </button>
             {createOpen ? (
               <div className="workspace-menu scheduled-create__menu" role="menu">
@@ -77,7 +104,7 @@ export function ScheduledTasksView({
                     onCreateWithPi();
                   }}
                 >
-                  让 pi 创建
+                  {t("Have pi create one", "让 pi 创建")}
                 </button>
                 <button
                   className="workspace-menu__item"
@@ -88,7 +115,7 @@ export function ScheduledTasksView({
                     onOpenEditor({ mode: "create" });
                   }}
                 >
-                  手动设置
+                  {t("Set up manually", "手动设置")}
                 </button>
               </div>
             ) : null}
@@ -98,10 +125,10 @@ export function ScheduledTasksView({
 
       <div className="scheduled-toolbar">
         <input
-          aria-label="搜索计划任务"
+          aria-label={t("Search scheduled tasks", "搜索计划任务")}
           className="skills-search"
           data-testid="scheduled-task-search"
-          placeholder="搜索"
+          placeholder={t("Search", "搜索")}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -126,11 +153,21 @@ export function ScheduledTasksView({
 
       {visible.length === 0 ? (
         <div className="empty-panel" data-testid="scheduled-tasks-empty">
-          <h2>{filter === "active" ? "没有生效中的计划任务" : "没有计划任务"}</h2>
+          <h2>
+            {filter === "active"
+              ? t("No active scheduled tasks", "没有生效中的计划任务")
+              : t("No scheduled tasks", "没有计划任务")}
+          </h2>
           <p>
             {filter === "active"
-              ? "计划任务在 RSI-Agent-PI 打开时于本设备运行。它们不会在云端运行，也不会在你退出后运行。"
-              : "手动创建任务，或让 pi 建立一个。"}
+              ? t(
+                  "Scheduled tasks run on this device while RSI-Agent-PI is open. They do not run in the cloud or after you quit.",
+                  "计划任务在 RSI-Agent-PI 打开时于本设备运行。它们不会在云端运行，也不会在你退出后运行。",
+                )
+              : t(
+                  "Create a task manually or ask pi to set one up.",
+                  "手动创建任务，或让 pi 建立一个。",
+                )}
           </p>
         </div>
       ) : (
@@ -154,7 +191,7 @@ export function ScheduledTasksView({
                 <button
                   className="icon-button"
                   type="button"
-                  aria-label={`${task.title} 的操作`}
+                  aria-label={t(`Actions for ${task.title}`, `${task.title} 的操作`)}
                   aria-haspopup="menu"
                   aria-expanded={menuTaskId === task.id}
                   onClick={(event) => {
@@ -179,7 +216,7 @@ export function ScheduledTasksView({
                           });
                         }}
                       >
-                        恢复
+                        {t("Restore", "恢复")}
                       </button>
                     ) : task.status !== "completed" ? (
                       <button
@@ -194,7 +231,7 @@ export function ScheduledTasksView({
                           });
                         }}
                       >
-                        暂停
+                        {t("Pause", "暂停")}
                       </button>
                     ) : null}
                     <button
@@ -205,7 +242,7 @@ export function ScheduledTasksView({
                         onOpenEditor({ mode: "edit", taskId: task.id });
                       }}
                     >
-                      编辑
+                      {t("Edit", "编辑")}
                     </button>
                     <button
                       className="workspace-menu__item workspace-menu__item--danger"
@@ -219,7 +256,7 @@ export function ScheduledTasksView({
                         });
                       }}
                     >
-                      删除
+                      {t("Delete", "删除")}
                     </button>
                   </div>
                 ) : null}

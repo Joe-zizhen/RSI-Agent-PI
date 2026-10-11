@@ -12,7 +12,7 @@ import type {
 } from "../../contracts/desktop-state";
 import type { CreateWorktreeOptions } from "../platform/worktrees/worktree-manager";
 import type { WorkspaceOwnerHost } from "./app-store-workspace";
-import { NEW_THREAD_PLACEHOLDER_TITLE } from "../conversation/thread-title-constants";
+import { newThreadPlaceholderTitle } from "../conversation/thread-title-constants";
 
 /* ── Public methods ─────────────────────────────────────── */
 
@@ -147,7 +147,7 @@ export async function startThread(
       initialThinkingLevel = input.thinkingLevel ?? createOptions.initialThinkingLevel;
       session = await store.driver.createSession(targetWorkspace, {
         ...createOptions,
-        title: NEW_THREAD_PLACEHOLDER_TITLE,
+        title: newThreadPlaceholderTitle(),
         ...(initialModel ? { initialModel } : {}),
         ...(initialThinkingLevel ? { initialThinkingLevel } : {}),
         extensionFlagValues: extensionFlags.applied,
@@ -494,7 +494,7 @@ async function generateAndApplyAutoTitle(
     if (
       !pendingAutoTitle ||
       pendingAutoTitle.requestToken !== options.requestToken ||
-      currentSession?.title !== NEW_THREAD_PLACEHOLDER_TITLE
+      currentSession?.title !== newThreadPlaceholderTitle()
     ) {
       // Expected when the user renamed first; anything else here means a
       // generated title was dropped — make the reason visible.

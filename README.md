@@ -1,13 +1,13 @@
 # RSI-Agent-PI
 
 > 基于 [pi-gui](https://github.com/minghinmatthewlam/pi-gui)（MIT © Matthew Lam）的 fork。
-> RSI-Agent-PI 内置 memloop 长期记忆，并以中文为唯一发行语言。
+> RSI-Agent-PI 内置 memloop 长期记忆，支持简体中文与 English 双语切换。
 
 RSI-Agent-PI 是内置长期记忆的开源编码 agent 桌面客户端。它在 pi 编码 agent 之上提供桌面界面，并内置 memloop 记忆系统。会话、模型、认证与工具全部走 pi 本身。
 
 特性：
 
-- 全中文界面。设置、菜单、通知均为中文。
+- 中英双语界面。默认简体中文，可在设置 → 通用 → 语言 中切换 English。
 - 记忆自动工作。系统自动捕获经验、自动注入记忆卡、自动回传世界判决。无需手动维护。
 - 内置常用插件。六个常用插件与两个安全扩展随应用安装。
 - 开箱即用。无需安装 Python 或 Node。应用内置 Python 运行时与 pi 运行时。
@@ -62,6 +62,16 @@ RSI-Agent-PI 是内置长期记忆的开源编码 agent 桌面客户端。它在
 2. 任务过程中查看时间线。若本次引用了记忆，会出现一行「本次引用了 N 条记忆」。
 3. 在输入框输入 `/memory list`。确认能看到本会话用过的记忆卡。
 4. 打开设置 → 记忆。填入 verdictCmd 世界判决命令，例如 `npm test`。此后任务结束会自动运行该命令并记录世界判决。
+
+## 界面语言
+
+界面默认使用简体中文。
+
+若要切换界面语言，请在设置 → 通用 → 语言 中选择。渲染层文案即时生效。菜单、对话框与内置插件文案在重启后生效。切换时应用给出提示与「立即重启」按钮。点「立即重启」后，全部文案生效。
+
+记忆卡等模型可见内容固定为中文。注入块与 Python 侧同步维护。界面语言切换不改变注入块。
+
+The interface language defaults to Simplified Chinese and can be changed in Settings → General → Language.
 
 ## 记忆系统
 

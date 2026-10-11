@@ -30,6 +30,7 @@ import {
 } from "./sidecar.ts";
 import { registerMemloopCommands } from "./commands.ts";
 import { registerMemloopTools } from "./tools.ts";
+import { t } from "./t.ts";
 
 // L0 display budget: per-card and total caps keep the prompt section bounded.
 // Storage never truncates; full text stays reachable via memory_search.
@@ -39,6 +40,8 @@ const MEMORY_SECTION = "memory";
 const MEMLOOP_HINT_TYPE = "memloop-hint";
 
 // Must stay in lockstep with loops.py USAGE_RULES (same block, same teaching).
+// Not migrated to t() on purpose: this block is injected into the model prompt
+// and the Python sidecar (python/memloop/loops.py) is not localized this round.
 const USAGE_RULES = [
   "长期记忆卡。每条带置信度（0 至 1）与验证方式。",
   "使用规则：置信度低于 0.70 时先执行 verify 命令确认。hearsay 条目仅作线索。",
@@ -84,7 +87,8 @@ function truncateForDisplay(text: string): string {
 }
 
 // Card line mirrors loops.py _card_line exactly: no verify path means the card
-// is hearsay, and the CONFLICTED flag trails the bracket.
+// is hearsay, and the CONFLICTED flag trails the bracket. Not migrated to t():
+// the format must stay byte-compatible with the Python sidecar's card line.
 function formatClaimLine(claim: RetrievedClaim, conflicted: boolean): string {
   const confidence = claim.confidence !== undefined ? claim.confidence.toFixed(2) : "??";
   const verifyCmd = claim.verify_cmd;
@@ -189,9 +193,12 @@ export default function memloop(pi: ExtensionAPI) {
       // Degraded mode must never break the agent: no memory, one notice.
       if (!degradedNotified) {
         degradedNotified = true;
-        const detail = lastDiagnostic !== "" ? `：${lastDiagnostic}` : "";
+        const detail = lastDiagnostic !== "" ? t(`: ${lastDiagnostic}`, `：${lastDiagnostic}`) : "";
         ctx.ui.notify(
-          `memloop 记忆不可用（缺少 Python 3.11+ 或 sidecar 启动失败），以无记忆模式运行${detail}`,
+          t(
+            `memloop memory unavailable (missing Python 3.11+ or sidecar start failure); running without memory${detail}`,
+            `memloop 记忆不可用（缺少 Python 3.11+ 或 sidecar 启动失败），以无记忆模式运行${detail}`,
+          ),
           "warning",
         );
       }
@@ -205,7 +212,9 @@ export default function memloop(pi: ExtensionAPI) {
   // continuing the run, and entries stay out of the model context.
   pi.registerEntryRenderer<{ count: number }>(MEMLOOP_HINT_TYPE, (entry, _options, theme) => {
     const count = entry.data?.count ?? 0;
-    return new Text(theme.fg("dim", `本次引用了 ${count} 条记忆`));
+    return new Text(
+      theme.fg("dim", t(`used ${count} memories this turn`, `本次引用了 ${count} 条记忆`)),
+    );
   });
 
   // Session start is the sleep-between-sessions maintenance point: cleanup
@@ -217,7 +226,10 @@ export default function memloop(pi: ExtensionAPI) {
       await active.consolidate();
       await active.runDream({});
     } catch (err) {
-      ctx.ui.notify(`memloop 维护失败：${String(err)}`, "warning");
+      ctx.ui.notify(
+        t(`memloop maintenance failed: ${String(err)}`, `memloop 维护失败：${String(err)}`),
+        "warning",
+      );
     }
   });
 
@@ -245,7 +257,10 @@ export default function memloop(pi: ExtensionAPI) {
       }
     } catch (err) {
       // Memory must never block the turn; run without injection on failure.
-      ctx.ui.notify(`memloop 注入失败：${String(err)}`, "warning");
+      ctx.ui.notify(
+        t(`memloop injection failed: ${String(err)}`, `memloop 注入失败：${String(err)}`),
+        "warning",
+      );
     }
   });
 
@@ -262,12 +277,23 @@ export default function memloop(pi: ExtensionAPI) {
       guardCache.set(event.toolCallId, guard);
       registry.recordGuardHit(guard);
       if (guard.level === "l2" && guard.blocked === true) {
-        return { block: true, reason: guard.message ?? "[memloop 硬拦截] 命中已验证的失败模式。" };
+        return {
+          block: true,
+          reason:
+            guard.message ??
+            t(
+              "[memloop hard block] matched a verified failure pattern.",
+              "[memloop 硬拦截] 命中已验证的失败模式。",
+            ),
+        };
       }
     } catch (err) {
       // A tool_call handler failure blocks the tool as fail-safe; guard
       // errors must not, so allow the call to proceed.
-      ctx.ui.notify(`memloop guard 失败：${String(err)}`, "warning");
+      ctx.ui.notify(
+        t(`memloop guard failed: ${String(err)}`, `memloop guard 失败：${String(err)}`),
+        "warning",
+      );
     }
   });
 
@@ -324,14 +350,17 @@ export default function memloop(pi: ExtensionAPI) {
             const captured = await active.capture({
               kind: "failure_fix",
               payload: {
-                text: `命令失败：${firstLine}`,
+                text: t(`command failed: ${firstLine}`, `命令失败：${firstLine}`),
                 failed_cmd: command,
               },
               origin_key: `pi:${sessionKey}:fail-${Date.now()}-${createHash("sha1").update(command).digest("hex").slice(0, 8)}`,
             });
             pendingFailures.push({ command, eventId: captured.event_id });
           } catch (err) {
-            ctx.ui.notify(`memloop 捕获失败：${String(err)}`, "warning");
+            ctx.ui.notify(
+              t(`memloop capture failed: ${String(err)}`, `memloop 捕获失败：${String(err)}`),
+              "warning",
+            );
           }
         } else {
           // Pair the closest preceding different failure with this
@@ -346,13 +375,19 @@ export default function memloop(pi: ExtensionAPI) {
               await active.cardify({
                 event_id: failure.eventId,
                 key: firstCommandToken(failure.command),
-                text: `${failure.command} 失败，改用 ${command} 后成功`,
+                text: t(
+                  `${failure.command} failed; succeeded after switching to ${command}`,
+                  `${failure.command} 失败，改用 ${command} 后成功`,
+                ),
                 claim_kind: "experience",
                 verify_cmd: command,
                 match_pattern: failure.command,
               });
             } catch (err) {
-              ctx.ui.notify(`memloop 成卡失败：${String(err)}`, "warning");
+              ctx.ui.notify(
+                t(`memloop cardify failed: ${String(err)}`, `memloop 成卡失败：${String(err)}`),
+                "warning",
+              );
             }
             break;
           }
@@ -373,7 +408,13 @@ export default function memloop(pi: ExtensionAPI) {
     try {
       ({ signal } = await active.classifySignal({ text }));
     } catch (err) {
-      ctx.ui.notify(`memloop 信号识别失败：${String(err)}`, "warning");
+      ctx.ui.notify(
+        t(
+          `memloop signal classification failed: ${String(err)}`,
+          `memloop 信号识别失败：${String(err)}`,
+        ),
+        "warning",
+      );
       return;
     }
     const kind = signal === "correction" ? "user_correction" : "explicit_instruction";
@@ -382,7 +423,10 @@ export default function memloop(pi: ExtensionAPI) {
       const captured = await active.capture({ kind, payload: { text }, origin_key: originKey });
       eventId = captured.event_id;
     } catch (err) {
-      ctx.ui.notify(`memloop 捕获失败：${String(err)}`, "warning");
+      ctx.ui.notify(
+        t(`memloop capture failed: ${String(err)}`, `memloop 捕获失败：${String(err)}`),
+        "warning",
+      );
     }
     // T2 signals are world-verdict input and must not be lost when capture
     // fails, so they run in their own guard. They fire at input time, before
@@ -391,7 +435,13 @@ export default function memloop(pi: ExtensionAPI) {
       try {
         await active.episodeSignal({ signal });
       } catch (err) {
-        ctx.ui.notify(`memloop 判决信号失败：${String(err)}`, "warning");
+        ctx.ui.notify(
+          t(
+            `memloop verdict signal failed: ${String(err)}`,
+            `memloop 判决信号失败：${String(err)}`,
+          ),
+          "warning",
+        );
       }
     }
     if (
@@ -401,7 +451,10 @@ export default function memloop(pi: ExtensionAPI) {
       try {
         await active.cardify({ event_id: eventId, key: normalizeKey(text.slice(0, 24)) });
       } catch (err) {
-        ctx.ui.notify(`memloop 成卡失败：${String(err)}`, "warning");
+        ctx.ui.notify(
+          t(`memloop cardify failed: ${String(err)}`, `memloop 成卡失败：${String(err)}`),
+          "warning",
+        );
       }
     }
   });
@@ -413,7 +466,10 @@ export default function memloop(pi: ExtensionAPI) {
       // The sidecar records the verdict trace itself; only trigger it here.
       await active.closeEpisode({ verdict_cmd: resolveVerdictCmd() });
     } catch (err) {
-      ctx.ui.notify(`memloop 判决失败：${String(err)}`, "warning");
+      ctx.ui.notify(
+        t(`memloop verdict failed: ${String(err)}`, `memloop 判决失败：${String(err)}`),
+        "warning",
+      );
     }
   });
 

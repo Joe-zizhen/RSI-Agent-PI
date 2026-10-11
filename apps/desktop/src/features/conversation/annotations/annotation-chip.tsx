@@ -1,5 +1,6 @@
 import { ChatIcon, CloseIcon } from "../../../ui/icons";
 import type { TranscriptAnnotation } from "./annotation-prompt";
+import { t, useLocale } from "../../../t";
 
 /** "N annotations" above the composer; hovering or focusing it lists each quote and comment. */
 export function AnnotationChip({
@@ -9,8 +10,12 @@ export function AnnotationChip({
   readonly annotations: readonly TranscriptAnnotation[];
   readonly onRemove: (id: string) => void;
 }) {
+  useLocale();
   if (annotations.length === 0) return null;
-  const label = `${annotations.length} 条批注`;
+  const label = t(
+    `${annotations.length} annotation${annotations.length === 1 ? "" : "s"}`,
+    `${annotations.length} 条批注`,
+  );
   return (
     <div className="annotation-chip" data-testid="annotation-chip">
       <button className="annotation-chip__button" type="button">
@@ -29,7 +34,7 @@ export function AnnotationChip({
                 ) : null}
               </div>
               <button
-                aria-label={`移除批注 ${index + 1}`}
+                aria-label={t(`Remove annotation ${index + 1}`, `移除批注 ${index + 1}`)}
                 className="annotation-chip__remove"
                 type="button"
                 onClick={() => onRemove(annotation.id)}

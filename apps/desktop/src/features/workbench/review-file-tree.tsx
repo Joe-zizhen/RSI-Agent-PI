@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReviewFileEntry, ReviewFileStatus } from "../../../contracts/review";
 import { ChevronDownIcon, ChevronRightIcon, MinusIcon, PlusIcon, SearchIcon } from "../../ui/icons";
 import { buildFileTree, filterWorkspaceFiles, type FileTreeNode } from "./file-tree";
+import { t, useLocale } from "../../t";
 
 interface ReviewFileTreeProps {
   readonly checkoutId: string;
@@ -28,6 +29,7 @@ export function ReviewFileTree({
   onToggleReviewed,
   onStage,
 }: ReviewFileTreeProps) {
+  useLocale();
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -107,8 +109,8 @@ export function ReviewFileTree({
               <button
                 className="icon-button review-tree__stage"
                 type="button"
-                aria-label="取消暂存"
-                title="取消暂存文件"
+                aria-label={t("Unstage", "取消暂存")}
+                title={t("Unstage file", "取消暂存文件")}
                 disabled={busy || stale || file.conflicted}
                 onClick={() => onStage(file, "unstage")}
               >
@@ -119,8 +121,8 @@ export function ReviewFileTree({
               <button
                 className="icon-button review-tree__stage"
                 type="button"
-                aria-label="暂存"
-                title="暂存文件"
+                aria-label={t("Stage", "暂存")}
+                title={t("Stage file", "暂存文件")}
                 disabled={busy || stale || file.conflicted}
                 onClick={() => onStage(file, "stage")}
               >
@@ -130,7 +132,7 @@ export function ReviewFileTree({
           </span>
         ) : null}
         <input
-          aria-label={`将 ${file.path} 标记为已审查`}
+          aria-label={t(`Mark ${file.path} reviewed`, `将 ${file.path} 标记为已审查`)}
           className="diff-panel__reviewed-checkbox"
           data-testid={`diff-panel-reviewed-${file.path}`}
           type="checkbox"
@@ -140,7 +142,7 @@ export function ReviewFileTree({
         />
         <span
           className={`review-tree__status review-tree__status--${file.conflicted ? "conflicted" : file.status}`}
-          title={file.conflicted ? "冲突" : file.status}
+          title={file.conflicted ? t("Conflicted", "冲突") : file.status}
         >
           {statusLetter(file.conflicted ? "conflicted" : file.status)}
         </span>
@@ -149,26 +151,27 @@ export function ReviewFileTree({
   };
 
   return (
-    <section className="review-tree" aria-label="变更的文件">
+    <section className="review-tree" aria-label={t("Changed files", "变更的文件")}>
       <div className="review-tree__header">
         <label className="review-tree__filter">
           <SearchIcon />
           <input
-            aria-label="筛选变更的文件"
-            placeholder="筛选文件…"
+            aria-label={t("Filter changed files", "筛选变更的文件")}
+            placeholder={t("Filter files…", "筛选文件…")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
         <span className="review-tree__counter" data-testid="diff-panel-counter">
-          已审查 {reviewedCount} / {files.length}
+          {t("Reviewed", "已审查")}
+          {reviewedCount} / {files.length}
         </span>
       </div>
       <div className="review-tree__list diff-panel__file-list" ref={listRef}>
         {tree.length ? (
           tree.map((node) => renderNode(node, 0))
         ) : (
-          <div className="diff-panel__empty">没有匹配的文件。</div>
+          <div className="diff-panel__empty">{t("No matching files.", "没有匹配的文件。")}</div>
         )}
       </div>
     </section>

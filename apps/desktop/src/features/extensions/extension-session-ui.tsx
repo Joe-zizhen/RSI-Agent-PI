@@ -7,10 +7,10 @@ import type {
   SessionExtensionDialogRecord,
   SessionExtensionUiStateRecord,
 } from "../../../contracts/desktop-state";
+import { t, useLocale } from "../../t";
 
 const ANSI_ESCAPE_PATTERN = /\u001B\[[0-?]*[ -/]*[@-~]/g;
 const DOCK_SEGMENT_SEPARATOR = "--------------------";
-const GENERIC_ACTIVE_LABEL = "扩展界面运行中";
 
 interface ExtensionDockBlock {
   readonly key: string;
@@ -101,6 +101,7 @@ export function ExtensionDock({
   readonly onToggle: () => void;
   readonly onDismiss?: () => void;
 }) {
+  useLocale();
   return (
     <div
       className={`extension-dock ${expanded ? "extension-dock--expanded" : ""}`}
@@ -125,10 +126,10 @@ export function ExtensionDock({
         </button>
         {onDismiss ? (
           <button
-            aria-label="隐藏扩展状态"
+            aria-label={t("Hide extension status", "隐藏扩展状态")}
             className="extension-dock__dismiss icon-button"
             data-testid="extension-dock-dismiss"
-            title="隐藏到扩展更改为止"
+            title={t("Hide until the extension changes it", "隐藏到扩展更改为止")}
             type="button"
             onClick={(event) => focusComposerAfter(event.currentTarget, onDismiss)}
           >
@@ -156,6 +157,7 @@ export function ExtensionDialog({
   readonly dialog: SessionExtensionDialogRecord;
   readonly onRespond: (response: HostUiResponse) => void;
 }) {
+  useLocale();
   const [draft, setDraft] = useState("");
   const titleId = useId();
   const bodyId = useId();
@@ -254,7 +256,7 @@ export function ExtensionDialog({
           <input
             autoFocus
             className="skills-search"
-            placeholder={dialog.placeholder ?? "输入一个值"}
+            placeholder={dialog.placeholder ?? t("Enter a value", "输入一个值")}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
           />
@@ -277,7 +279,7 @@ export function ExtensionDialog({
             type="button"
             onClick={respondWithCancel}
           >
-            取消
+            {t("Cancel", "取消")}
           </button>
           {dialog.kind === "confirm" ? (
             <button
@@ -286,7 +288,7 @@ export function ExtensionDialog({
               type="button"
               onClick={respondWithSubmit}
             >
-              确认
+              {t("Confirm", "确认")}
             </button>
           ) : null}
           {dialog.kind === "input" || dialog.kind === "editor" ? (
@@ -296,7 +298,7 @@ export function ExtensionDialog({
               type="button"
               onClick={respondWithSubmit}
             >
-              提交
+              {t("Submit", "提交")}
             </button>
           ) : null}
         </div>
@@ -336,7 +338,7 @@ function resolveDockSummaryText(
     }
   }
 
-  return GENERIC_ACTIVE_LABEL;
+  return t("Extension UI running", "扩展界面运行中");
 }
 
 function buildDockBodyText(

@@ -25,6 +25,7 @@ import { sameRowContent, type TimelineRow } from "./timeline-layout";
 import type { OpenTurnChange } from "./turn-changes-card";
 import type { WorkspaceFileLine } from "./workspace-file-line";
 import { SparkIcon } from "../../ui/icons";
+import { t, useLocale } from "../../t";
 
 interface ThreadSearchModel {
   readonly isOpen: boolean;
@@ -213,6 +214,7 @@ export function ConversationTimeline({
 }
 
 function TranscriptSkeleton() {
+  useLocale();
   return (
     <div className="transcript-skeleton" data-testid="transcript-skeleton" aria-hidden="true">
       <div className="transcript-skeleton__row transcript-skeleton__row--user">
@@ -230,7 +232,7 @@ function TranscriptSkeleton() {
         <span className="skeleton-line" style={{ width: "80%" }} />
         <span className="skeleton-line" style={{ width: "72%" }} />
       </div>
-      <span className="sr-only">正在加载对话记录…</span>
+      <span className="sr-only">{t("Loading transcript…", "正在加载对话记录…")}</span>
     </div>
   );
 }
@@ -242,10 +244,16 @@ function TranscriptHydrateError({
   readonly retrying: boolean;
   readonly onRetry?: () => void;
 }) {
+  useLocale();
   return (
     <div className="transcript-hydrate-error" data-testid="transcript-hydrate-error">
-      <h2>无法加载此会话</h2>
-      <p>所选对话未能恢复。点击重试再试一次。</p>
+      <h2>{t("Couldn't load this thread", "无法加载此会话")}</h2>
+      <p>
+        {t(
+          "The selected conversation couldn't be restored. Retry to try again.",
+          "所选对话未能恢复。点击重试再试一次。",
+        )}
+      </p>
       <div className="transcript-hydrate-error__actions">
         <button
           className="button button--primary"
@@ -254,7 +262,7 @@ function TranscriptHydrateError({
           disabled={retrying || !onRetry}
           onClick={onRetry}
         >
-          {retrying ? "重试中…" : "重试"}
+          {retrying ? t("Retrying…", "重试中…") : t("Retry", "重试")}
         </button>
       </div>
     </div>
@@ -262,13 +270,16 @@ function TranscriptHydrateError({
 }
 
 function TranscriptEmptyState() {
+  useLocale();
   return (
     <div className="transcript-empty" data-testid="transcript-empty">
       <span className="transcript-empty__glyph" aria-hidden="true">
         <SparkIcon />
       </span>
-      <p className="transcript-empty__title">开始对话</p>
-      <p className="transcript-empty__hint">在下方发送提示词以开始本会话记录。</p>
+      <p className="transcript-empty__title">{t("Start the conversation", "开始对话")}</p>
+      <p className="transcript-empty__hint">
+        {t("Send a prompt below to begin this session.", "在下方发送提示词以开始本会话记录。")}
+      </p>
     </div>
   );
 }

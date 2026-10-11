@@ -13,6 +13,7 @@ import type {
   WorktreeRecord,
 } from "../../../../contracts/desktop-state";
 import type { PiDesktopApi } from "../../../../contracts/ipc";
+import { t, useLocale } from "../../../t";
 
 interface UseWorkspaceMenuParams {
   readonly api: PiDesktopApi | undefined;
@@ -51,6 +52,7 @@ export interface WorkspaceMenuState {
 }
 
 export function useWorkspaceMenu(params: UseWorkspaceMenuParams): WorkspaceMenuState {
+  useLocale();
   const { api, setSnapshot, updateSnapshot } = params;
 
   const [workspaceMenuId, setWorkspaceMenuId] = useState<string | null>(null);
@@ -142,7 +144,10 @@ export function useWorkspaceMenu(params: UseWorkspaceMenuParams): WorkspaceMenuS
 
   const removeWorkspace = (workspace: WorkspaceRecord) => {
     const confirmed = window.confirm(
-      `从 RSI-Agent-PI 移除 ${workspace.name}？此操作不会删除任何文件。`,
+      t(
+        `Remove ${workspace.name} from RSI-Agent-PI? This will not delete any files.`,
+        `从 RSI-Agent-PI 移除 ${workspace.name}？此操作不会删除任何文件。`,
+      ),
     );
     setWorkspaceMenuId(null);
     setWorkspaceRenameId(null);
@@ -174,7 +179,10 @@ export function useWorkspaceMenu(params: UseWorkspaceMenuParams): WorkspaceMenuS
 
   const removeWorktree = (workspaceId: string, worktree: WorktreeRecord) => {
     const confirmed = window.confirm(
-      `移除工作树 ${worktree.name}？此操作会从磁盘删除该 git 工作树。`,
+      t(
+        `Remove worktree ${worktree.name}? This removes the git worktree from disk.`,
+        `移除工作树 ${worktree.name}？此操作会从磁盘删除该 git 工作树。`,
+      ),
     );
     if (!confirmed || !api) {
       return;

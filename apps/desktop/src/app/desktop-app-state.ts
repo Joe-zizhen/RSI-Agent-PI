@@ -7,6 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import type { DesktopAppState, SelectedTranscriptRecord } from "../../contracts/desktop-state";
+import { setLocale } from "../t";
 import type { PiDesktopApi } from "../../contracts/ipc";
 
 export type HydrationOperation = "state" | "selected-transcript";
@@ -352,6 +353,9 @@ export function useDesktopAppState(): DesktopAppSession {
   const apply = useCallback((event: DesktopHydrationEvent) => {
     const next = reduceDesktopHydration(modelRef.current, event);
     modelRef.current = next;
+    if (next.liveSnapshot) {
+      setLocale(next.liveSnapshot.locale);
+    }
     setModel(next);
   }, []);
 
@@ -439,6 +443,9 @@ export function useDesktopAppState(): DesktopAppSession {
       snapshot: next,
     });
     modelRef.current = reduced;
+    if (reduced.liveSnapshot) {
+      setLocale(reduced.liveSnapshot.locale);
+    }
     setModel(reduced);
   }, []);
 

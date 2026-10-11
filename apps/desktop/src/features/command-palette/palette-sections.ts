@@ -1,5 +1,6 @@
 import type { PaletteFilter, PaletteItem, PaletteSection } from "./command-palette";
 import { rankByFuzzy, type RankedMatch } from "./fuzzy-match";
+import { t } from "../../t";
 
 /** An item before matching; the palette highlights its title. */
 export type PaletteCandidate = Omit<PaletteItem, "titleMatches" | "detailMatches">;
@@ -7,10 +8,30 @@ export type PaletteCandidate = Omit<PaletteItem, "titleMatches" | "detailMatches
 export type CommandFilter = "all" | "chats" | "workspaces" | "actions";
 
 export const COMMAND_FILTERS: readonly PaletteFilter<CommandFilter>[] = [
-  { id: "all", label: "全部" },
-  { id: "chats", label: "会话" },
-  { id: "workspaces", label: "项目" },
-  { id: "actions", label: "操作" },
+  {
+    id: "all",
+    get label() {
+      return t("All", "全部");
+    },
+  },
+  {
+    id: "chats",
+    get label() {
+      return t("Threads", "会话");
+    },
+  },
+  {
+    id: "workspaces",
+    get label() {
+      return t("Project", "项目");
+    },
+  },
+  {
+    id: "actions",
+    get label() {
+      return t("Actions", "操作");
+    },
+  },
 ];
 
 const RECENT_CHAT_COUNT = 5;
@@ -53,24 +74,26 @@ export function buildCommandSections(input: {
   if (query.trim() === "") {
     switch (filter) {
       case "chats":
-        return [{ id: "chats", label: "会话", items: chats.slice(0, SINGLE_FILTER_LIMIT) }];
+        return [
+          { id: "chats", label: t("Threads", "会话"), items: chats.slice(0, SINGLE_FILTER_LIMIT) },
+        ];
       case "workspaces":
-        return [{ id: "workspaces", label: "项目", items: workspaces }];
+        return [{ id: "workspaces", label: t("Project", "项目"), items: workspaces }];
       case "actions":
-        return [{ id: "actions", label: "操作", items: actions }];
+        return [{ id: "actions", label: t("Actions", "操作"), items: actions }];
       case "all":
         return [
-          { id: "recents", label: "最近", items: chats.slice(0, RECENT_CHAT_COUNT) },
-          { id: "actions", label: "操作", items: actions },
+          { id: "recents", label: t("Recents", "最近"), items: chats.slice(0, RECENT_CHAT_COUNT) },
+          { id: "actions", label: t("Actions", "操作"), items: actions },
         ];
     }
   }
 
   const single = filter !== "all";
   const kinds = [
-    { id: "chats", label: "会话", candidates: chats },
-    { id: "workspaces", label: "项目", candidates: workspaces },
-    { id: "actions", label: "操作", candidates: actions },
+    { id: "chats", label: t("Threads", "会话"), candidates: chats },
+    { id: "workspaces", label: t("Project", "项目"), candidates: workspaces },
+    { id: "actions", label: t("Actions", "操作"), candidates: actions },
   ] as const;
   return kinds
     .filter((kind) => !single || kind.id === filter)
@@ -110,7 +133,7 @@ export function buildFileSections(input: {
     return [
       {
         id: "open-files",
-        label: "打开的文件",
+        label: t("Open files", "打开的文件"),
         items: [...openTabs].reverse().map(toCandidate),
       },
     ];
@@ -126,7 +149,7 @@ export function buildFileSections(input: {
       detailMatches: match.positions.filter((position) => position < directory.length),
     };
   });
-  return [{ id: "files", label: "文件", items }];
+  return [{ id: "files", label: t("Files", "文件"), items }];
 }
 
 export function buildListSection(input: {

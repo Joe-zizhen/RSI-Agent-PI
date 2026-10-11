@@ -60,5 +60,5 @@ test("a failed tool that returned only images names them in its detail", () => {
     state,
   );
   const [row] = transcript.get(sessionKey(sessionRef))!.filter((item) => item.kind === "tool");
-  expect(row).toMatchObject({ detail: "[image/png image]" });
+  expect(row).toMatchObject({ detail: "[image/png 图片]" });
 });

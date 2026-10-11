@@ -10,6 +10,7 @@ import { CloseIcon, ExtensionIcon, PlusIcon, SidePanelIcon } from "../../ui/icon
 import { BUILTIN_TOOL_ENTRIES, BUILTIN_TOOLS } from "./builtin-tools";
 import { WorkbenchResizeHandle } from "./workbench-resize-handle";
 import { activeWorkbenchTool } from "./workbench-state";
+import { t, useLocale } from "../../t";
 
 interface WorkbenchProps {
   readonly view: TaskWorkbenchTemplate;
@@ -61,6 +62,7 @@ export function Workbench({
   extensionViewsError = "",
   onReloadExtensionViews,
 }: WorkbenchProps) {
+  useLocale();
   const panelId = useId();
   const addRef = useRef<HTMLButtonElement | null>(null);
   const tabRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -129,14 +131,18 @@ export function Workbench({
 
   return (
     <aside
-      aria-label="侧边工作台"
+      aria-label={t("Side workspace", "侧边工作台")}
       className="workbench side-panel"
       data-testid="workbench"
       id="task-workbench"
     >
       <WorkbenchResizeHandle onResize={onResize} />
       <div className="workbench__tabbar">
-        <div aria-label="工作台工具" className="workbench__tabs" role="tablist">
+        <div
+          aria-label={t("Workspace tools", "工作台工具")}
+          className="workbench__tabs"
+          role="tablist"
+        >
           {view.tools.map((tool, index) => {
             const toolId = toolRefId(tool);
             const label =
@@ -183,12 +189,12 @@ export function Workbench({
                   <span>{label}</span>
                 </button>
                 <button
-                  aria-label={`关闭 ${label} 标签页`}
+                  aria-label={t(`Close ${label} tab`, `关闭 ${label} 标签页`)}
                   className="workbench__tab-close icon-button"
                   disabled={loading}
                   onClick={() => closeAndFocus(toolId)}
                   tabIndex={-1}
-                  title={`关闭 ${label} 标签页`}
+                  title={t(`Close ${label} tab`, `关闭 ${label} 标签页`)}
                   type="button"
                 >
                   <CloseIcon />
@@ -198,25 +204,25 @@ export function Workbench({
           })}
         </div>
         <button
-          aria-label="添加标签页"
+          aria-label={t("Add tab", "添加标签页")}
           className="workbench__add icon-button"
           data-testid="workbench-add-tab"
           disabled={loading}
           onClick={onShowChooser}
           ref={addRef}
-          title="添加标签页"
+          title={t("Add tab", "添加标签页")}
           type="button"
         >
           <PlusIcon />
         </button>
         <button
-          aria-label="切换侧边面板"
+          aria-label={t("Toggle side panel", "切换侧边面板")}
           aria-pressed="true"
           aria-controls="task-workbench"
           data-testid="toggle-side-panel"
           className="workbench__add icon-button"
           onClick={onTogglePanel}
-          title="隐藏侧边面板"
+          title={t("Hide side panel", "隐藏侧边面板")}
           type="button"
         >
           <SidePanelIcon />
@@ -227,7 +233,7 @@ export function Workbench({
           <p>{error}</p>
           {loading && onRetryRestore ? (
             <button className="button" onClick={onRetryRestore} type="button">
-              重试恢复标签页
+              {t("Retry restoring tabs", "重试恢复标签页")}
             </button>
           ) : null}
         </div>
@@ -240,12 +246,22 @@ export function Workbench({
       >
         {loading ? (
           <p className="workbench__loading" role="status">
-            {error ? "在恢复成功之前，已保存的标签页不可用。" : "正在恢复工具标签页…"}
+            {error
+              ? t(
+                  "Saved tabs are unavailable until recovery succeeds.",
+                  "在恢复成功之前，已保存的标签页不可用。",
+                )
+              : t("Restoring tool tabs…", "正在恢复工具标签页…")}
           </p>
         ) : view.selection.kind === "chooser" ? (
           <div className="workbench__chooser" data-testid="workbench-chooser">
-            <h2>打开工具</h2>
-            <p>在会话旁保留你需要的工具。</p>
+            <h2>{t("Open a tool", "打开工具")}</h2>
+            <p>
+              {t(
+                "Keep the tools you need alongside your conversation.",
+                "在会话旁保留你需要的工具。",
+              )}
+            </p>
             {BUILTIN_TOOL_ENTRIES.map(({ kind, label, description, Icon, shortcutKey }) => (
               <button
                 aria-keyshortcuts={
@@ -273,14 +289,16 @@ export function Workbench({
                 ) : null}
               </button>
             ))}
-            <h3 className="workbench__extension-heading">扩展视图</h3>
-            {extensionViewsLoading ? <p role="status">正在加载扩展视图…</p> : null}
+            <h3 className="workbench__extension-heading">{t("Extension views", "扩展视图")}</h3>
+            {extensionViewsLoading ? (
+              <p role="status">{t("Loading extension view…", "正在加载扩展视图…")}</p>
+            ) : null}
             {extensionViewsError ? (
               <div role="status">
                 <p>{extensionViewsError}</p>
                 {onReloadExtensionViews ? (
                   <button className="button" type="button" onClick={onReloadExtensionViews}>
-                    刷新视图
+                    {t("Refresh views", "刷新视图")}
                   </button>
                 ) : null}
               </div>
@@ -309,27 +327,39 @@ export function Workbench({
                 <span className="workbench__choice-copy">
                   <strong>{extension.title}</strong>
                   {extension.state === "error" ? (
-                    <span>{extension.error ?? "视图不可用"}</span>
+                    <span>{extension.error ?? t("View unavailable", "视图不可用")}</span>
                   ) : null}
                 </span>
               </button>
             ))}
             {!extensionViewsLoading && !extensionViewsError && extensionViews.length === 0 ? (
-              <p>已安装的扩展可以在此提供额外视图。</p>
+              <p>
+                {t(
+                  "Installed extensions can provide additional views here.",
+                  "已安装的扩展可以在此提供额外视图。",
+                )}
+              </p>
             ) : null}
           </div>
         ) : activeTool?.kind === "extension" && activeExtension?.state !== "ready" ? (
           <div className="workbench__unavailable" role="status">
             <ExtensionIcon />
-            <h2>{extensionViewsLoading ? "正在查找此扩展视图…" : "此扩展视图不可用"}</h2>
+            <h2>
+              {extensionViewsLoading
+                ? t("Looking for this extension view…", "正在查找此扩展视图…")
+                : t("This extension view is unavailable", "此扩展视图不可用")}
+            </h2>
             <p>
               {activeExtension?.error ||
                 extensionViewsError ||
-                "已保留你保存的标签页。扩展命令在安装后仍可使用。"}
+                t(
+                  "Your saved tab is retained. Extension commands can still be used when installed.",
+                  "已保留你保存的标签页。扩展命令在安装后仍可使用。",
+                )}
             </p>
             {!extensionViewsLoading && onReloadExtensionViews ? (
               <button className="button" type="button" onClick={onReloadExtensionViews}>
-                刷新视图
+                {t("Refresh views", "刷新视图")}
               </button>
             ) : null}
             <button
@@ -337,7 +367,7 @@ export function Workbench({
               onClick={() => closeAndFocus(toolRefId(activeTool))}
               type="button"
             >
-              关闭标签页
+              {t("Close tab", "关闭标签页")}
             </button>
           </div>
         ) : (

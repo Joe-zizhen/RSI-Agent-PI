@@ -37,6 +37,7 @@ import {
   TerminalIcon,
 } from "../../ui/icons";
 import { extensionToLanguage } from "../../ui/syntax-highlight";
+import { t, useLocale } from "../../t";
 
 export function TimelineItem({
   item,
@@ -141,6 +142,7 @@ function TimelineMessage({
   readonly annotationMarkers?: readonly AnnotationMarker[];
   readonly onOpenAnnotation?: OpenAnnotation;
 }) {
+  useLocale();
   const articleRef = useRef<HTMLElement | null>(null);
   const annotated = useMemo(
     () => (item.role === "user" ? parseAnnotatedPrompt(item.text) : null),
@@ -163,7 +165,7 @@ function TimelineMessage({
         <div className="timeline-item__user-stack">
           {scheduledOrigin ? (
             <div className="timeline-item__scheduled-origin" data-testid="sent-by-scheduled-task">
-              由计划任务发送
+              {t("Sent by a scheduled task", "由计划任务发送")}
             </div>
           ) : null}
           <div className="timeline-item__bubble">
@@ -174,7 +176,7 @@ function TimelineMessage({
                     <ImageAttachmentThumb
                       className="timeline-item__attachment timeline-item__attachment--image"
                       key={`${item.id}:${index}`}
-                      name={attachment.name ?? `附件 ${index + 1}`}
+                      name={attachment.name ?? t(`Attachment ${index + 1}`, `附件 ${index + 1}`)}
                       src={`data:${attachment.mimeType};base64,${attachment.data}`}
                     />
                   ) : (
@@ -205,7 +207,9 @@ function TimelineMessage({
     return (
       <article className="timeline-item timeline-item--summary-card">
         <div className="timeline-item__summary-eyebrow">
-          {item.role === "branchSummary" ? "分支总结" : "上下文压缩总结"}
+          {item.role === "branchSummary"
+            ? t("Branch summary", "分支总结")
+            : t("Compaction summary", "上下文压缩总结")}
         </div>
         <MessageMarkdown text={item.text} />
       </article>
@@ -228,14 +232,18 @@ function TimelineMessage({
           <button
             type="button"
             className="timeline-item__action"
-            title={onForkFromMessage ? "从该点分叉对话" : "运行结束后可进行分叉"}
-            aria-label="从该点分叉对话"
+            title={
+              onForkFromMessage
+                ? t("Fork conversation from this point", "从该点分叉对话")
+                : t("Fork is available when the run finishes", "运行结束后可进行分叉")
+            }
+            aria-label={t("Fork conversation from this point", "从该点分叉对话")}
             data-testid="fork-from-message"
             disabled={!onForkFromMessage}
             onClick={() => onForkFromMessage?.(sourceMessageIndex, item.text)}
           >
             <ForkIcon />
-            <span className="timeline-item__action-label">分叉</span>
+            <span className="timeline-item__action-label">{t("Fork", "分叉")}</span>
           </button>
         </div>
       ) : null}
@@ -265,6 +273,7 @@ function TimelineToolCallItem({
   readonly onToggle?: (callId: string) => void;
   readonly onViewFileInDiff?: (path: string) => void;
 }) {
+  useLocale();
   const hasContent = item.input !== undefined || item.output !== undefined;
   // An extension's tool shows the label it registered instead of a guess from its name.
   const extensionLabel = useExtensionToolLabel(item.toolName);
@@ -322,7 +331,7 @@ function TimelineToolCallItem({
         </button>
         {filePath && onViewFileInDiff ? (
           <button
-            aria-label={`在变更中查看 ${filePath}`}
+            aria-label={t(`View ${filePath} in changes`, `在变更中查看 ${filePath}`)}
             className="icon-button timeline-tool__view-in-diff"
             data-testid="timeline-tool-view-in-diff"
             type="button"
@@ -342,7 +351,7 @@ function TimelineToolCallItem({
             <ImageAttachmentThumb
               className="timeline-tool__image"
               key={`${item.callId}:${index}`}
-              name={`${item.toolName} 图片 ${index + 1}`}
+              name={t(`${item.toolName} image ${index + 1}`, `${item.toolName} 图片 ${index + 1}`)}
               src={toolOutputImageSrc(image)}
             />
           ))}
@@ -367,7 +376,7 @@ function TimelineToolCallItem({
                   className="icon-button timeline-tool__copy"
                   type="button"
                   onClick={handleCopy}
-                  aria-label="复制"
+                  aria-label={t("Copy", "复制")}
                 >
                   <CopyIcon />
                 </button>
@@ -381,7 +390,7 @@ function TimelineToolCallItem({
                   className="icon-button timeline-tool__copy"
                   type="button"
                   onClick={handleCopy}
-                  aria-label="复制"
+                  aria-label={t("Copy", "复制")}
                 >
                   <CopyIcon />
                 </button>
@@ -419,7 +428,7 @@ function buildCompactLabel(
   if (isWriteTool(item.toolName)) {
     const filename = extractFilename(item.input);
     if (filename) {
-      return `已编辑 ${shortenPath(filename)}`;
+      return t(`Edited ${shortenPath(filename)}`, `已编辑 ${shortenPath(filename)}`);
     }
   }
   return item.label;
@@ -470,15 +479,21 @@ function formatToolContent(input: unknown, output: unknown): string {
 }
 
 function statusLabel(status: "running" | "success" | "error") {
-  if (status === "running") return "运行中";
-  if (status === "success") return "完成";
-  return "失败";
+  if (status === "running") return t("running", "运行中");
+  if (status === "success") return t("done", "完成");
+  return t("failed", "失败");
 }
 
 function TimelineTurnMarkerItem({ item }: { readonly item: TimelineTurnMarker }) {
+  useLocale();
   return (
     <div className="timeline-turn-marker" data-testid="timeline-turn-marker">
-      <span className="timeline-turn-marker__label">{`已运行 ${formatWorkedDuration(item.durationMs)}`}</span>
+      <span className="timeline-turn-marker__label">
+        {t(
+          `Ran for ${formatWorkedDuration(item.durationMs)}`,
+          `已运行 ${formatWorkedDuration(item.durationMs)}`,
+        )}
+      </span>
     </div>
   );
 }

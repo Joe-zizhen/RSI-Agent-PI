@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { SearchIcon } from "../../ui/icons";
+import { t, useLocale } from "../../t";
 
 export interface PaletteItem {
   readonly id: string;
@@ -63,6 +64,7 @@ export function CommandPalette<F extends string>({
   onBack,
   onClose,
 }: CommandPaletteProps<F>) {
+  useLocale();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -202,7 +204,7 @@ export function CommandPalette<F extends string>({
             onChange={(event) => onQueryChange(event.target.value)}
           />
           <button
-            aria-label="关闭"
+            aria-label={t("Close", "关闭")}
             className="command-palette__close"
             type="button"
             onClick={onClose}
@@ -212,7 +214,11 @@ export function CommandPalette<F extends string>({
         </div>
 
         {filters && filters.length > 0 ? (
-          <div aria-label="筛选" className="command-palette__filters" role="tablist">
+          <div
+            aria-label={t("Filters", "筛选")}
+            className="command-palette__filters"
+            role="tablist"
+          >
             {filters.map((filter) => (
               <button
                 key={filter.id}

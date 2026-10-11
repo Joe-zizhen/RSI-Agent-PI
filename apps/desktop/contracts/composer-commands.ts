@@ -3,6 +3,7 @@ import type {
   RuntimeCommandRecord,
   RuntimeSnapshot,
 } from "@rsi-agent-pi/session-driver/runtime-types";
+import { t } from "./t";
 
 export type ParsedComposerCommand =
   | { type: "model"; provider: string; modelId: string }
@@ -14,15 +15,33 @@ export type ParsedComposerCommand =
   | { type: "compact"; customInstructions?: string }
   | { type: "name"; title: string };
 
-const INCOMPLETE_COMMAND_MESSAGES: Readonly<Record<string, string>> = {
-  "/compact": "Add optional instructions after /compact or send it directly from the slash menu.",
-  "/login": "Choose a provider from the slash menu before sending /login.",
-  "/logout": "Choose a connected provider from the slash menu before sending /logout.",
-  "/model": "Choose a provider and model from the slash menu before sending /model.",
-  "/name": "Add a thread title after /name.",
-  "/scoped-models": "Open Enabled models from the slash menu or Settings.",
-  "/settings": "Open Settings from the slash menu or Cmd+,.",
-  "/thinking": "Choose a reasoning level from the slash menu before sending /thinking.",
+const INCOMPLETE_COMMAND_MESSAGES: Readonly<Record<string, readonly [string, string]>> = {
+  "/compact": [
+    "Add optional instructions after /compact or send it directly from the slash menu.",
+    "在 /compact 后补充可选指令，或直接从斜杠菜单发送。",
+  ],
+  "/login": [
+    "Choose a provider from the slash menu before sending /login.",
+    "发送 /login 前，请先从斜杠菜单选择提供商。",
+  ],
+  "/logout": [
+    "Choose a connected provider from the slash menu before sending /logout.",
+    "发送 /logout 前，请先从斜杠菜单选择一个已连接的提供商。",
+  ],
+  "/model": [
+    "Choose a provider and model from the slash menu before sending /model.",
+    "发送 /model 前，请先从斜杠菜单选择提供商和模型。",
+  ],
+  "/name": ["Add a thread title after /name.", "请在 /name 后添加会话标题。"],
+  "/scoped-models": [
+    "Open Enabled models from the slash menu or Settings.",
+    "请从斜杠菜单或设置打开“已启用模型”。",
+  ],
+  "/settings": ["Open Settings from the slash menu or Cmd+,.", "请从斜杠菜单或按 Cmd+, 打开设置。"],
+  "/thinking": [
+    "Choose a reasoning level from the slash menu before sending /thinking.",
+    "发送 /thinking 前，请先从斜杠菜单选择思考力度。",
+  ],
 } as const;
 
 export function resolveRuntimeCommands(
@@ -200,5 +219,6 @@ export function incompleteComposerCommandMessage(value: string): string | undefi
   }
 
   const [command] = trimmed.split(/\s+/);
-  return INCOMPLETE_COMMAND_MESSAGES[command as keyof typeof INCOMPLETE_COMMAND_MESSAGES];
+  const entry = INCOMPLETE_COMMAND_MESSAGES[command as keyof typeof INCOMPLETE_COMMAND_MESSAGES];
+  return entry ? t(entry[0], entry[1]) : undefined;
 }

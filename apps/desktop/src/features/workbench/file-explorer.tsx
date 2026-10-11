@@ -8,6 +8,7 @@ import {
 } from "../../ui/icons";
 import { ancestorDirectoryPaths } from "./file-workbench-state";
 import { buildFileTree, filterWorkspaceFiles, type FileTreeNode } from "./file-tree";
+import { t, useLocale } from "../../t";
 
 interface FileExplorerProps {
   readonly files: readonly string[] | null;
@@ -26,6 +27,7 @@ export function FileExplorer({
   onSelect,
   onRefresh,
 }: FileExplorerProps) {
+  useLocale();
   const [filter, setFilter] = useState("");
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
   const filterActive = filter.trim().length > 0;
@@ -55,27 +57,31 @@ export function FileExplorer({
   const emptyCopy = error
     ? error
     : files === null
-      ? "正在加载文件..."
+      ? t("Loading files…", "正在加载文件...")
       : files.length === 0
-        ? "没有已索引的文件"
+        ? t("No indexed files", "没有已索引的文件")
         : visibleFiles.length === 0
-          ? "没有匹配的文件"
+          ? t("No matching files", "没有匹配的文件")
           : null;
 
   return (
-    <section className="file-explorer" data-testid="file-explorer" aria-label="文件浏览器">
+    <section
+      className="file-explorer"
+      data-testid="file-explorer"
+      aria-label={t("File explorer", "文件浏览器")}
+    >
       <div className="file-explorer__toolbar">
         <input
-          aria-label="筛选文件"
+          aria-label={t("Filter files", "筛选文件")}
           className="file-explorer__filter"
           data-testid="file-workbench-filter"
           onChange={(event) => setFilter(event.target.value)}
-          placeholder="筛选文件…"
+          placeholder={t("Filter files…", "筛选文件…")}
           type="search"
           value={filter}
         />
         <button
-          aria-label="刷新"
+          aria-label={t("Refresh", "刷新")}
           className="icon-button"
           disabled={loading}
           onClick={onRefresh}

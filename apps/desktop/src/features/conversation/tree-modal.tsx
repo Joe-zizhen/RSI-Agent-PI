@@ -14,6 +14,7 @@ import type {
 } from "@rsi-agent-pi/session-driver/types";
 import { trapDialogFocus } from "../../ui/dialog-focus";
 import { ChevronDownIcon, ChevronRightIcon } from "../../ui/icons";
+import { t, useLocale } from "../../t";
 
 interface TreeModalProps {
   readonly tree?: SessionTreeSnapshot;
@@ -66,6 +67,7 @@ export function TreeModal({
   onClose,
   onNavigate,
 }: TreeModalProps) {
+  useLocale();
   const [step, setStep] = useState<"select" | "summary">("select");
   const [search, setSearch] = useState("");
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
@@ -314,11 +316,15 @@ export function TreeModal({
       >
         <div className="tree-modal__header">
           <div>
-            <div className="tree-modal__eyebrow">会话树</div>
-            <h2 className="tree-modal__title">{step === "summary" ? "切换分支" : "浏览分支"}</h2>
+            <div className="tree-modal__eyebrow">{t("Session tree", "会话树")}</div>
+            <h2 className="tree-modal__title">
+              {step === "summary"
+                ? t("Switch branch", "切换分支")
+                : t("Browse branches", "浏览分支")}
+            </h2>
           </div>
           <button
-            aria-label="关闭会话树对话框"
+            aria-label={t("Close tree modal", "关闭会话树对话框")}
             className="tree-modal__close"
             disabled={submitting}
             type="button"
@@ -342,7 +348,7 @@ export function TreeModal({
 
         {loading ? (
           <div className="tree-modal__loading" data-testid="tree-modal-loading">
-            正在加载会话树…
+            {t("Loading session tree…", "正在加载会话树…")}
           </div>
         ) : null}
 
@@ -351,10 +357,10 @@ export function TreeModal({
             <div className="tree-modal__search-row">
               <input
                 autoFocus
-                aria-label="搜索会话树"
+                aria-label={t("Search session tree", "搜索会话树")}
                 className="tree-modal__search"
                 data-testid="tree-modal-search"
-                placeholder="搜索可见的树节点"
+                placeholder={t("Search visible tree entries", "搜索可见的树节点")}
                 ref={searchRef}
                 value={search}
                 onChange={(event) => {
@@ -364,16 +370,18 @@ export function TreeModal({
               />
               <div className="tree-modal__meta">
                 {searching
-                  ? "搜索会展开匹配的分支。"
+                  ? t("Search expands matching branches.", "搜索会展开匹配的分支。")
                   : currentLeafId
-                    ? "树将在最近的节点处打开。"
-                    : "选择一个节点，从该节点新建分支。"}
+                    ? t("The tree opens at the most recent node.", "树将在最近的节点处打开。")
+                    : t("Pick a node to branch from.", "选择一个节点，从该节点新建分支。")}
               </div>
             </div>
 
             <div className="tree-modal__list" data-testid="tree-modal-list" ref={setListElement}>
               {displayRows.length === 0 ? (
-                <div className="tree-modal__empty">没有匹配的节点。</div>
+                <div className="tree-modal__empty">
+                  {t("No matching nodes.", "没有匹配的节点。")}
+                </div>
               ) : (
                 displayRows.map((row) => {
                   const isSelected = row.node.id === selectedId;
@@ -384,7 +392,11 @@ export function TreeModal({
                       key={row.node.id}
                     >
                       <button
-                        aria-label={row.expanded ? "收起分支" : "展开分支"}
+                        aria-label={
+                          row.expanded
+                            ? t("Collapse branch", "收起分支")
+                            : t("Expand branch", "展开分支")
+                        }
                         className={`tree-row__toggle ${row.hasChildren ? "" : "tree-row__toggle--hidden"}`}
                         disabled={searching || !row.hasChildren}
                         tabIndex={-1}
@@ -429,11 +441,14 @@ export function TreeModal({
 
             <div className="tree-modal__footer">
               <div className="tree-modal__hint">
-                选择用户提示会在输入框中重新打开它。选择其他节点会直接跳转到那里。
+                {t(
+                  "Choosing a user prompt reopens it in the composer. Choosing any other node jumps there.",
+                  "选择用户提示会在输入框中重新打开它。选择其他节点会直接跳转到那里。",
+                )}
               </div>
               <div className="tree-modal__actions">
                 <button className="button button--secondary" type="button" onClick={onClose}>
-                  取消
+                  {t("Cancel", "取消")}
                 </button>
                 <button
                   className="button button--primary"
@@ -441,7 +456,7 @@ export function TreeModal({
                   type="button"
                   onClick={() => setStep("summary")}
                 >
-                  {currentLeafSelected ? "已在此处" : "继续"}
+                  {currentLeafSelected ? t("Already here", "已在此处") : t("Continue", "继续")}
                 </button>
               </div>
             </div>
@@ -451,7 +466,10 @@ export function TreeModal({
         {!loading && tree && step === "summary" ? (
           <div className="tree-modal__summary-step" data-testid="tree-summary-step">
             <div className="tree-modal__summary-copy">
-              你正在离开当前分支。请选择 pi 是否在切换前总结被放弃的路径。
+              {t(
+                "You are leaving the current branch. Choose whether pi summarizes the abandoned path before switching.",
+                "你正在离开当前分支。请选择 pi 是否在切换前总结被放弃的路径。",
+              )}
             </div>
             <div className="tree-summary-options">
               <button
@@ -459,33 +477,44 @@ export function TreeModal({
                 type="button"
                 onClick={() => setSummaryMode("none")}
               >
-                <span className="tree-summary-option__title">不总结</span>
-                <span className="tree-summary-option__description">立即跳转，不生成分支总结。</span>
+                <span className="tree-summary-option__title">{t("No summary", "不总结")}</span>
+                <span className="tree-summary-option__description">
+                  {t("Jump now with no branch summary.", "立即跳转，不生成分支总结。")}
+                </span>
               </button>
               <button
                 className={`tree-summary-option ${summaryMode === "summary" ? "tree-summary-option--selected" : ""}`}
                 type="button"
                 onClick={() => setSummaryMode("summary")}
               >
-                <span className="tree-summary-option__title">总结</span>
-                <span className="tree-summary-option__description">在切换前生成分支总结。</span>
+                <span className="tree-summary-option__title">{t("Summary", "总结")}</span>
+                <span className="tree-summary-option__description">
+                  {t("Write a branch summary before switching.", "在切换前生成分支总结。")}
+                </span>
               </button>
               <button
                 className={`tree-summary-option ${summaryMode === "custom" ? "tree-summary-option--selected" : ""}`}
                 type="button"
                 onClick={() => setSummaryMode("custom")}
               >
-                <span className="tree-summary-option__title">使用自定义提示总结</span>
-                <span className="tree-summary-option__description">为总结提供额外说明。</span>
+                <span className="tree-summary-option__title">
+                  {t("Summarize with a custom prompt", "使用自定义提示总结")}
+                </span>
+                <span className="tree-summary-option__description">
+                  {t("Add extra guidance for the summary.", "为总结提供额外说明。")}
+                </span>
               </button>
             </div>
 
             {summaryMode === "custom" ? (
               <textarea
                 autoFocus
-                aria-label="自定义总结说明"
+                aria-label={t("Custom summary instructions", "自定义总结说明")}
                 className="tree-modal__custom-instructions"
-                placeholder="总结应聚焦于决策、变更的文件和未解决的风险。"
+                placeholder={t(
+                  "Focus the summary on decisions, changed files, and unresolved risks.",
+                  "总结应聚焦于决策、变更的文件和未解决的风险。",
+                )}
                 ref={customInstructionsRef}
                 value={customInstructions}
                 onChange={(event) => setCustomInstructions(event.target.value)}
@@ -495,10 +524,13 @@ export function TreeModal({
             <div className="tree-modal__footer">
               <div className="tree-modal__hint">
                 {submitting
-                  ? "正在切换分支…"
+                  ? t("Switching branches…", "正在切换分支…")
                   : summaryMode === "none"
-                    ? "当前分支将保持原样。"
-                    : "总结将附加到你切换到的分支。"}
+                    ? t("The current branch stays as it is.", "当前分支将保持原样。")
+                    : t(
+                        "The summary is attached to the branch you switch to.",
+                        "总结将附加到你切换到的分支。",
+                      )}
               </div>
               <div className="tree-modal__actions">
                 <button
@@ -507,7 +539,7 @@ export function TreeModal({
                   type="button"
                   onClick={() => setStep("select")}
                 >
-                  返回
+                  {t("Back", "返回")}
                 </button>
                 <button
                   className="button button--primary"
@@ -520,7 +552,7 @@ export function TreeModal({
                   type="button"
                   onClick={handleSubmit}
                 >
-                  {submitting ? "正在切换…" : "切换分支"}
+                  {submitting ? t("Switching…", "正在切换…") : t("Switch branch", "切换分支")}
                 </button>
               </div>
             </div>
@@ -723,7 +755,7 @@ function buildTreeRowLine(row: TreeRow, currentLeafId: string | null): string {
   const prefix = buildTreePrefix(row);
   const pathMarker = row.node.id === currentLeafId ? "• " : row.isOnActivePath ? "· " : "  ";
   const label = row.node.label ? `[${row.node.label}] ` : "";
-  const current = row.node.id === currentLeafId ? "  ← 当前" : "";
+  const current = row.node.id === currentLeafId ? t("← current", "  ← 当前") : "";
   return `${prefix}${pathMarker}${label}${formatTreeNodeDisplayText(row.node)}${current}`;
 }
 
@@ -763,26 +795,50 @@ function formatTreeNodeDisplayText(node: SessionTreeNodeSnapshot): string {
     case "message":
       switch (node.role) {
         case "user":
-          return `用户: ${node.preview ?? "(空)"}`;
+          return t(`user: ${node.preview ?? "(empty)"}`, `用户: ${node.preview ?? "(空)"}`);
         case "assistant":
-          return `助手: ${node.preview ?? "(无内容)"}`;
+          return t(
+            `assistant: ${node.preview ?? "(no content)"}`,
+            `助手: ${node.preview ?? "(无内容)"}`,
+          );
         case "toolResult":
-          return node.preview ?? "[工具]";
+          return node.preview ?? t("[tool]", "[工具]");
         case "bashExecution":
-          return `[bash]: ${node.preview ?? "(无命令)"}`;
+          return t(
+            `[bash]: ${node.preview ?? "(no command)"}`,
+            `[bash]: ${node.preview ?? "(无命令)"}`,
+          );
         case "branchSummary":
-          return `[分支总结]: ${node.preview ?? "(空)"}`;
+          return t(
+            `[branch summary]: ${node.preview ?? "(empty)"}`,
+            `[分支总结]: ${node.preview ?? "(空)"}`,
+          );
         case "compactionSummary":
-          return `[上下文压缩]: ${node.preview ?? "(空)"}`;
+          return t(
+            `[compaction]: ${node.preview ?? "(empty)"}`,
+            `[上下文压缩]: ${node.preview ?? "(空)"}`,
+          );
         default:
-          return `[${node.role ?? "消息"}]${node.preview ? ` ${node.preview}` : ""}`;
+          return t(
+            `[${node.role ?? "message"}]${node.preview ? ` ${node.preview}` : ""}`,
+            `[${node.role ?? "消息"}]${node.preview ? ` ${node.preview}` : ""}`,
+          );
       }
     case "custom_message":
-      return `[${node.customType ?? "自定义"}]: ${node.preview ?? "(空)"}`;
+      return t(
+        `[${node.customType ?? "custom"}]: ${node.preview ?? "(empty)"}`,
+        `[${node.customType ?? "自定义"}]: ${node.preview ?? "(空)"}`,
+      );
     case "compaction":
-      return `[上下文压缩: ${node.preview ?? "总结"}]`;
+      return t(
+        `[compaction: ${node.preview ?? "summary"}]`,
+        `[上下文压缩: ${node.preview ?? "总结"}]`,
+      );
     case "branch_summary":
-      return `[分支总结]: ${node.preview ?? "(空)"}`;
+      return t(
+        `[branch summary]: ${node.preview ?? "(empty)"}`,
+        `[分支总结]: ${node.preview ?? "(空)"}`,
+      );
     default:
       return node.preview ? `${node.title}: ${node.preview}` : node.title;
   }

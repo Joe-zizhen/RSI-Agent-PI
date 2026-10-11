@@ -11,6 +11,7 @@ import {
   type WorkbenchAction,
   type WorkspaceFileReference,
 } from "./workbench-state";
+import { t, useLocale } from "../../t";
 
 interface WorkbenchEntry {
   view: TaskWorkbenchTemplate;
@@ -35,6 +36,7 @@ function targetKey(target: SessionRef): string {
 
 /** Each window owns this map. Host templates are read once, never subscribed to as live state. */
 export function useWorkbench({ api, target }: UseWorkbenchOptions) {
+  useLocale();
   const entries = useRef(new Map<string, WorkbenchEntry>());
   const pendingRestores = useRef(new Set<string>());
   const mounted = useRef(true);
@@ -124,7 +126,10 @@ export function useWorkbench({ api, target }: UseWorkbenchOptions) {
         },
         () => {
           entry.restore = "failed";
-          entry.error = "无法恢复已保存的工具标签页。当前标签页仍可用。";
+          entry.error = t(
+            "Couldn't restore saved tool tabs. Your current tabs are still available.",
+            "无法恢复已保存的工具标签页。当前标签页仍可用。",
+          );
           pendingRestores.current.delete(key);
           publish();
         },

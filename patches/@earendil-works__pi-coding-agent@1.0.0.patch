@@ -1,5 +1,5 @@
 diff --git a/dist/cli/args.js b/dist/cli/args.js
-index ac2b668eec0725de509c3c83cf02920f8170c25b..a66b0ee2b87a16fcd73ae76b7e667d0f651e8bbc 100644
+index ac2b668eec0725de509c3c83cf02920f8170c25b..6842accb22f145f8c332d09da82b32c54d2dd460 100644
 --- a/dist/cli/args.js
 +++ b/dist/cli/args.js
 @@ -242,7 +242,7 @@ export function parseArgs(args) {
@@ -7,12 +7,12 @@ index ac2b668eec0725de509c3c83cf02920f8170c25b..a66b0ee2b87a16fcd73ae76b7e667d0f
          }
          else if (arg.startsWith("-") && !arg.startsWith("--")) {
 -            result.diagnostics.push({ type: "error", message: `Unknown option: ${arg}` });
-+            result.diagnostics.push({ type: "error", message: `未知选项：${arg}` });
++            result.diagnostics.push({ type: "error", message: (process.env.RSI_LOCALE === "en" ? `Unknown option: ${arg}` : `未知选项：${arg}`) });
          }
          else if (!arg.startsWith("-")) {
              result.messages.push(arg);
 diff --git a/dist/cli/auth-command.js b/dist/cli/auth-command.js
-index 209f586150f5c14f8f389880d2adce3a40756770..9837d5aaaa9c65b0614919e7ec40c48f1271968f 100644
+index 209f586150f5c14f8f389880d2adce3a40756770..6d9ccc86f99395a540e5e0dc3ae2274b0cc71638 100644
 --- a/dist/cli/auth-command.js
 +++ b/dist/cli/auth-command.js
 @@ -35,7 +35,7 @@ export function parseAuthCommand(args) {
@@ -20,7 +20,7 @@ index 209f586150f5c14f8f389880d2adce3a40756770..9837d5aaaa9c65b0614919e7ec40c48f
                  : undefined;
      if (!kind) {
 -        throw new AuthCommandError(`Unknown auth command "${args[1] ?? ""}". Use "${APP_NAME} auth print-api-key", "${APP_NAME} auth print-bearer-token", or "${APP_NAME} auth check".`);
-+        throw new AuthCommandError(`未知 auth 命令 "${args[1] ?? ""}"。请使用 "${APP_NAME} auth print-api-key"、"${APP_NAME} auth print-bearer-token" 或 "${APP_NAME} auth check"。`);
++        throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Unknown auth command "${args[1] ?? ""}". Use "${APP_NAME} auth print-api-key", "${APP_NAME} auth print-bearer-token", or "${APP_NAME} auth check".` : `未知 auth 命令 "${args[1] ?? ""}"。请使用 "${APP_NAME} auth print-api-key"、"${APP_NAME} auth print-bearer-token" 或 "${APP_NAME} auth check"。`));
      }
      const commandArgs = [];
      let json = false;
@@ -29,12 +29,12 @@ index 209f586150f5c14f8f389880d2adce3a40756770..9837d5aaaa9c65b0614919e7ec40c48f
          if (arg === "--min-expiry") {
              if (kind !== "bearer_token")
 -                throw new AuthCommandError("--min-expiry is only supported by print-bearer-token");
-+                throw new AuthCommandError("--min-expiry 仅支持 print-bearer-token");
++                throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? "--min-expiry is only supported by print-bearer-token" : "--min-expiry 仅支持 print-bearer-token"));
              const value = args[++index];
              const match = value ? /^(\d+)(ms|s|m|h)$/iu.exec(value) : undefined;
              if (!match)
 -                throw new AuthCommandError("--min-expiry must use a duration such as 30m or 1h");
-+                throw new AuthCommandError("--min-expiry 必须使用类似 30m 或 1h 的时长");
++                throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? "--min-expiry must use a duration such as 30m or 1h" : "--min-expiry 必须使用类似 30m 或 1h 的时长"));
              const amount = Number(match[1]);
              const unit = match[2];
              minExpiryMs = amount * (unit === "ms" ? 1 : unit === "s" ? 1_000 : unit === "m" ? 60_000 : 3_600_000);
@@ -43,7 +43,7 @@ index 209f586150f5c14f8f389880d2adce3a40756770..9837d5aaaa9c65b0614919e7ec40c48f
          if (arg === "--json" || arg === "--credentials" || arg === "--no-refresh") {
              if (kind !== "check")
 -                throw new AuthCommandError(`${arg} is only supported by auth check`);
-+                throw new AuthCommandError(`${arg} 仅支持 auth check`);
++                throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `${arg} is only supported by auth check` : `${arg} 仅支持 auth check`));
              if (arg === "--json")
                  json = true;
              else if (arg === "--credentials")
@@ -52,27 +52,27 @@ index 209f586150f5c14f8f389880d2adce3a40756770..9837d5aaaa9c65b0614919e7ec40c48f
      if (args.unknownFlags.size > 0) {
          const option = args.unknownFlags.keys().next().value;
 -        throw new AuthCommandError(`Unknown option --${option} for "${getAuthCommandName(kind)}".`);
-+        throw new AuthCommandError(`未知选项 --${option}，"${getAuthCommandName(kind)}" 不支持该选项。`);
++        throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Unknown option --${option} for "${getAuthCommandName(kind)}".` : `未知选项 --${option}，"${getAuthCommandName(kind)}" 不支持该选项。`));
      }
      if (args.apiKey !== undefined || args.messages.length > 0 || args.fileArgs.length > 0) {
 -        throw new AuthCommandError("Auth commands only accept --provider and --model");
-+        throw new AuthCommandError("auth 命令只接受 --provider 与 --model");
++        throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? "Auth commands only accept --provider and --model" : "auth 命令只接受 --provider 与 --model"));
      }
      if (kind === "check") {
          if (!provider && !model) {
 -            throw new AuthCommandError("Auth checks require --provider <provider> or --model <model>");
-+            throw new AuthCommandError("auth check 需要 --provider <provider> 或 --model <model>");
++            throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? "Auth checks require --provider <provider> or --model <model>" : "auth check 需要 --provider <provider> 或 --model <model>"));
          }
          return { provider, model };
      }
      if (!provider && !model) {
 -        throw new AuthCommandError("Credential printing requires --provider <provider> or --model <model>");
-+        throw new AuthCommandError("打印凭据需要 --provider <provider> 或 --model <model>");
++        throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? "Credential printing requires --provider <provider> or --model <model>" : "打印凭据需要 --provider <provider> 或 --model <model>"));
      }
      return { provider, model };
  }
 diff --git a/dist/cli/credential-print.js b/dist/cli/credential-print.js
-index 7171e7e59b2cabef3b080ef376a1c0a578d9a4ee..00b1873aec5545ca45157bb416e58565bd9779ae 100644
+index 7171e7e59b2cabef3b080ef376a1c0a578d9a4ee..745132213e73887c2c4b296309e6c881da300820 100644
 --- a/dist/cli/credential-print.js
 +++ b/dist/cli/credential-print.js
 @@ -14,12 +14,12 @@ export async function resolveCredentialForPrint(args, modelRuntime, kind, minExp
@@ -80,13 +80,13 @@ index 7171e7e59b2cabef3b080ef376a1c0a578d9a4ee..00b1873aec5545ca45157bb416e58565
          const provider = modelRuntime.getProvider(cliProvider);
          if (!provider) {
 -            throw new AuthCommandError(`Unknown provider "${cliProvider}". Use --list-models to see available providers.`);
-+            throw new AuthCommandError(`未知提供商 "${cliProvider}"。使用 --list-models 查看可用提供商。`);
++            throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Unknown provider "${cliProvider}". Use --list-models to see available providers.` : `未知提供商 "${cliProvider}"。使用 --list-models 查看可用提供商。`));
          }
          if (cliModel) {
              const resolved = resolveCliModel({ cliProvider: provider.id, cliModel, modelRuntime });
              if (resolved.error || !resolved.model) {
 -                throw new AuthCommandError(resolved.error ?? "Unable to resolve the requested provider/model");
-+                throw new AuthCommandError(resolved.error ?? "无法解析所请求的提供商/模型");
++                throw new AuthCommandError(resolved.error ?? (process.env.RSI_LOCALE === "en" ? "Unable to resolve the requested provider/model" : "无法解析所请求的提供商/模型"));
              }
              providers.push({ id: provider.id, model: resolved.model });
          }
@@ -95,13 +95,13 @@ index 7171e7e59b2cabef3b080ef376a1c0a578d9a4ee..00b1873aec5545ca45157bb416e58565
                  continue;
              const resolved = resolveCliModel({ cliProvider: provider.id, cliModel: cliModel, modelRuntime });
 -            if (resolved.model && !resolved.error && !resolved.warning?.includes("Using custom model id")) {
-+            if (resolved.model && !resolved.error && !resolved.warning?.includes("使用自定义模型 ID")) {
++            if (resolved.model && !resolved.error && !resolved.warning?.includes((process.env.RSI_LOCALE === "en" ? "Using custom model id" : "使用自定义模型 ID"))) {
                  providers.push({ id: provider.id, model: resolved.model });
              }
          }
          if (providers.length === 0) {
 -            throw new AuthCommandError(`Model "${cliModel}" not found. Use --list-models to see available models.`);
-+            throw new AuthCommandError(`找不到模型 "${cliModel}"。使用 --list-models 查看可用模型。`);
++            throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Model "${cliModel}" not found. Use --list-models to see available models.` : `找不到模型 "${cliModel}"。使用 --list-models 查看可用模型。`));
          }
      }
      const credentials = [];
@@ -110,22 +110,22 @@ index 7171e7e59b2cabef3b080ef376a1c0a578d9a4ee..00b1873aec5545ca45157bb416e58565
          const type = providerId ? credentialTypes.get(providerId) : undefined;
          if (cliProvider && kind === "api_key" && type === "oauth") {
 -            throw new AuthCommandError(`Provider "${providerId}" is configured with OAuth, not an API key`);
-+            throw new AuthCommandError(`提供商 "${providerId}" 配置的是 OAuth，不是 API key`);
++            throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Provider "${providerId}" is configured with OAuth, not an API key` : `提供商 "${providerId}" 配置的是 OAuth，不是 API key`));
          }
          if (cliProvider && kind === "bearer_token" && type !== "oauth") {
 -            throw new AuthCommandError(`Provider "${providerId}" is not configured with an OAuth bearer token`);
-+            throw new AuthCommandError(`提供商 "${providerId}" 未配置 OAuth bearer token`);
++            throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Provider "${providerId}" is not configured with an OAuth bearer token` : `提供商 "${providerId}" 未配置 OAuth bearer token`));
          }
 -        throw new AuthCommandError(`No usable ${kind === "api_key" ? "API key" : "OAuth bearer token"} is configured`);
-+        throw new AuthCommandError(`未配置可用的 ${kind === "api_key" ? "API key" : "OAuth bearer token"}`);
++        throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `No usable ${kind === "api_key" ? "API key" : "OAuth bearer token"} is configured` : `未配置可用的 ${kind === "api_key" ? "API key" : "OAuth bearer token"}`));
      }
 -    throw new AuthCommandError(`Multiple configured providers matched (${credentials.map(({ providerId }) => providerId).join(", ")}). Specify --provider.`);
-+    throw new AuthCommandError(`匹配到多个已配置的提供商（${credentials.map(({ providerId }) => providerId).join(", ")}）。请指定 --provider。`);
++    throw new AuthCommandError((process.env.RSI_LOCALE === "en" ? `Multiple configured providers matched (${credentials.map(({ providerId }) => providerId).join(", ")}). Specify --provider.` : `匹配到多个已配置的提供商（${credentials.map(({ providerId }) => providerId).join(", ")}）。请指定 --provider。`));
  }
  //# sourceMappingURL=credential-print.js.map
 \ No newline at end of file
 diff --git a/dist/cli/file-processor.js b/dist/cli/file-processor.js
-index 37fe7978ee3fd8df07a513ec39855f3371b1bf91..5cdd779073c972d437cb9015747702e7a3c884d5 100644
+index 37fe7978ee3fd8df07a513ec39855f3371b1bf91..336ed9627c36e24f1dcf4f1ccc657647378a3ed0 100644
 --- a/dist/cli/file-processor.js
 +++ b/dist/cli/file-processor.js
 @@ -21,7 +21,7 @@ export async function processFileArguments(fileArgs, options) {
@@ -133,12 +133,12 @@ index 37fe7978ee3fd8df07a513ec39855f3371b1bf91..5cdd779073c972d437cb9015747702e7
          }
          catch {
 -            console.error(chalk.red(`Error: File not found: ${absolutePath}`));
-+            console.error(chalk.red(`错误：找不到文件：${absolutePath}`));
++            console.error(chalk.red((process.env.RSI_LOCALE === "en" ? `Error: File not found: ${absolutePath}` : `错误：找不到文件：${absolutePath}`)));
              process.exit(1);
          }
          // Check if file is empty
 diff --git a/dist/core/agent-session-runtime.js b/dist/core/agent-session-runtime.js
-index be9d5fdbd0cef1a02a614af528cfa85a63cec09a..0ec945cfa0575d53c7bf656efb1095dc6c9ee82f 100644
+index be9d5fdbd0cef1a02a614af528cfa85a63cec09a..49fe212f7798b3c06311fd187fccd171af27a3c4 100644
 --- a/dist/core/agent-session-runtime.js
 +++ b/dist/core/agent-session-runtime.js
 @@ -181,14 +181,14 @@ export class AgentSessionRuntime {
@@ -146,7 +146,7 @@ index be9d5fdbd0cef1a02a614af528cfa85a63cec09a..0ec945cfa0575d53c7bf656efb1095dc
          const selectedEntry = this.session.sessionManager.getEntry(entryId);
          if (!selectedEntry) {
 -            throw new Error("Invalid entry ID for forking");
-+            throw new Error("用于分叉的条目 ID 无效");
++            throw new Error((process.env.RSI_LOCALE === "en" ? "Invalid entry ID for forking" : "用于分叉的条目 ID 无效"));
          }
          if (position === "at") {
              targetLeafId = selectedEntry.id;
@@ -154,12 +154,12 @@ index be9d5fdbd0cef1a02a614af528cfa85a63cec09a..0ec945cfa0575d53c7bf656efb1095dc
          else {
              if (selectedEntry.type !== "message" || selectedEntry.message.role !== "user") {
 -                throw new Error("Invalid entry ID for forking");
-+                throw new Error("用于分叉的条目 ID 无效");
++                throw new Error((process.env.RSI_LOCALE === "en" ? "Invalid entry ID for forking" : "用于分叉的条目 ID 无效"));
              }
              targetLeafId = selectedEntry.parentId;
              selectedText = extractUserMessageText(selectedEntry.message.content);
 diff --git a/dist/core/agent-session.js b/dist/core/agent-session.js
-index 1da213f5fb33ff8d0e98ed044a1844c97463bcd3..27573f845dab25724f400f8a83557ecd9da5d616 100644
+index 1da213f5fb33ff8d0e98ed044a1844c97463bcd3..af106848e110693b196622eddd935a224253ade0 100644
 --- a/dist/core/agent-session.js
 +++ b/dist/core/agent-session.js
 @@ -1909,7 +1909,7 @@ export class AgentSession {
@@ -167,7 +167,7 @@ index 1da213f5fb33ff8d0e98ed044a1844c97463bcd3..27573f845dab25724f400f8a83557ecd
      async setModel(model, options = {}) {
          if (!(await this._modelRuntime.checkAuth(model.provider))) {
 -            throw new Error(`No API key for ${model.provider}/${model.id}`);
-+            throw new Error(`缺少 ${model.provider}/${model.id} 的 API key`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `No API key for ${model.provider}/${model.id}` : `缺少 ${model.provider}/${model.id} 的 API key`));
          }
          const previousModel = this.model;
          const thinkingLevel = this._getThinkingLevelForModelSwitch(model);
@@ -176,7 +176,7 @@ index 1da213f5fb33ff8d0e98ed044a1844c97463bcd3..27573f845dab25724f400f8a83557ecd
                  if (result?.cancel) {
                      cancelledByExtension = true;
 -                    throw new Error("Compaction cancelled");
-+                    throw new Error("上下文压缩已取消");
++                    throw new Error((process.env.RSI_LOCALE === "en" ? "Compaction cancelled" : "上下文压缩已取消"));
                  }
                  if (result?.compaction) {
                      extensionCompaction = result.compaction;
@@ -185,7 +185,7 @@ index 1da213f5fb33ff8d0e98ed044a1844c97463bcd3..27573f845dab25724f400f8a83557ecd
              }
              if (this._compactionAbortController.signal.aborted) {
 -                throw new Error("Compaction cancelled");
-+                throw new Error("上下文压缩已取消");
++                throw new Error((process.env.RSI_LOCALE === "en" ? "Compaction cancelled" : "上下文压缩已取消"));
              }
              this.sessionManager.appendCompaction(summary, firstKeptEntryId, tokensBefore, details, fromExtension, usage);
              const newEntries = this.sessionManager.getEntries();
@@ -194,12 +194,12 @@ index 1da213f5fb33ff8d0e98ed044a1844c97463bcd3..27573f845dab25724f400f8a83557ecd
                  if (extensionResult?.cancel) {
                      cancelledByExtension = true;
 -                    throw new Error("Compaction cancelled");
-+                    throw new Error("上下文压缩已取消");
++                    throw new Error((process.env.RSI_LOCALE === "en" ? "Compaction cancelled" : "上下文压缩已取消"));
                  }
                  if (extensionResult?.compaction) {
                      extensionCompaction = extensionResult.compaction;
 diff --git a/dist/core/model-resolver.js b/dist/core/model-resolver.js
-index f3869e266f956f7127c769ce5f9148fca8a5e1ef..60940d0fd2739eb50eea03cb0cc0825bc4e1bfd5 100644
+index f3869e266f956f7127c769ce5f9148fca8a5e1ef..d00a8fd6c7b2bf141a2e2238e0c6d771adc55866 100644
 --- a/dist/core/model-resolver.js
 +++ b/dist/core/model-resolver.js
 @@ -314,7 +314,7 @@ export function resolveCliModel(options) {
@@ -207,7 +207,7 @@ index f3869e266f956f7127c769ce5f9148fca8a5e1ef..60940d0fd2739eb50eea03cb0cc0825b
              model: undefined,
              warning: undefined,
 -            error: `Unknown provider "${cliProvider}". Use --list-models to see available providers/models.`,
-+            error: `未知提供商 "${cliProvider}"。使用 --list-models 查看可用提供商与模型。`,
++            error: (process.env.RSI_LOCALE === "en" ? `Unknown provider "${cliProvider}". Use --list-models to see available providers/models.` : `未知提供商 "${cliProvider}"。使用 --list-models 查看可用提供商与模型。`),
          };
      }
      // If no explicit --provider, try to interpret "provider/model" format first.
@@ -217,8 +217,8 @@ index f3869e266f956f7127c769ce5f9148fca8a5e1ef..60940d0fd2739eb50eea03cb0cc0825b
              const fallbackWarning = warning
 -                ? `${warning} Model "${fallbackPattern}" not found for provider "${provider}". Using custom model id.`
 -                : `Model "${fallbackPattern}" not found for provider "${provider}". Using custom model id.`;
-+                ? `${warning} 提供商 "${provider}" 中找不到模型 "${fallbackPattern}"。将使用自定义模型 ID。`
-+                : `提供商 "${provider}" 中找不到模型 "${fallbackPattern}"。将使用自定义模型 ID。`;
++                ? (process.env.RSI_LOCALE === "en" ? `${warning} Model "${fallbackPattern}" not found for provider "${provider}". Using custom model id.` : `${warning} 提供商 "${provider}" 中找不到模型 "${fallbackPattern}"。将使用自定义模型 ID。`)
++                : (process.env.RSI_LOCALE === "en" ? `Model "${fallbackPattern}" not found for provider "${provider}". Using custom model id.` : `提供商 "${provider}" 中找不到模型 "${fallbackPattern}"。将使用自定义模型 ID。`);
              return { model, thinkingLevel: fallbackThinking, warning: fallbackWarning, error: undefined };
          }
      }
@@ -227,12 +227,12 @@ index f3869e266f956f7127c769ce5f9148fca8a5e1ef..60940d0fd2739eb50eea03cb0cc0825b
          thinkingLevel: undefined,
          warning,
 -        error: `Model "${display}" not found. Use --list-models to see available models.`,
-+        error: `找不到模型 "${display}"。使用 --list-models 查看可用模型。`,
++        error: (process.env.RSI_LOCALE === "en" ? `Model "${display}" not found. Use --list-models to see available models.` : `找不到模型 "${display}"。使用 --list-models 查看可用模型。`),
      };
  }
  /**
 diff --git a/dist/core/session-manager.js b/dist/core/session-manager.js
-index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..4835eddf4cfff79ad44ddb5a8c24a6676bc3d34f 100644
+index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..92c4a00666092b93e7654dfd651539fa62d26f4c 100644
 --- a/dist/core/session-manager.js
 +++ b/dist/core/session-manager.js
 @@ -671,7 +671,7 @@ export class SessionManager {
@@ -240,7 +240,7 @@ index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..4835eddf4cfff79ad44ddb5a8c24a667
                  const explicitPath = this.sessionFile;
                  if (statSync(explicitPath).size > 0) {
 -                    throw new Error(`Session file is not a valid ${APP_NAME} session: ${explicitPath}`);
-+                    throw new Error(`会话记录文件不是有效的 ${APP_NAME} 会话记录：${explicitPath}`);
++                    throw new Error((process.env.RSI_LOCALE === "en" ? `Session file is not a valid ${APP_NAME} session: ${explicitPath}` : `会话记录文件不是有效的 ${APP_NAME} 会话记录：${explicitPath}`));
                  }
                  this.newSession();
                  this.sessionFile = explicitPath;
@@ -249,7 +249,7 @@ index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..4835eddf4cfff79ad44ddb5a8c24a667
          const target = this.byId.get(targetId);
          if (!target)
 -            throw new Error(`Entry ${targetId} not found`);
-+            throw new Error(`找不到条目 ${targetId}`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `Entry ${targetId} not found` : `找不到条目 ${targetId}`));
          if (!this.getBranch().some((entry) => entry.id === targetId)) {
              throw new Error(`Entry ${targetId} is not on the active branch`);
          }
@@ -258,7 +258,7 @@ index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..4835eddf4cfff79ad44ddb5a8c24a667
      appendLabelChange(targetId, label) {
          if (!this.byId.has(targetId)) {
 -            throw new Error(`Entry ${targetId} not found`);
-+            throw new Error(`找不到条目 ${targetId}`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `Entry ${targetId} not found` : `找不到条目 ${targetId}`));
          }
          const entry = {
              type: "label",
@@ -267,7 +267,7 @@ index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..4835eddf4cfff79ad44ddb5a8c24a667
      branch(branchFromId) {
          if (!this.byId.has(branchFromId)) {
 -            throw new Error(`Entry ${branchFromId} not found`);
-+            throw new Error(`找不到条目 ${branchFromId}`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `Entry ${branchFromId} not found` : `找不到条目 ${branchFromId}`));
          }
          this.leafId = branchFromId;
      }
@@ -276,12 +276,12 @@ index 62b469b5dc3fcea2aa8f52218cbdfe892d9abed4..4835eddf4cfff79ad44ddb5a8c24a667
      branchWithSummary(branchFromId, summary, details, fromHook, usage) {
          if (branchFromId !== null && !this.byId.has(branchFromId)) {
 -            throw new Error(`Entry ${branchFromId} not found`);
-+            throw new Error(`找不到条目 ${branchFromId}`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `Entry ${branchFromId} not found` : `找不到条目 ${branchFromId}`));
          }
          const fromId = this.leafId ?? "root";
          this.leafId = branchFromId;
 diff --git a/dist/core/tools/bash.js b/dist/core/tools/bash.js
-index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d02df5357d 100644
+index e52c9d779bdb50667083810d946e11da6c7e29ba..52c93d9720f1c0fad6da986b4b3104fe4d5fa74d 100644
 --- a/dist/core/tools/bash.js
 +++ b/dist/core/tools/bash.js
 @@ -17,11 +17,11 @@ function resolveTimeoutMs(timeout) {
@@ -289,12 +289,12 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
          return undefined;
      if (!Number.isFinite(timeout) || timeout <= 0) {
 -        throw new Error("Invalid timeout: must be a finite number of seconds");
-+        throw new Error("timeout 无效：必须是有限的秒数");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Invalid timeout: must be a finite number of seconds" : "timeout 无效：必须是有限的秒数"));
      }
      const timeoutMs = timeout * 1000;
      if (timeoutMs > MAX_TIMEOUT_MS) {
 -        throw new Error(`Invalid timeout: maximum is ${MAX_TIMEOUT_SECONDS} seconds`);
-+        throw new Error(`timeout 无效：最大值为 ${MAX_TIMEOUT_SECONDS} 秒`);
++        throw new Error((process.env.RSI_LOCALE === "en" ? `Invalid timeout: maximum is ${MAX_TIMEOUT_SECONDS} seconds` : `timeout 无效：最大值为 ${MAX_TIMEOUT_SECONDS} 秒`));
      }
      return timeoutMs;
  }
@@ -303,7 +303,7 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
              }
              catch {
 -                throw new Error(`Working directory does not exist: ${cwd}\nCannot execute ${shellName} commands.`);
-+                throw new Error(`工作目录不存在：${cwd}\n无法执行 ${shellName} 命令。`);
++                throw new Error((process.env.RSI_LOCALE === "en" ? `Working directory does not exist: ${cwd}\nCannot execute ${shellName} commands.` : `工作目录不存在：${cwd}\n无法执行 ${shellName} 命令。`));
              }
              const commandFromStdin = shellConfig.commandTransport === "stdin";
              const child = spawn(shellConfig.shell, commandFromStdin ? shellConfig.args : [...shellConfig.args, command], {
@@ -312,7 +312,7 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
                  return snapshot;
              };
 -            const formatOutput = (snapshot, emptyText = "(no output)") => {
-+            const formatOutput = (snapshot, emptyText = "(无输出)") => {
++            const formatOutput = (snapshot, emptyText = (process.env.RSI_LOCALE === "en" ? "(no output)" : "(无输出)")) => {
                  const truncation = snapshot.truncation;
                  let text = snapshot.content || emptyText;
                  let details;
@@ -321,15 +321,15 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
                      if (truncation.lastLinePartial) {
                          const lastLineSize = formatSize(output.getLastLineBytes());
 -                        text += `\n\n[Showing last ${formatSize(truncation.outputBytes)} of line ${endLine} (line is ${lastLineSize}). Full output: ${snapshot.fullOutputPath}]`;
-+                        text += `\n\n[显示第 ${endLine} 行的最后 ${formatSize(truncation.outputBytes)}（该行共 ${lastLineSize}）。完整输出：${snapshot.fullOutputPath}]`;
++                        text += (process.env.RSI_LOCALE === "en" ? `\n\n[Showing last ${formatSize(truncation.outputBytes)} of line ${endLine} (line is ${lastLineSize}). Full output: ${snapshot.fullOutputPath}]` : `\n\n[显示第 ${endLine} 行的最后 ${formatSize(truncation.outputBytes)}（该行共 ${lastLineSize}）。完整输出：${snapshot.fullOutputPath}]`);
                      }
                      else if (truncation.truncatedBy === "lines") {
 -                        text += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines}. Full output: ${snapshot.fullOutputPath}]`;
-+                        text += `\n\n[显示第 ${startLine}-${endLine} 行，共 ${truncation.totalLines} 行。完整输出：${snapshot.fullOutputPath}]`;
++                        text += (process.env.RSI_LOCALE === "en" ? `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines}. Full output: ${snapshot.fullOutputPath}]` : `\n\n[显示第 ${startLine}-${endLine} 行，共 ${truncation.totalLines} 行。完整输出：${snapshot.fullOutputPath}]`);
                      }
                      else {
 -                        text += `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Full output: ${snapshot.fullOutputPath}]`;
-+                        text += `\n\n[显示第 ${startLine}-${endLine} 行，共 ${truncation.totalLines} 行（上限 ${formatSize(DEFAULT_MAX_BYTES)}）。完整输出：${snapshot.fullOutputPath}]`;
++                        text += (process.env.RSI_LOCALE === "en" ? `\n\n[Showing lines ${startLine}-${endLine} of ${truncation.totalLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Full output: ${snapshot.fullOutputPath}]` : `\n\n[显示第 ${startLine}-${endLine} 行，共 ${truncation.totalLines} 行（上限 ${formatSize(DEFAULT_MAX_BYTES)}）。完整输出：${snapshot.fullOutputPath}]`);
                      }
                  }
                  return { text, details };
@@ -338,12 +338,12 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
                      const { text } = formatOutput(snapshot, "");
                      if (err instanceof Error && err.message === "aborted") {
 -                        throw new Error(appendStatus(text, "Command aborted"));
-+                        throw new Error(appendStatus(text, "命令已中止"));
++                        throw new Error(appendStatus(text, (process.env.RSI_LOCALE === "en" ? "Command aborted" : "命令已中止")));
                      }
                      if (err instanceof Error && err.message.startsWith("timeout:")) {
                          const timeoutSecs = err.message.split(":")[1];
 -                        throw new Error(appendStatus(text, `Command timed out after ${timeoutSecs} seconds`));
-+                        throw new Error(appendStatus(text, `命令在 ${timeoutSecs} 秒后超时`));
++                        throw new Error(appendStatus(text, (process.env.RSI_LOCALE === "en" ? `Command timed out after ${timeoutSecs} seconds` : `命令在 ${timeoutSecs} 秒后超时`)));
                      }
                      throw err;
                  }
@@ -351,7 +351,7 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
                  const { text: outputText, details } = formatOutput(snapshot);
                  if (exitCode === null) {
 -                    throw new Error(appendStatus(outputText, "Command terminated without an exit code"));
-+                    throw new Error(appendStatus(outputText, "命令已终止，没有退出码"));
++                    throw new Error(appendStatus(outputText, (process.env.RSI_LOCALE === "en" ? "Command terminated without an exit code" : "命令已终止，没有退出码")));
                  }
                  const wallTimeSeconds = Math.round((performance.now() - startedAt) / 100) / 10;
                  const fullOutput = await output.readFullOutput(STRUCTURED_OUTPUT_MAX_BYTES);
@@ -360,12 +360,12 @@ index e52c9d779bdb50667083810d946e11da6c7e29ba..63a747a96e86881d2030eac3533af9d0
                  if (exitCode !== 0) {
                      return {
 -                        content: [{ type: "text", text: appendStatus(outputText, `Command exited with code ${exitCode}`) }],
-+                        content: [{ type: "text", text: appendStatus(outputText, `命令已退出，退出码 ${exitCode}`) }],
++                        content: [{ type: "text", text: appendStatus(outputText, (process.env.RSI_LOCALE === "en" ? `Command exited with code ${exitCode}` : `命令已退出，退出码 ${exitCode}`)) }],
                          details,
                          structuredContent,
                          isError: true,
 diff --git a/dist/core/tools/edit-diff.js b/dist/core/tools/edit-diff.js
-index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec920146d26 100644
+index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..7a53f5b30e9c84aaaf1caafd94dc7bfbfa129fc2 100644
 --- a/dist/core/tools/edit-diff.js
 +++ b/dist/core/tools/edit-diff.js
 @@ -71,14 +71,14 @@ function getReplacementLineRange(lines, replacement) {
@@ -373,7 +373,7 @@ index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec9
      }
      if (startLine === -1) {
 -        throw new Error("Replacement range is outside the base content.");
-+        throw new Error("替换范围超出原始内容。");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Replacement range is outside the base content." : "替换范围超出原始内容。"));
      }
      let endLine = startLine;
      while (endLine < lines.length && lines[endLine].end < replacementEnd) {
@@ -381,7 +381,7 @@ index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec9
      }
      if (endLine >= lines.length) {
 -        throw new Error("Replacement range is outside the base content.");
-+        throw new Error("替换范围超出原始内容。");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Replacement range is outside the base content." : "替换范围超出原始内容。"));
      }
      return { startLine, endLine: endLine + 1 };
  }
@@ -390,7 +390,7 @@ index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec9
      const baseLines = getLineSpans(baseContent);
      if (originalLines.length !== baseLines.length) {
 -        throw new Error("Cannot preserve unchanged lines because the base content has a different line count.");
-+        throw new Error("无法保留未更改的行，因为原始内容的行数不同。");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Cannot preserve unchanged lines because the base content has a different line count." : "无法保留未更改的行，因为原始内容的行数不同。"));
      }
      const groups = [];
      const sortedReplacements = [...replacements].sort((a, b) => a.matchIndex - b.matchIndex);
@@ -399,34 +399,34 @@ index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec9
  function getNotFoundError(path, editIndex, totalEdits) {
      if (totalEdits === 1) {
 -        return new Error(`Could not find the exact text in ${path}. The old text must match exactly including all whitespace and newlines.`);
-+        return new Error(`在 ${path} 中找不到完全匹配的文本。oldText 必须完全一致，包括所有空白字符与换行。`);
++        return new Error((process.env.RSI_LOCALE === "en" ? `Could not find the exact text in ${path}. The old text must match exactly including all whitespace and newlines.` : `在 ${path} 中找不到完全匹配的文本。oldText 必须完全一致，包括所有空白字符与换行。`));
      }
 -    return new Error(`Could not find edits[${editIndex}] in ${path}. The oldText must match exactly including all whitespace and newlines.`);
-+    return new Error(`在 ${path} 中找不到 edits[${editIndex}]。oldText 必须完全一致，包括所有空白字符与换行。`);
++    return new Error((process.env.RSI_LOCALE === "en" ? `Could not find edits[${editIndex}] in ${path}. The oldText must match exactly including all whitespace and newlines.` : `在 ${path} 中找不到 edits[${editIndex}]。oldText 必须完全一致，包括所有空白字符与换行。`));
  }
  function getDuplicateError(path, editIndex, totalEdits, occurrences) {
      if (totalEdits === 1) {
 -        return new Error(`Found ${occurrences} occurrences of the text in ${path}. The text must be unique. Please provide more context to make it unique.`);
-+        return new Error(`在 ${path} 中找到 ${occurrences} 处相同文本。该文本必须唯一。请提供更多上下文使其唯一。`);
++        return new Error((process.env.RSI_LOCALE === "en" ? `Found ${occurrences} occurrences of the text in ${path}. The text must be unique. Please provide more context to make it unique.` : `在 ${path} 中找到 ${occurrences} 处相同文本。该文本必须唯一。请提供更多上下文使其唯一。`));
      }
 -    return new Error(`Found ${occurrences} occurrences of edits[${editIndex}] in ${path}. Each oldText must be unique. Please provide more context to make it unique.`);
-+    return new Error(`在 ${path} 中找到 ${occurrences} 处 edits[${editIndex}]。每个 oldText 必须唯一。请提供更多上下文使其唯一。`);
++    return new Error((process.env.RSI_LOCALE === "en" ? `Found ${occurrences} occurrences of edits[${editIndex}] in ${path}. Each oldText must be unique. Please provide more context to make it unique.` : `在 ${path} 中找到 ${occurrences} 处 edits[${editIndex}]。每个 oldText 必须唯一。请提供更多上下文使其唯一。`));
  }
  function getEmptyOldTextError(path, editIndex, totalEdits) {
      if (totalEdits === 1) {
 -        return new Error(`oldText must not be empty in ${path}.`);
-+        return new Error(`${path} 中的 oldText 不能为空。`);
++        return new Error((process.env.RSI_LOCALE === "en" ? `oldText must not be empty in ${path}.` : `${path} 中的 oldText 不能为空。`));
      }
 -    return new Error(`edits[${editIndex}].oldText must not be empty in ${path}.`);
-+    return new Error(`${path} 中的 edits[${editIndex}].oldText 不能为空。`);
++    return new Error((process.env.RSI_LOCALE === "en" ? `edits[${editIndex}].oldText must not be empty in ${path}.` : `${path} 中的 edits[${editIndex}].oldText 不能为空。`));
  }
  function getNoChangeError(path, totalEdits) {
      if (totalEdits === 1) {
 -        return new Error(`No changes made to ${path}. The replacement produced identical content. This might indicate an issue with special characters or the text not existing as expected.`);
-+        return new Error(`未对 ${path} 做出任何更改。替换产生了相同的内容。这可能与特殊字符有关，或目标文本与预期不符。`);
++        return new Error((process.env.RSI_LOCALE === "en" ? `No changes made to ${path}. The replacement produced identical content. This might indicate an issue with special characters or the text not existing as expected.` : `未对 ${path} 做出任何更改。替换产生了相同的内容。这可能与特殊字符有关，或目标文本与预期不符。`));
      }
 -    return new Error(`No changes made to ${path}. The replacements produced identical content.`);
-+    return new Error(`未对 ${path} 做出任何更改。替换产生了相同的内容。`);
++    return new Error((process.env.RSI_LOCALE === "en" ? `No changes made to ${path}. The replacements produced identical content.` : `未对 ${path} 做出任何更改。替换产生了相同的内容。`));
  }
  /**
   * Apply one or more exact-text replacements to LF-normalized content.
@@ -435,7 +435,7 @@ index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec9
          const current = matchedEdits[i];
          if (previous.matchIndex + previous.matchLength > current.matchIndex) {
 -            throw new Error(`edits[${previous.editIndex}] and edits[${current.editIndex}] overlap in ${path}. Merge them into one edit or target disjoint regions.`);
-+            throw new Error(`${path} 中的 edits[${previous.editIndex}] 与 edits[${current.editIndex}] 重叠。请合并为一处编辑，或分别指向不相交的区域。`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `edits[${previous.editIndex}] and edits[${current.editIndex}] overlap in ${path}. Merge them into one edit or target disjoint regions.` : `${path} 中的 edits[${previous.editIndex}] 与 edits[${current.editIndex}] 重叠。请合并为一处编辑，或分别指向不相交的区域。`));
          }
      }
      const baseContent = normalizedContent;
@@ -445,13 +445,13 @@ index d1218b8c39248710d0c7acbbfcb686e4ff17f6bc..ee0792e6ea6d4ea9f0a0257909077ec9
          catch (error) {
 -            const errorMessage = error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
 -            return { error: `Could not edit file: ${path}. ${errorMessage}.` };
-+            const errorMessage = error instanceof Error && "code" in error ? `错误代码：${error.code}` : String(error);
-+            return { error: `无法编辑文件：${path}。${errorMessage}。` };
++            const errorMessage = error instanceof Error && "code" in error ? (process.env.RSI_LOCALE === "en" ? `Error code: ${error.code}` : `错误代码：${error.code}`) : String(error);
++            return { error: (process.env.RSI_LOCALE === "en" ? `Could not edit file: ${path}. ${errorMessage}.` : `无法编辑文件：${path}。${errorMessage}。`) };
          }
          // Read the file
          const rawContent = await readFile(absolutePath, "utf-8");
 diff --git a/dist/core/tools/edit.js b/dist/core/tools/edit.js
-index a5f1b34a1b37f9851a4e0c0fc4e65b9a0da9a1a1..fd2deaf2beb018bac81253240fa83fc965178ffe 100644
+index a5f1b34a1b37f9851a4e0c0fc4e65b9a0da9a1a1..f22d57397e1c1d52d9b841c69b687ad8d0d6f386 100644
 --- a/dist/core/tools/edit.js
 +++ b/dist/core/tools/edit.js
 @@ -73,7 +73,7 @@ function prepareEditArguments(input) {
@@ -459,7 +459,7 @@ index a5f1b34a1b37f9851a4e0c0fc4e65b9a0da9a1a1..fd2deaf2beb018bac81253240fa83fc9
  function validateEditInput(input) {
      if (!Array.isArray(input.edits) || input.edits.length === 0) {
 -        throw new Error("Edit tool input is invalid. edits must contain at least one replacement.");
-+        throw new Error("edit 工具输入无效。edits 必须至少包含一处替换。");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Edit tool input is invalid. edits must contain at least one replacement." : "edit 工具输入无效。edits 必须至少包含一处替换。"));
      }
      return { path: input.path, edits: input.edits };
  }
@@ -468,7 +468,7 @@ index a5f1b34a1b37f9851a4e0c0fc4e65b9a0da9a1a1..fd2deaf2beb018bac81253240fa83fc9
                  const throwIfAborted = () => {
                      if (signal?.aborted)
 -                        throw new Error("Operation aborted");
-+                        throw new Error("操作已中止");
++                        throw new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"));
                  };
                  throwIfAborted();
                  // Check if file exists.
@@ -478,8 +478,8 @@ index a5f1b34a1b37f9851a4e0c0fc4e65b9a0da9a1a1..fd2deaf2beb018bac81253240fa83fc9
                      throwIfAborted();
 -                    const errorMessage = error instanceof Error && "code" in error ? `Error code: ${error.code}` : String(error);
 -                    throw new Error(`Could not edit file: ${path}. ${errorMessage}.`);
-+                    const errorMessage = error instanceof Error && "code" in error ? `错误代码：${error.code}` : String(error);
-+                    throw new Error(`无法编辑文件：${path}。${errorMessage}。`);
++                    const errorMessage = error instanceof Error && "code" in error ? (process.env.RSI_LOCALE === "en" ? `Error code: ${error.code}` : `错误代码：${error.code}`) : String(error);
++                    throw new Error((process.env.RSI_LOCALE === "en" ? `Could not edit file: ${path}. ${errorMessage}.` : `无法编辑文件：${path}。${errorMessage}。`));
                  }
                  throwIfAborted();
                  // Read the file.
@@ -488,12 +488,12 @@ index a5f1b34a1b37f9851a4e0c0fc4e65b9a0da9a1a1..fd2deaf2beb018bac81253240fa83fc9
                          {
                              type: "text",
 -                            text: `Successfully replaced ${edits.length} block(s) in ${path}.`,
-+                            text: `已成功在 ${path} 中替换 ${edits.length} 处文本块。`,
++                            text: (process.env.RSI_LOCALE === "en" ? `Successfully replaced ${edits.length} block(s) in ${path}.` : `已成功在 ${path} 中替换 ${edits.length} 处文本块。`),
                          },
                      ],
                      details: { diff: diffResult.diff, patch, firstChangedLine: diffResult.firstChangedLine },
 diff --git a/dist/core/tools/find.js b/dist/core/tools/find.js
-index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60ba67bbf0b 100644
+index a3bab76c952c2a03d6534aba80a72f7743a52b94..7797185288c4e1bda62179fa3901a302c76b2782 100644
 --- a/dist/core/tools/find.js
 +++ b/dist/core/tools/find.js
 @@ -42,7 +42,7 @@ export function createFindToolDefinition(cwd, options) {
@@ -501,7 +501,7 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
              return new Promise((resolve, reject) => {
                  if (signal?.aborted) {
 -                    reject(new Error("Operation aborted"));
-+                    reject(new Error("操作已中止"));
++                    reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止")));
                      return;
                  }
                  let settled = false;
@@ -510,7 +510,7 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                  const onAbort = () => {
                      stopChild?.();
 -                    settle(() => reject(new Error("Operation aborted")));
-+                    settle(() => reject(new Error("操作已中止")));
++                    settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                  };
                  signal?.addEventListener("abort", onAbort, { once: true });
                  (async () => {
@@ -519,12 +519,12 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                          if (customOps?.glob) {
                              if (!(await ops.exists(searchPath))) {
 -                                settle(() => reject(new Error(`Path not found: ${searchPath}`)));
-+                                settle(() => reject(new Error(`找不到路径：${searchPath}`)));
++                                settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? `Path not found: ${searchPath}` : `找不到路径：${searchPath}`))));
                                  return;
                              }
                              if (signal?.aborted) {
 -                                settle(() => reject(new Error("Operation aborted")));
-+                                settle(() => reject(new Error("操作已中止")));
++                                settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                                  return;
                              }
                              const results = await ops.glob(pattern, searchPath, {
@@ -533,13 +533,13 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                              });
                              if (signal?.aborted) {
 -                                settle(() => reject(new Error("Operation aborted")));
-+                                settle(() => reject(new Error("操作已中止")));
++                                settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                                  return;
                              }
                              if (results.length === 0) {
                                  settle(() => resolve({
 -                                    content: [{ type: "text", text: "No files found matching pattern" }],
-+                                    content: [{ type: "text", text: "未找到匹配该模式的文件" }],
++                                    content: [{ type: "text", text: (process.env.RSI_LOCALE === "en" ? "No files found matching pattern" : "未找到匹配该模式的文件") }],
                                      details: undefined,
                                  }));
                                  return;
@@ -548,12 +548,12 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                              const notices = [];
                              if (resultLimitReached) {
 -                                notices.push(`${effectiveLimit} results limit reached`);
-+                                notices.push(`已达到 ${effectiveLimit} 条结果上限`);
++                                notices.push((process.env.RSI_LOCALE === "en" ? `${effectiveLimit} results limit reached` : `已达到 ${effectiveLimit} 条结果上限`));
                                  details.resultLimitReached = effectiveLimit;
                              }
                              if (truncation.truncated) {
 -                                notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
-+                                notices.push(`已达 ${formatSize(DEFAULT_MAX_BYTES)} 上限`);
++                                notices.push((process.env.RSI_LOCALE === "en" ? `${formatSize(DEFAULT_MAX_BYTES)} limit reached` : `已达 ${formatSize(DEFAULT_MAX_BYTES)} 上限`));
                                  details.truncation = truncation;
                              }
                              if (notices.length > 0) {
@@ -562,12 +562,12 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                          const fdPath = await ensureTool("fd");
                          if (signal?.aborted) {
 -                            settle(() => reject(new Error("Operation aborted")));
-+                            settle(() => reject(new Error("操作已中止")));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                              return;
                          }
                          if (!fdPath) {
 -                            settle(() => reject(new Error("fd is not available and could not be downloaded")));
-+                            settle(() => reject(new Error("fd 不可用，且无法下载")));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "fd is not available and could not be downloaded" : "fd 不可用，且无法下载"))));
                              return;
                          }
                          const args = ["--glob", "--color=never", "--hidden"];
@@ -576,13 +576,13 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                          child.on("error", (error) => {
                              cleanup();
 -                            settle(() => reject(new Error(`Failed to run fd: ${error.message}`)));
-+                            settle(() => reject(new Error(`fd 运行失败：${error.message}`)));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? `Failed to run fd: ${error.message}` : `fd 运行失败：${error.message}`))));
                          });
                          child.on("close", (code) => {
                              cleanup();
                              if (signal?.aborted) {
 -                                settle(() => reject(new Error("Operation aborted")));
-+                                settle(() => reject(new Error("操作已中止")));
++                                settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                                  return;
                              }
                              const output = lines.join("\n");
@@ -591,7 +591,7 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                              if (!output) {
                                  settle(() => resolve({
 -                                    content: [{ type: "text", text: "No files found matching pattern" }],
-+                                    content: [{ type: "text", text: "未找到匹配该模式的文件" }],
++                                    content: [{ type: "text", text: (process.env.RSI_LOCALE === "en" ? "No files found matching pattern" : "未找到匹配该模式的文件") }],
                                      details: undefined,
                                  }));
                                  return;
@@ -600,12 +600,12 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                              const notices = [];
                              if (resultLimitReached) {
 -                                notices.push(`${effectiveLimit} results limit reached. Use limit=${effectiveLimit * 2} for more, or refine pattern`);
-+                                notices.push(`已达到 ${effectiveLimit} 条结果上限。使用 limit=${effectiveLimit * 2} 获取更多，或细化 pattern`);
++                                notices.push((process.env.RSI_LOCALE === "en" ? `${effectiveLimit} results limit reached. Use limit=${effectiveLimit * 2} for more, or refine pattern` : `已达到 ${effectiveLimit} 条结果上限。使用 limit=${effectiveLimit * 2} 获取更多，或细化 pattern`));
                                  details.resultLimitReached = effectiveLimit;
                              }
                              if (truncation.truncated) {
 -                                notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
-+                                notices.push(`已达 ${formatSize(DEFAULT_MAX_BYTES)} 上限`);
++                                notices.push((process.env.RSI_LOCALE === "en" ? `${formatSize(DEFAULT_MAX_BYTES)} limit reached` : `已达 ${formatSize(DEFAULT_MAX_BYTES)} 上限`));
                                  details.truncation = truncation;
                              }
                              if (notices.length > 0) {
@@ -614,12 +614,12 @@ index a3bab76c952c2a03d6534aba80a72f7743a52b94..7778e13f0c3b5f275a717bacada6d60b
                      catch (e) {
                          if (signal?.aborted) {
 -                            settle(() => reject(new Error("Operation aborted")));
-+                            settle(() => reject(new Error("操作已中止")));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                              return;
                          }
                          const error = e instanceof Error ? e : new Error(String(e));
 diff --git a/dist/core/tools/grep.js b/dist/core/tools/grep.js
-index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae6a1c1d54 100644
+index d427d071582ead6e0c876121a8b67ad9fe6c45f7..0e65a2bce9ca8a32ded3aea0be2496341acdcc82 100644
 --- a/dist/core/tools/grep.js
 +++ b/dist/core/tools/grep.js
 @@ -37,7 +37,7 @@ export function createGrepToolDefinition(cwd, options) {
@@ -627,7 +627,7 @@ index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae
              return new Promise((resolve, reject) => {
                  if (signal?.aborted) {
 -                    reject(new Error("Operation aborted"));
-+                    reject(new Error("操作已中止"));
++                    reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止")));
                      return;
                  }
                  let settled = false;
@@ -636,7 +636,7 @@ index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae
                          const rgPath = await ensureTool("rg");
                          if (!rgPath) {
 -                            settle(() => reject(new Error("ripgrep (rg) is not available and could not be downloaded")));
-+                            settle(() => reject(new Error("ripgrep (rg) 不可用，且无法下载")));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "ripgrep (rg) is not available and could not be downloaded" : "ripgrep (rg) 不可用，且无法下载"))));
                              return;
                          }
                          const searchPath = resolveToCwd(searchDir || ".", ctx?.cwd || cwd);
@@ -645,7 +645,7 @@ index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae
                          }
                          catch {
 -                            settle(() => reject(new Error(`Path not found: ${searchPath}`)));
-+                            settle(() => reject(new Error(`找不到路径：${searchPath}`)));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? `Path not found: ${searchPath}` : `找不到路径：${searchPath}`))));
                              return;
                          }
                          const contextValue = context && context > 0 ? context : 0;
@@ -654,24 +654,24 @@ index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae
                          child.on("error", (error) => {
                              cleanup();
 -                            settle(() => reject(new Error(`Failed to run ripgrep: ${error.message}`)));
-+                            settle(() => reject(new Error(`ripgrep 运行失败：${error.message}`)));
++                            settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? `Failed to run ripgrep: ${error.message}` : `ripgrep 运行失败：${error.message}`))));
                          });
                          child.on("close", async (code) => {
                              cleanup();
                              if (aborted) {
 -                                settle(() => reject(new Error("Operation aborted")));
-+                                settle(() => reject(new Error("操作已中止")));
++                                settle(() => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"))));
                                  return;
                              }
                              if (!killedDueToLimit && code !== 0 && code !== 1) {
 -                                const errorMsg = stderr.trim() || `ripgrep exited with code ${code}`;
-+                                const errorMsg = stderr.trim() || `ripgrep 退出码 ${code}`;
++                                const errorMsg = stderr.trim() || (process.env.RSI_LOCALE === "en" ? `ripgrep exited with code ${code}` : `ripgrep 退出码 ${code}`);
                                  settle(() => reject(new Error(errorMsg)));
                                  return;
                              }
                              if (matchCount === 0) {
 -                                settle(() => resolve({ content: [{ type: "text", text: "No matches found" }], details: undefined }));
-+                                settle(() => resolve({ content: [{ type: "text", text: "未找到匹配项" }], details: undefined }));
++                                settle(() => resolve({ content: [{ type: "text", text: (process.env.RSI_LOCALE === "en" ? "No matches found" : "未找到匹配项") }], details: undefined }));
                                  return;
                              }
                              // Format matches after streaming finishes so custom readFile() backends can be async.
@@ -680,7 +680,7 @@ index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae
                              const notices = [];
                              if (matchLimitReached) {
 -                                notices.push(`${effectiveLimit} matches limit reached. Use limit=${effectiveLimit * 2} for more, or refine pattern`);
-+                                notices.push(`已达到 ${effectiveLimit} 条匹配上限。使用 limit=${effectiveLimit * 2} 获取更多，或细化 pattern`);
++                                notices.push((process.env.RSI_LOCALE === "en" ? `${effectiveLimit} matches limit reached. Use limit=${effectiveLimit * 2} for more, or refine pattern` : `已达到 ${effectiveLimit} 条匹配上限。使用 limit=${effectiveLimit * 2} 获取更多，或细化 pattern`));
                                  details.matchLimitReached = effectiveLimit;
                              }
                              if (truncation.truncated) {
@@ -689,12 +689,12 @@ index d427d071582ead6e0c876121a8b67ad9fe6c45f7..1492c5762c3432826171f0faec1bdaae
                              }
                              if (linesTruncated) {
 -                                notices.push(`Some lines truncated to ${GREP_MAX_LINE_LENGTH} chars. Use read tool to see full lines`);
-+                                notices.push(`部分行被截断至 ${GREP_MAX_LINE_LENGTH} 个字符。使用 read 工具查看完整行`);
++                                notices.push((process.env.RSI_LOCALE === "en" ? `Some lines truncated to ${GREP_MAX_LINE_LENGTH} chars. Use read tool to see full lines` : `部分行被截断至 ${GREP_MAX_LINE_LENGTH} 个字符。使用 read 工具查看完整行`));
                                  details.linesTruncated = true;
                              }
                              if (notices.length > 0)
 diff --git a/dist/core/tools/index.js b/dist/core/tools/index.js
-index 27765f06391130ba4c99d307fb85edb14e5ffc2a..31a2d712893a594b5959b42ba36469f378c8bf04 100644
+index 27765f06391130ba4c99d307fb85edb14e5ffc2a..4a84b80fecc95c5b20d5ae8e0028003a89325aa4 100644
 --- a/dist/core/tools/index.js
 +++ b/dist/core/tools/index.js
 @@ -45,7 +45,7 @@ export function createToolDefinition(toolName, cwd, options) {
@@ -702,7 +702,7 @@ index 27765f06391130ba4c99d307fb85edb14e5ffc2a..31a2d712893a594b5959b42ba36469f3
              return createLsToolDefinition(cwd, options?.ls);
          default:
 -            throw new Error(`Unknown tool name: ${toolName}`);
-+            throw new Error(`未知工具名称：${toolName}`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `Unknown tool name: ${toolName}` : `未知工具名称：${toolName}`));
      }
  }
  export function createTool(toolName, cwd, options) {
@@ -711,12 +711,12 @@ index 27765f06391130ba4c99d307fb85edb14e5ffc2a..31a2d712893a594b5959b42ba36469f3
              return createLsTool(cwd, options?.ls);
          default:
 -            throw new Error(`Unknown tool name: ${toolName}`);
-+            throw new Error(`未知工具名称：${toolName}`);
++            throw new Error((process.env.RSI_LOCALE === "en" ? `Unknown tool name: ${toolName}` : `未知工具名称：${toolName}`));
      }
  }
  export function createCodingToolDefinitions(cwd, options) {
 diff --git a/dist/core/tools/ls.js b/dist/core/tools/ls.js
-index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..dd03ca7a6468498319456b05c3d7d9e01c26ec1a 100644
+index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..7170f9fa594e2b66c7715abef93db40386447d05 100644
 --- a/dist/core/tools/ls.js
 +++ b/dist/core/tools/ls.js
 @@ -30,10 +30,10 @@ export function createLsToolDefinition(cwd, options) {
@@ -724,11 +724,11 @@ index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..dd03ca7a6468498319456b05c3d7d9e0
              return new Promise((resolve, reject) => {
                  if (signal?.aborted) {
 -                    reject(new Error("Operation aborted"));
-+                    reject(new Error("操作已中止"));
++                    reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止")));
                      return;
                  }
 -                const onAbort = () => reject(new Error("Operation aborted"));
-+                const onAbort = () => reject(new Error("操作已中止"));
++                const onAbort = () => reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止")));
                  signal?.addEventListener("abort", onAbort, { once: true });
                  (async () => {
                      try {
@@ -737,14 +737,14 @@ index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..dd03ca7a6468498319456b05c3d7d9e0
                          // Check if path exists.
                          if (!(await ops.exists(dirPath))) {
 -                            reject(new Error(`Path not found: ${dirPath}`));
-+                            reject(new Error(`找不到路径：${dirPath}`));
++                            reject(new Error((process.env.RSI_LOCALE === "en" ? `Path not found: ${dirPath}` : `找不到路径：${dirPath}`)));
                              return;
                          }
                          // Check if path is a directory.
                          const stat = await ops.stat(dirPath);
                          if (!stat.isDirectory()) {
 -                            reject(new Error(`Not a directory: ${dirPath}`));
-+                            reject(new Error(`不是目录：${dirPath}`));
++                            reject(new Error((process.env.RSI_LOCALE === "en" ? `Not a directory: ${dirPath}` : `不是目录：${dirPath}`)));
                              return;
                          }
                          // Read directory entries.
@@ -753,7 +753,7 @@ index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..dd03ca7a6468498319456b05c3d7d9e0
                          }
                          catch (e) {
 -                            reject(new Error(`Cannot read directory: ${e.message}`));
-+                            reject(new Error(`无法读取目录：${e.message}`));
++                            reject(new Error((process.env.RSI_LOCALE === "en" ? `Cannot read directory: ${e.message}` : `无法读取目录：${e.message}`)));
                              return;
                          }
                          // Sort alphabetically, case-insensitive.
@@ -762,7 +762,7 @@ index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..dd03ca7a6468498319456b05c3d7d9e0
                          signal?.removeEventListener("abort", onAbort);
                          if (results.length === 0) {
 -                            resolve({ content: [{ type: "text", text: "(empty directory)" }], details: undefined });
-+                            resolve({ content: [{ type: "text", text: "(空目录)" }], details: undefined });
++                            resolve({ content: [{ type: "text", text: (process.env.RSI_LOCALE === "en" ? "(empty directory)" : "(空目录)") }], details: undefined });
                              return;
                          }
                          const rawOutput = results.join("\n");
@@ -771,17 +771,17 @@ index f5fbe769c294ddd8cf62f3b1a129c5b2cadb4faf..dd03ca7a6468498319456b05c3d7d9e0
                          const notices = [];
                          if (entryLimitReached) {
 -                            notices.push(`${effectiveLimit} entries limit reached. Use limit=${effectiveLimit * 2} for more`);
-+                            notices.push(`已达到 ${effectiveLimit} 条目上限。使用 limit=${effectiveLimit * 2} 获取更多`);
++                            notices.push((process.env.RSI_LOCALE === "en" ? `${effectiveLimit} entries limit reached. Use limit=${effectiveLimit * 2} for more` : `已达到 ${effectiveLimit} 条目上限。使用 limit=${effectiveLimit * 2} 获取更多`));
                              details.entryLimitReached = effectiveLimit;
                          }
                          if (truncation.truncated) {
 -                            notices.push(`${formatSize(DEFAULT_MAX_BYTES)} limit reached`);
-+                            notices.push(`已达 ${formatSize(DEFAULT_MAX_BYTES)} 上限`);
++                            notices.push((process.env.RSI_LOCALE === "en" ? `${formatSize(DEFAULT_MAX_BYTES)} limit reached` : `已达 ${formatSize(DEFAULT_MAX_BYTES)} 上限`));
                              details.truncation = truncation;
                          }
                          if (notices.length > 0) {
 diff --git a/dist/core/tools/read.js b/dist/core/tools/read.js
-index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b8c7cb454 100644
+index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..a0544178e9fa1f1302e02e561f8da4ce97067aa6 100644
 --- a/dist/core/tools/read.js
 +++ b/dist/core/tools/read.js
 @@ -25,7 +25,7 @@ function getNonVisionImageNote(model) {
@@ -789,7 +789,7 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
          return undefined;
      }
 -    return "[Current model does not support images. The image will be omitted from this request.]";
-+    return "[当前模型不支持图片。该图片将从本次请求中省略。]";
++    return (process.env.RSI_LOCALE === "en" ? "[Current model does not support images. The image will be omitted from this request.]" : "[当前模型不支持图片。该图片将从本次请求中省略。]");
  }
  export function createReadToolDefinition(cwd, options) {
      const autoResizeImages = options?.autoResizeImages ?? true;
@@ -798,14 +798,14 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
              return new Promise((resolve, reject) => {
                  if (signal?.aborted) {
 -                    reject(new Error("Operation aborted"));
-+                    reject(new Error("操作已中止"));
++                    reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止")));
                      return;
                  }
                  let aborted = false;
                  const onAbort = () => {
                      aborted = true;
 -                    reject(new Error("Operation aborted"));
-+                    reject(new Error("操作已中止"));
++                    reject(new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止")));
                  };
                  signal?.addEventListener("abort", onAbort, { once: true });
                  (async () => {
@@ -814,14 +814,14 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
                              });
                              if (!processed.ok) {
 -                                let textNote = `Read image file [${mimeType}]\n${processed.message}`;
-+                                let textNote = `已读取图片文件 [${mimeType}]\n${processed.message}`;
++                                let textNote = (process.env.RSI_LOCALE === "en" ? `Read image file [${mimeType}]\n${processed.message}` : `已读取图片文件 [${mimeType}]\n${processed.message}`);
                                  if (nonVisionImageNote)
                                      textNote += `\n${nonVisionImageNote}`;
                                  content = [{ type: "text", text: textNote }];
                              }
                              else {
 -                                let textNote = `Read image file [${processed.mimeType}]`;
-+                                let textNote = `已读取图片文件 [${processed.mimeType}]`;
++                                let textNote = (process.env.RSI_LOCALE === "en" ? `Read image file [${processed.mimeType}]` : `已读取图片文件 [${processed.mimeType}]`);
                                  if (processed.hints.length > 0)
                                      textNote += `\n${processed.hints.join("\n")}`;
                                  if (nonVisionImageNote)
@@ -830,7 +830,7 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
                              // Check if offset is out of bounds.
                              if (startLine >= allLines.length) {
 -                                throw new Error(`Offset ${offset} is beyond end of file (${allLines.length} lines total)`);
-+                                throw new Error(`偏移量 ${offset} 超出文件末尾（文件共 ${allLines.length} 行）`);
++                                throw new Error((process.env.RSI_LOCALE === "en" ? `Offset ${offset} is beyond end of file (${allLines.length} lines total)` : `偏移量 ${offset} 超出文件末尾（文件共 ${allLines.length} 行）`));
                              }
                              let selectedContent;
                              let userLimitedLines;
@@ -839,7 +839,7 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
                                  // First line alone exceeds the byte limit. Point the model at a bash fallback.
                                  const firstLineSize = formatSize(Buffer.byteLength(allLines[startLine], "utf-8"));
 -                                outputText = `[Line ${startLineDisplay} is ${firstLineSize}, exceeds ${formatSize(DEFAULT_MAX_BYTES)} limit. Use bash: sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]`;
-+                                outputText = `[第 ${startLineDisplay} 行大小为 ${firstLineSize}，超过 ${formatSize(DEFAULT_MAX_BYTES)} 上限。请用 bash 执行：sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]`;
++                                outputText = (process.env.RSI_LOCALE === "en" ? `[Line ${startLineDisplay} is ${firstLineSize}, exceeds ${formatSize(DEFAULT_MAX_BYTES)} limit. Use bash: sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]` : `[第 ${startLineDisplay} 行大小为 ${firstLineSize}，超过 ${formatSize(DEFAULT_MAX_BYTES)} 上限。请用 bash 执行：sed -n '${startLineDisplay}p' ${path} | head -c ${DEFAULT_MAX_BYTES}]`);
                                  details = { truncation };
                              }
                              else if (truncation.truncated) {
@@ -848,11 +848,11 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
                                  outputText = truncation.content;
                                  if (truncation.truncatedBy === "lines") {
 -                                    outputText += `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines}. Use offset=${nextOffset} to continue.]`;
-+                                    outputText += `\n\n[显示第 ${startLineDisplay}-${endLineDisplay} 行，共 ${totalFileLines} 行。使用 offset=${nextOffset} 继续读取。]`;
++                                    outputText += (process.env.RSI_LOCALE === "en" ? `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines}. Use offset=${nextOffset} to continue.]` : `\n\n[显示第 ${startLineDisplay}-${endLineDisplay} 行，共 ${totalFileLines} 行。使用 offset=${nextOffset} 继续读取。]`);
                                  }
                                  else {
 -                                    outputText += `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Use offset=${nextOffset} to continue.]`;
-+                                    outputText += `\n\n[显示第 ${startLineDisplay}-${endLineDisplay} 行，共 ${totalFileLines} 行（上限 ${formatSize(DEFAULT_MAX_BYTES)}）。使用 offset=${nextOffset} 继续读取。]`;
++                                    outputText += (process.env.RSI_LOCALE === "en" ? `\n\n[Showing lines ${startLineDisplay}-${endLineDisplay} of ${totalFileLines} (${formatSize(DEFAULT_MAX_BYTES)} limit). Use offset=${nextOffset} to continue.]` : `\n\n[显示第 ${startLineDisplay}-${endLineDisplay} 行，共 ${totalFileLines} 行（上限 ${formatSize(DEFAULT_MAX_BYTES)}）。使用 offset=${nextOffset} 继续读取。]`);
                                  }
                                  details = { truncation };
                              }
@@ -861,12 +861,12 @@ index b9bc3b9dde0f5e8f0e6b24451cc20cd609b15a53..84c8eb6611a1f688ecd8e14814bf117b
                                  const remaining = allLines.length - (startLine + userLimitedLines);
                                  const nextOffset = startLine + userLimitedLines + 1;
 -                                outputText = `${truncation.content}\n\n[${remaining} more lines in file. Use offset=${nextOffset} to continue.]`;
-+                                outputText = `${truncation.content}\n\n[文件还有 ${remaining} 行。使用 offset=${nextOffset} 继续读取。]`;
++                                outputText = (process.env.RSI_LOCALE === "en" ? `${truncation.content}\n\n[${remaining} more lines in file. Use offset=${nextOffset} to continue.]` : `${truncation.content}\n\n[文件还有 ${remaining} 行。使用 offset=${nextOffset} 继续读取。]`);
                              }
                              else {
                                  // No truncation and no remaining user-limited content.
 diff --git a/dist/core/tools/truncate.js b/dist/core/tools/truncate.js
-index 579da03562cbced40108d65af2da225def8ec57b..10310070fef5994bfb7bcbaa2e1fcfce34df8150 100644
+index 579da03562cbced40108d65af2da225def8ec57b..a7316314ac5cd2baf558fbafc4861ab10a21b788 100644
 --- a/dist/core/tools/truncate.js
 +++ b/dist/core/tools/truncate.js
 @@ -210,7 +210,7 @@ export function truncateLine(line, maxChars = GREP_MAX_LINE_LENGTH) {
@@ -874,12 +874,12 @@ index 579da03562cbced40108d65af2da225def8ec57b..10310070fef5994bfb7bcbaa2e1fcfce
          return { text: line, wasTruncated: false };
      }
 -    return { text: `${line.slice(0, maxChars)}... [truncated]`, wasTruncated: true };
-+    return { text: `${line.slice(0, maxChars)}... [已截断]`, wasTruncated: true };
++    return { text: (process.env.RSI_LOCALE === "en" ? `${line.slice(0, maxChars)}... [truncated]` : `${line.slice(0, maxChars)}... [已截断]`), wasTruncated: true };
  }
  /**
   * Keep the start and the end of `content`, half of `maxBytes` each, and replace the middle with a
 diff --git a/dist/core/tools/write.js b/dist/core/tools/write.js
-index a1e20c81f4b9307c4660ca7147cea183b73045fc..ef02566c40f235166ad50702306b1625712ecebd 100644
+index a1e20c81f4b9307c4660ca7147cea183b73045fc..5e842426aff47368891bb850b6ce93204c07e4d0 100644
 --- a/dist/core/tools/write.js
 +++ b/dist/core/tools/write.js
 @@ -37,7 +37,7 @@ export function createWriteToolDefinition(cwd, options) {
@@ -887,7 +887,7 @@ index a1e20c81f4b9307c4660ca7147cea183b73045fc..ef02566c40f235166ad50702306b1625
                  const throwIfAborted = () => {
                      if (signal?.aborted)
 -                        throw new Error("Operation aborted");
-+                        throw new Error("操作已中止");
++                        throw new Error((process.env.RSI_LOCALE === "en" ? "Operation aborted" : "操作已中止"));
                  };
                  throwIfAborted();
                  // Create parent directories if needed.
@@ -896,12 +896,12 @@ index a1e20c81f4b9307c4660ca7147cea183b73045fc..ef02566c40f235166ad50702306b1625
                  throwIfAborted();
                  return {
 -                    content: [{ type: "text", text: `Successfully wrote to ${path}` }],
-+                    content: [{ type: "text", text: `已成功写入 ${path}` }],
++                    content: [{ type: "text", text: (process.env.RSI_LOCALE === "en" ? `Successfully wrote to ${path}` : `已成功写入 ${path}`) }],
                      details: undefined,
                  };
              });
 diff --git a/dist/extensions/codemode/execute.js b/dist/extensions/codemode/execute.js
-index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c5535fedfad7 100644
+index b75b6801fa46363a948d8bb61b4aac248b6bcec5..1f7127dd258168696a923276fc453d8eadf9bfb8 100644
 --- a/dist/extensions/codemode/execute.js
 +++ b/dist/extensions/codemode/execute.js
 @@ -195,18 +195,18 @@ function valueText(value) {
@@ -910,8 +910,8 @@ index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c553
      if (calls.length === 0)
 -        return "No tool calls were made.";
 -    return `Tool calls made before the failure (they are not undone): ${calls.map((call) => `${call.name} (${call.status})`).join(", ")}`;
-+        return "未发起任何工具调用。";
-+    return `失败前发起的工具调用（不会撤销）：${calls.map((call) => `${call.name} (${call.status})`).join(", ")}`;
++        return (process.env.RSI_LOCALE === "en" ? "No tool calls were made." : "未发起任何工具调用。");
++    return (process.env.RSI_LOCALE === "en" ? `Tool calls made before the failure (they are not undone): ${calls.map((call) => `${call.name} (${call.status})`).join(", ")}` : `失败前发起的工具调用（不会撤销）：${calls.map((call) => `${call.name} (${call.status})`).join(", ")}`);
  }
  function formatError(result, calls) {
      const { error } = result;
@@ -919,12 +919,12 @@ index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c553
          ? (error.stack ?? `${error.name ?? "Error"}: ${error.message}`)
          : error.kind === "timeout"
 -            ? `Script timed out: ${error.message}`
-+            ? `脚本超时：${error.message}`
++            ? (process.env.RSI_LOCALE === "en" ? `Script timed out: ${error.message}` : `脚本超时：${error.message}`)
              : error.kind === "aborted"
 -                ? `Script aborted: ${error.message}`
 -                : `Script sandbox failed: ${error.message}`;
-+                ? `脚本已中止：${error.message}`
-+                : `脚本沙箱失败：${error.message}`;
++                ? (process.env.RSI_LOCALE === "en" ? `Script aborted: ${error.message}` : `脚本已中止：${error.message}`)
++                : (process.env.RSI_LOCALE === "en" ? `Script sandbox failed: ${error.message}` : `脚本沙箱失败：${error.message}`);
      return `${head}\n\n${formatCallSummary(calls)}`;
  }
  /** Write the full text output to a temp file, like bash does for truncated output. */
@@ -933,14 +933,14 @@ index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c553
      const head = combined.slice(0, headChars);
      const tail = tailChars > 0 ? combined.slice(-tailChars) : "";
 -    let text = `Warning: truncated output (original token count: ${Math.ceil(combined.length / CHARS_PER_TOKEN)})\nTotal output lines: ${combined.split("\n").length}\n\n${head}…${Math.ceil(removed / CHARS_PER_TOKEN)} tokens truncated…${tail}`;
-+    let text = `警告：输出已截断（原始 token 数：${Math.ceil(combined.length / CHARS_PER_TOKEN)}）\n输出总行数：${combined.split("\n").length}\n\n${head}…${Math.ceil(removed / CHARS_PER_TOKEN)} tokens 已截断…${tail}`;
++    let text = (process.env.RSI_LOCALE === "en" ? `Warning: truncated output (original token count: ${Math.ceil(combined.length / CHARS_PER_TOKEN)})\nTotal output lines: ${combined.split("\n").length}\n\n${head}…${Math.ceil(removed / CHARS_PER_TOKEN)} tokens truncated…${tail}` : `警告：输出已截断（原始 token 数：${Math.ceil(combined.length / CHARS_PER_TOKEN)}）\n输出总行数：${combined.split("\n").length}\n\n${head}…${Math.ceil(removed / CHARS_PER_TOKEN)} tokens 已截断…${tail}`);
      const spilled = await spillOutput(combined);
      text +=
          "path" in spilled
 -            ? `\n\n[Full output: ${spilled.path} (read with offset/limit)]`
 -            : `\n\n[Could not save the full output: ${spilled.error}]`;
-+            ? `\n\n[完整输出：${spilled.path}（使用 offset/limit 读取）]`
-+            : `\n\n[无法保存完整输出：${spilled.error}]`;
++            ? (process.env.RSI_LOCALE === "en" ? `\n\n[Full output: ${spilled.path} (read with offset/limit)]` : `\n\n[完整输出：${spilled.path}（使用 offset/limit 读取）]`)
++            : (process.env.RSI_LOCALE === "en" ? `\n\n[Could not save the full output: ${spilled.error}]` : `\n\n[无法保存完整输出：${spilled.error}]`);
      return {
          items: [{ type: "text", text }, ...items.filter((item) => item.type === "image")],
          ...("path" in spilled ? { fullOutputPath: spilled.path } : {}),
@@ -949,7 +949,7 @@ index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c553
      const text = textOf(result);
      if (outcome.isError)
 -        throw new Error(text || `Tool "${tool.name}" failed`);
-+        throw new Error(text || `工具 "${tool.name}" 失败`);
++        throw new Error(text || (process.env.RSI_LOCALE === "en" ? `Tool "${tool.name}" failed` : `工具 "${tool.name}" 失败`));
      return text;
  }
  /**
@@ -958,7 +958,7 @@ index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c553
              if (outcome.isError) {
                  record.status = callSignal.aborted ? "cancelled" : "error";
 -                record.error = truncateText(textOf(outcome.result) || `Tool "${tool.name}" failed`, ERROR_PREVIEW_CHARS);
-+                record.error = truncateText(textOf(outcome.result) || `工具 "${tool.name}" 失败`, ERROR_PREVIEW_CHARS);
++                record.error = truncateText(textOf(outcome.result) || (process.env.RSI_LOCALE === "en" ? `Tool "${tool.name}" failed` : `工具 "${tool.name}" 失败`), ERROR_PREVIEW_CHARS);
              }
              else {
                  record.status = "ok";
@@ -967,12 +967,12 @@ index b75b6801fa46363a948d8bb61b4aac248b6bcec5..0130748f50b3e07f22092a2c9508c553
      }
      else {
 -        items.push({ type: "text", text: `Script error:\n${formatError(result, calls)}` });
-+        items.push({ type: "text", text: `脚本错误：\n${formatError(result, calls)}` });
++        items.push({ type: "text", text: (process.env.RSI_LOCALE === "en" ? `Script error:\n${formatError(result, calls)}` : `脚本错误：\n${formatError(result, calls)}`) });
      }
      if (generatedImages > 0 && !items.some((item) => item.type === "image")) {
          items.push({
 diff --git a/dist/extensions/llama/client.js b/dist/extensions/llama/client.js
-index 0fdd0d43163d2178789e83ac78347735bfec7364..3e2e13f2f8ba0e12ed8172a7ea8bc1d18df8392d 100644
+index 0fdd0d43163d2178789e83ac78347735bfec7364..250563eb7722b691693fd293e3582e6abf7ad403 100644
 --- a/dist/extensions/llama/client.js
 +++ b/dist/extensions/llama/client.js
 @@ -103,7 +103,7 @@ export function formatBytes(bytes) {
@@ -980,7 +980,7 @@ index 0fdd0d43163d2178789e83ac78347735bfec7364..3e2e13f2f8ba0e12ed8172a7ea8bc1d1
      const url = new URL(value.trim());
      if (url.protocol !== "http:" && url.protocol !== "https:") {
 -        throw new Error("Server URL must use http or https");
-+        throw new Error("服务器 URL 必须使用 http 或 https");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Server URL must use http or https" : "服务器 URL 必须使用 http 或 https"));
      }
      url.hash = "";
      url.search = "";
@@ -989,17 +989,17 @@ index 0fdd0d43163d2178789e83ac78347735bfec7364..3e2e13f2f8ba0e12ed8172a7ea8bc1d1
          const payload = await this.request(`/models${options.reload ? "?reload=1" : ""}`, { signal: options.signal });
          if (typeof payload !== "object" || payload === null || !Array.isArray(payload.data)) {
 -            throw new Error("llama.cpp returned an invalid model catalog");
-+            throw new Error("llama.cpp 返回的模型目录无效");
++            throw new Error((process.env.RSI_LOCALE === "en" ? "llama.cpp returned an invalid model catalog" : "llama.cpp 返回的模型目录无效"));
          }
          const data = payload.data;
          if (!data.every(isModelInfo))
 -            throw new Error("Server is not running in llama.cpp router mode");
-+            throw new Error("服务器未运行在 llama.cpp router 模式");
++            throw new Error((process.env.RSI_LOCALE === "en" ? "Server is not running in llama.cpp router mode" : "服务器未运行在 llama.cpp router 模式"));
          return data;
      }
      async props(options = {}) {
 diff --git a/dist/extensions/llama/index.js b/dist/extensions/llama/index.js
-index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d68d185de4 100644
+index 9681f035d0d27baf40fe669d55499dc4abb108bd..f823ca6f46c5a8093b1935f2bb7ce1506387e37e 100644
 --- a/dist/extensions/llama/index.js
 +++ b/dist/extensions/llama/index.js
 @@ -25,7 +25,7 @@ function parseHuggingFaceModel(value) {
@@ -1007,7 +1007,7 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
      const result = await ctx.modelRegistry.getProviderAuth(LLAMA_PROVIDER_ID);
      if (!result) {
 -        ctx.ui.notify(`Configure llama.cpp with /login ${LLAMA_PROVIDER_ID}`, "warning");
-+        ctx.ui.notify(`使用 /login ${LLAMA_PROVIDER_ID} 配置 llama.cpp`, "warning");
++        ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Configure llama.cpp with /login ${LLAMA_PROVIDER_ID}` : `使用 /login ${LLAMA_PROVIDER_ID} 配置 llama.cpp`), "warning");
          return undefined;
      }
      const configuredUrl = result.env?.LLAMA_BASE_URL;
@@ -1016,7 +1016,7 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
          });
          if (result.aborted)
 -            throw new Error("Model catalog refresh timed out.");
-+            throw new Error("模型目录刷新超时。");
++            throw new Error((process.env.RSI_LOCALE === "en" ? "Model catalog refresh timed out." : "模型目录刷新超时。"));
          const refreshError = result.errors.get(LLAMA_PROVIDER_ID);
          if (refreshError)
              throw refreshError;
@@ -1025,7 +1025,7 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
          }
          const restoreLoaded = async () => {
 -            ctx.ui.notify("Restoring previously loaded models");
-+            ctx.ui.notify("正在恢复之前加载的模型");
++            ctx.ui.notify((process.env.RSI_LOCALE === "en" ? "Restoring previously loaded models" : "正在恢复之前加载的模型"));
              for (const model of loaded)
                  await client.loadAndWait(model.id, () => { });
              await syncCatalog(ctx, client);
@@ -1034,7 +1034,7 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
              const refreshed = await syncCatalog(ctx, client);
              const loadedModel = refreshed.find((model) => model.id === target.id);
 -            ctx.ui.notify(loadedModel?.status.value === "loaded" ? `Loaded ${target.id}` : `Load started for ${target.id}`);
-+            ctx.ui.notify(loadedModel?.status.value === "loaded" ? `已加载 ${target.id}` : `已开始加载 ${target.id}`);
++            ctx.ui.notify(loadedModel?.status.value === "loaded" ? (process.env.RSI_LOCALE === "en" ? `Loaded ${target.id}` : `已加载 ${target.id}`) : (process.env.RSI_LOCALE === "en" ? `Load started for ${target.id}` : `已开始加载 ${target.id}`));
          }
          catch (error) {
              if (replace) {
@@ -1043,7 +1043,7 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
          await client.unloadAndWait(model.id);
          await syncCatalog(ctx, client);
 -        ctx.ui.notify(`Unloaded ${model.id}`);
-+        ctx.ui.notify(`已卸载 ${model.id}`);
++        ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Unloaded ${model.id}` : `已卸载 ${model.id}`));
      };
      const downloadModel = async (ctx, ui, client) => {
          const huggingFace = new HuggingFaceClient(await findHuggingFaceToken());
@@ -1052,14 +1052,14 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
              return;
          await syncCatalog(ctx, client, result.value);
 -        ctx.ui.notify(`Downloaded ${model}`);
-+        ctx.ui.notify(`已下载 ${model}`);
++        ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Downloaded ${model}` : `已下载 ${model}`));
      };
      pi.registerCommand("llama", {
          description: "Manage llama.cpp router models",
          handler: async (_args, ctx) => {
              if (ctx.mode !== "tui") {
 -                ctx.ui.notify("/llama is available in interactive mode", "warning");
-+                ctx.ui.notify("/llama 仅在交互模式下可用", "warning");
++                ctx.ui.notify((process.env.RSI_LOCALE === "en" ? "/llama is available in interactive mode" : "/llama 仅在交互模式下可用"), "warning");
                  return;
              }
              const client = await configuredClient(ctx);
@@ -1068,12 +1068,12 @@ index 9681f035d0d27baf40fe669d55499dc4abb108bd..8f7df8978ef57bdaa7a21329c6ff48d6
                              await loadModel(ctx, ui, client, catalog, action.model);
                          else
 -                            ctx.ui.notify(`${action.model.id} is ${action.model.status.value}`, "warning");
-+                            ctx.ui.notify(`${action.model.id} 当前状态：${action.model.status.value}`, "warning");
++                            ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `${action.model.id} is ${action.model.status.value}` : `${action.model.id} 当前状态：${action.model.status.value}`), "warning");
                      }
                      catch (error) {
                          actionError = error;
 diff --git a/dist/extensions/mcp/index.js b/dist/extensions/mcp/index.js
-index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb1623b332 100644
+index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..27c6cf67eb55084ea9f174fecd6798f97123f853 100644
 --- a/dist/extensions/mcp/index.js
 +++ b/dist/extensions/mcp/index.js
 @@ -143,23 +143,23 @@ function scriptNeedsServer(code, server) {
@@ -1081,29 +1081,29 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
  function describeState(server, withError = true) {
      if (!isEnabled(server))
 -        return "disabled";
-+        return "已禁用";
++        return (process.env.RSI_LOCALE === "en" ? "disabled" : "已禁用");
      const connection = server.connection;
      if (!connection)
 -        return "starting";
-+        return "启动中";
++        return (process.env.RSI_LOCALE === "en" ? "starting" : "启动中");
      switch (connection.state) {
          case "needs-auth":
 -            return "needs sign-in";
-+            return "需要登录";
++            return (process.env.RSI_LOCALE === "en" ? "needs sign-in" : "需要登录");
          case "failed":
 -            return withError ? `failed: ${firstLine(connection.error ?? "unknown error")}` : "failed";
-+            return withError ? `失败：${firstLine(connection.error ?? "未知错误")}` : "失败";
++            return withError ? (process.env.RSI_LOCALE === "en" ? `failed: ${firstLine(connection.error ?? "unknown error")}` : `失败：${firstLine(connection.error ?? "未知错误")}`) : (process.env.RSI_LOCALE === "en" ? "failed" : "失败");
          case "connected": {
              const { tools, resources } = connection;
              const count = resources.length;
 -            const resourceCount = count > 0 ? ` · ${count} resource${count === 1 ? "" : "s"}` : "";
 -            return `connected · ${tools.length} tool${tools.length === 1 ? "" : "s"}${resourceCount}`;
-+            const resourceCount = count > 0 ? ` · ${count} 个资源` : "";
-+            return `已连接 · ${tools.length} 个工具${resourceCount}`;
++            const resourceCount = count > 0 ? (process.env.RSI_LOCALE === "en" ? ` · ${count} resource${count === 1 ? "" : "s"}` : ` · ${count} 个资源`) : "";
++            return (process.env.RSI_LOCALE === "en" ? `connected · ${tools.length} tool${tools.length === 1 ? "" : "s"}${resourceCount}` : `已连接 · ${tools.length} 个工具${resourceCount}`);
          }
          case "connecting":
 -            return "connecting…";
-+            return "连接中…";
++            return (process.env.RSI_LOCALE === "en" ? "connecting…" : "连接中…");
          default:
              return connection.state;
      }
@@ -1112,7 +1112,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
      return [config.command, ...(config.args ?? [])].join(" ");
  }
 -const MCP_USAGE = "Usage: /mcp, /mcp login [server], /mcp logout [server], /mcp reconnect [server]";
-+const MCP_USAGE = "用法：/mcp、/mcp login [server]、/mcp logout [server]、/mcp reconnect [server]";
++const MCP_USAGE = (process.env.RSI_LOCALE === "en" ? "Usage: /mcp, /mcp login [server], /mcp logout [server], /mcp reconnect [server]" : "用法：/mcp、/mcp login [server]、/mcp logout [server]、/mcp reconnect [server]");
  export function createMcpExtension(options = {}) {
      return (pi) => {
          let servers = [];
@@ -1121,7 +1121,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              warnedUnreachable = true;
              const reason = needsCodemode && hasCodemode && !autoEnableCodemode ? " (autoEnableCodemode is false)" : "";
 -            ctx.ui.notify(`MCP tools are only reachable from the codemode or tool_search tool, but neither is active${reason}; they cannot be called.`, "warning");
-+            ctx.ui.notify(`MCP 工具只能通过 codemode 或 tool_search 工具调用，但两者都未启用${reason}，无法调用这些工具。`, "warning");
++            ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `MCP tools are only reachable from the codemode or tool_search tool, but neither is active${reason}; they cannot be called.` : `MCP 工具只能通过 codemode 或 tool_search 工具调用，但两者都未启用${reason}，无法调用这些工具。`), "warning");
          };
          /**
           * Stored tokens of servers waiting for a sign-in, as they were when the sign-in was needed.
@@ -1130,7 +1130,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
           */
          const reportProblems = (ctx, only) => {
 -            const lines = only ? [] : configErrors.map((error) => `config: ${error}`);
-+            const lines = only ? [] : configErrors.map((error) => `配置：${error}`);
++            const lines = only ? [] : configErrors.map((error) => (process.env.RSI_LOCALE === "en" ? `config: ${error}` : `配置：${error}`));
              for (const server of only ?? servers) {
                  const state = server.connection?.state;
                  if (state === "needs-auth" || state === "failed")
@@ -1139,7 +1139,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              if (lines.length === 0)
                  return;
 -            ctx.ui.notify(`MCP servers need attention:\n${lines.map((line) => `  ${line}`).join("\n")}\nRun /mcp to fix.`, "warning");
-+            ctx.ui.notify(`MCP 服务器需要处理：\n${lines.map((line) => `  ${line}`).join("\n")}\n运行 /mcp 修复。`, "warning");
++            ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `MCP servers need attention:\n${lines.map((line) => `  ${line}`).join("\n")}\nRun /mcp to fix.` : `MCP 服务器需要处理：\n${lines.map((line) => `  ${line}`).join("\n")}\n运行 /mcp 修复。`), "warning");
          };
          /**
           * Save a config change; returns an error message when the file could not be updated. Changes to
@@ -1148,7 +1148,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                  }
                  catch (error) {
 -                    return `Could not update ${server.entry.source}: ${errorMessage(error)}`;
-+                    return `无法更新 ${server.entry.source}：${errorMessage(error)}`;
++                    return (process.env.RSI_LOCALE === "en" ? `Could not update ${server.entry.source}: ${errorMessage(error)}` : `无法更新 ${server.entry.source}：${errorMessage(error)}`);
                  }
              }
              server.entry = { ...server.entry, config: { ...server.entry.config, ...patch } };
@@ -1157,7 +1157,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              const url = connection?.oauthUrl;
              if (!connection || !url)
 -                return `MCP server "${server.entry.name}" does not use OAuth.`;
-+                return `MCP 服务器 "${server.entry.name}" 未使用 OAuth。`;
++                return (process.env.RSI_LOCALE === "en" ? `MCP server "${server.entry.name}" does not use OAuth.` : `MCP 服务器 "${server.entry.name}" 未使用 OAuth。`);
              const runtime = await loadMcpRuntime();
              try {
                  await runtime.signInMcpServer({
@@ -1167,8 +1167,8 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                  if (error instanceof runtime.McpSignInCancelledError)
 -                    return "Sign-in cancelled.";
 -                return `Sign-in failed: ${errorMessage(error)}`;
-+                    return "登录已取消。";
-+                return `登录失败：${errorMessage(error)}`;
++                    return (process.env.RSI_LOCALE === "en" ? "Sign-in cancelled." : "登录已取消。");
++                return (process.env.RSI_LOCALE === "en" ? `Sign-in failed: ${errorMessage(error)}` : `登录失败：${errorMessage(error)}`);
              }
              // The challenge that asked for this sign-in (for example for more scope) is answered.
              connection.challenge = undefined;
@@ -1177,7 +1177,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              }
              catch (error) {
 -                return `Signed in, but ${errorMessage(error)}`;
-+                return `已登录，但 ${errorMessage(error)}`;
++                return (process.env.RSI_LOCALE === "en" ? `Signed in, but ${errorMessage(error)}` : `已登录，但 ${errorMessage(error)}`);
              }
              return undefined;
          };
@@ -1186,7 +1186,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              const connection = server.connection;
              if (!connection)
 -                return `MCP server "${server.entry.name}" is disabled.`;
-+                return `MCP 服务器 "${server.entry.name}" 已禁用。`;
++                return (process.env.RSI_LOCALE === "en" ? `MCP server "${server.entry.name}" is disabled.` : `MCP 服务器 "${server.entry.name}" 已禁用。`);
              try {
                  await connection.reconnect();
                  return undefined;
@@ -1195,7 +1195,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                  describeTransport(entry),
                  `${entry.scope ?? "config"}: ${entry.source}`,
 -                `State: ${describeState(server, false)}`,
-+                `状态：${describeState(server, false)}`,
++                (process.env.RSI_LOCALE === "en" ? `State: ${describeState(server, false)}` : `状态：${describeState(server, false)}`),
              ];
              const error = [server.message, connection?.state === "connected" ? undefined : connection?.error]
                  .filter((line) => line !== undefined)
@@ -1204,7 +1204,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
          const formatStatus = () => {
              if (servers.length === 0 && configErrors.length === 0 && overridden.length === 0) {
 -                return `No MCP servers configured. Add them to ${resolve(getAgentDir(), "mcp.json")} or .pi/mcp.json.`;
-+                return `未配置 MCP 服务器。请添加到 ${resolve(getAgentDir(), "mcp.json")} 或 .pi/mcp.json。`;
++                return (process.env.RSI_LOCALE === "en" ? `No MCP servers configured. Add them to ${resolve(getAgentDir(), "mcp.json")} or .pi/mcp.json.` : `未配置 MCP 服务器。请添加到 ${resolve(getAgentDir(), "mcp.json")} 或 .pi/mcp.json。`);
              }
              const lines = servers.map((server) => {
                  const { name } = server.entry;
@@ -1213,16 +1213,16 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                  if (connection?.state === "needs-auth")
 -                    return `${name}: needs sign-in, run /mcp login ${name} (${exposure})`;
 -                const tools = connection?.state === "connected" ? `, ${connection.tools.length} tools` : "";
-+                    return `${name}：需要登录，运行 /mcp login ${name}（${exposure}）`;
-+                const tools = connection?.state === "connected" ? `，${connection.tools.length} 个工具` : "";
++                    return (process.env.RSI_LOCALE === "en" ? `${name}: needs sign-in, run /mcp login ${name} (${exposure})` : `${name}：需要登录，运行 /mcp login ${name}（${exposure}）`);
++                const tools = connection?.state === "connected" ? (process.env.RSI_LOCALE === "en" ? `, ${connection.tools.length} tools` : `，${connection.tools.length} 个工具`) : "";
                  const state = !isEnabled(server)
 -                    ? "disabled"
-+                    ? "已禁用"
++                    ? (process.env.RSI_LOCALE === "en" ? "disabled" : "已禁用")
                      : connection?.state === "disconnected"
 -                        ? "disconnected, reconnects on next call"
 -                        : (connection?.state ?? "starting");
-+                        ? "已断开，下次调用时重连"
-+                        : (connection?.state ?? "启动中");
++                        ? (process.env.RSI_LOCALE === "en" ? "disconnected, reconnects on next call" : "已断开，下次调用时重连")
++                        : (connection?.state ?? (process.env.RSI_LOCALE === "en" ? "starting" : "启动中"));
                  const error = connection?.error && connection.state !== "connected"
                      ? `\n    ${connection.error.split("\n").join("\n    ")}`
                      : "";
@@ -1230,10 +1230,10 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              });
              for (const error of configErrors)
 -                lines.push(`config error: ${error}`);
-+                lines.push(`配置错误：${error}`);
++                lines.push((process.env.RSI_LOCALE === "en" ? `config error: ${error}` : `配置错误：${error}`));
              for (const line of overridden)
 -                lines.push(`overridden: ${line}`);
-+                lines.push(`已被覆盖：${line}`);
++                lines.push((process.env.RSI_LOCALE === "en" ? `overridden: ${line}` : `已被覆盖：${line}`));
              return lines.join("\n");
          };
          /** Resolve the server for a subcommand, asking when the name is omitted and ambiguous. */
@@ -1242,7 +1242,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                  const server = findServer(name);
                  if (!server)
 -                    ctx.ui.notify(`No MCP server named "${name}".`, "error");
-+                    ctx.ui.notify(`未找到名为 "${name}" 的 MCP 服务器。`, "error");
++                    ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `No MCP server named "${name}".` : `未找到名为 "${name}" 的 MCP 服务器。`), "error");
                  else if (!options.eligible(server))
                      ctx.ui.notify(options.none, "error");
                  return server && options.eligible(server) ? server : undefined;
@@ -1251,13 +1251,13 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              eligible: usesOAuth,
              preferred: (server) => server.connection?.state === "needs-auth",
 -            none: "No enabled MCP server uses OAuth. Only HTTP servers without an Authorization header do.",
-+            none: "没有启用中的 MCP 服务器使用 OAuth。仅无 Authorization 头的 HTTP 服务器使用 OAuth。",
++            none: (process.env.RSI_LOCALE === "en" ? "No enabled MCP server uses OAuth. Only HTTP servers without an Authorization header do." : "没有启用中的 MCP 服务器使用 OAuth。仅无 Authorization 头的 HTTP 服务器使用 OAuth。"),
          };
          const loginCommand = async (server, ctx) => {
              const { name } = server.entry;
              if (!ctx.hasUI) {
 -                ctx.ui.notify(`Signing in to MCP server "${name}" requires interactive mode.`, "error");
-+                ctx.ui.notify(`登录 MCP 服务器 "${name}" 需要交互模式。`, "error");
++                ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Signing in to MCP server "${name}" requires interactive mode.` : `登录 MCP 服务器 "${name}" 需要交互模式。`), "error");
                  return;
              }
              const failure = await signIn(server, {
@@ -1266,20 +1266,20 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                          ? `${hyperlink(url.href, url.href)}\n${hyperlink(process.platform === "darwin" ? "Cmd+click to open" : "Ctrl+click to open", url.href)}`
                          : url.href;
 -                    ctx.ui.notify(`Sign in to MCP server "${name}" in your browser:\n${lines}`, "info");
-+                    ctx.ui.notify(`请在浏览器中登录 MCP 服务器 "${name}"：\n${lines}`, "info");
++                    ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Sign in to MCP server "${name}" in your browser:\n${lines}` : `请在浏览器中登录 MCP 服务器 "${name}"：\n${lines}`), "info");
                      openUrl(url.href);
                  },
 -                promptForRedirectUrl: (signal) => ctx.ui.input(`Waiting for sign-in to "${name}". If the browser cannot reach this machine, paste the URL it was redirected to.`, "http://127.0.0.1:.../callback?code=...", { signal }),
-+                promptForRedirectUrl: (signal) => ctx.ui.input(`正在等待登录 "${name}"。如果浏览器无法访问本机，请粘贴浏览器被重定向到的 URL。`, "http://127.0.0.1:.../callback?code=...", { signal }),
++                promptForRedirectUrl: (signal) => ctx.ui.input((process.env.RSI_LOCALE === "en" ? `Waiting for sign-in to "${name}". If the browser cannot reach this machine, paste the URL it was redirected to.` : `正在等待登录 "${name}"。如果浏览器无法访问本机，请粘贴浏览器被重定向到的 URL。`), "http://127.0.0.1:.../callback?code=...", { signal }),
              });
              if (failure) {
 -                ctx.ui.notify(failure, failure === "Sign-in cancelled." ? "info" : "error");
-+                ctx.ui.notify(failure, failure === "登录已取消。" ? "info" : "error");
++                ctx.ui.notify(failure, failure === (process.env.RSI_LOCALE === "en" ? "Sign-in cancelled." : "登录已取消。") ? "info" : "error");
                  return;
              }
              ensureDiscoveryActive(ctx);
 -            ctx.ui.notify(`Signed in to MCP server "${name}" (${server.connection?.tools.length ?? 0} tools).`, "info");
-+            ctx.ui.notify(`已登录 MCP 服务器 "${name}"（${server.connection?.tools.length ?? 0} 个工具）。`, "info");
++            ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Signed in to MCP server "${name}" (${server.connection?.tools.length ?? 0} tools).` : `已登录 MCP 服务器 "${name}"（${server.connection?.tools.length ?? 0} 个工具）。`), "info");
          };
          pi.on("session_start", (_event, ctx) => {
              const loaded = (options.loadConfig ?? defaultLoadConfig)(ctx);
@@ -1288,7 +1288,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                  // The session may have been disposed meanwhile, which makes ctx stale.
                  try {
 -                    ctx.ui.notify(`MCP failed to load: ${errorMessage(error)}`, "error");
-+                    ctx.ui.notify(`MCP 加载失败：${errorMessage(error)}`, "error");
++                    ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `MCP failed to load: ${errorMessage(error)}` : `MCP 加载失败：${errorMessage(error)}`), "error");
                  }
                  catch { }
              });
@@ -1297,7 +1297,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              clearTimeout(timer);
              if (!finished) {
 -                ctx.ui.notify("MCP servers are still connecting; their tools become available once connected.", "info");
-+                ctx.ui.notify("MCP 服务器仍在连接中。连接完成后即可使用其工具。", "info");
++                ctx.ui.notify((process.env.RSI_LOCALE === "en" ? "MCP servers are still connecting; their tools become available once connected." : "MCP 服务器仍在连接中。连接完成后即可使用其工具。"), "info");
              }
          };
          // Every prompt lists the servers in the `mcp_servers` section as they are when it starts. Pi
@@ -1306,7 +1306,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
              }
              catch (error) {
 -                ctx.ui.notify(`MCP failed to load: ${errorMessage(error)}`, "error");
-+                ctx.ui.notify(`MCP 加载失败：${errorMessage(error)}`, "error");
++                ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `MCP failed to load: ${errorMessage(error)}` : `MCP 加载失败：${errorMessage(error)}`), "error");
                  return;
              }
              if (current !== generation)
@@ -1315,7 +1315,7 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                              eligible: (candidate) => candidate.connection !== undefined,
                              preferred: (candidate) => candidate.connection?.state === "failed" || candidate.connection?.state === "disconnected",
 -                            none: "No enabled MCP server to reconnect.",
-+                            none: "没有启用中的 MCP 服务器可重新连接。",
++                            none: (process.env.RSI_LOCALE === "en" ? "No enabled MCP server to reconnect." : "没有启用中的 MCP 服务器可重新连接。"),
                          });
                          if (!server)
                              return;
@@ -1324,12 +1324,12 @@ index fbbb30c87e610b98ffbe47fa71f93dbc3bd0bc45..1ec27fd8df817d780d82d2ef93d928bb
                          else {
                              ensureDiscoveryActive(ctx);
 -                            ctx.ui.notify(`Reconnected to MCP server "${server.entry.name}" (${describeState(server)}).`, "info");
-+                            ctx.ui.notify(`已重新连接到 MCP 服务器 "${server.entry.name}"（${describeState(server)}）。`, "info");
++                            ctx.ui.notify((process.env.RSI_LOCALE === "en" ? `Reconnected to MCP server "${server.entry.name}" (${describeState(server)}).` : `已重新连接到 MCP 服务器 "${server.entry.name}"（${describeState(server)}）。`), "info");
                          }
                          return;
                      }
 diff --git a/dist/extensions/mcp/oauth.js b/dist/extensions/mcp/oauth.js
-index e0757bc410e488b1fceaa2d4da1d475ea854ed4d..36b7f3e9ae1ecf9dc5ecb37124e334325524bc0b 100644
+index e0757bc410e488b1fceaa2d4da1d475ea854ed4d..453b14303101ed04b97e61058a8152e9c1400a5a 100644
 --- a/dist/extensions/mcp/oauth.js
 +++ b/dist/extensions/mcp/oauth.js
 @@ -251,16 +251,16 @@ function responseFromRedirectUrl(input, state) {
@@ -1337,18 +1337,18 @@ index e0757bc410e488b1fceaa2d4da1d475ea854ed4d..36b7f3e9ae1ecf9dc5ecb37124e33432
      }
      catch {
 -        throw new Error("Expected the full redirect URL from the browser address bar");
-+        throw new Error("请粘贴浏览器地址栏中的完整重定向 URL");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "Expected the full redirect URL from the browser address bar" : "请粘贴浏览器地址栏中的完整重定向 URL"));
      }
      const error = url.searchParams.get("error");
      if (error)
          throw new Error(url.searchParams.get("error_description") ?? error);
      if (url.searchParams.get("state") !== state)
 -        throw new Error("The redirect URL belongs to a different sign-in");
-+        throw new Error("该重定向 URL 属于另一次登录");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "The redirect URL belongs to a different sign-in" : "该重定向 URL 属于另一次登录"));
      const code = url.searchParams.get("code");
      if (!code)
 -        throw new Error("The redirect URL does not contain an authorization code");
-+        throw new Error("该重定向 URL 不包含授权码");
++        throw new Error((process.env.RSI_LOCALE === "en" ? "The redirect URL does not contain an authorization code" : "该重定向 URL 不包含授权码"));
      return { code, iss: url.searchParams.get("iss") ?? undefined };
  }
  /** Wait for the browser callback or a pasted redirect URL, whichever comes first. */
@@ -1357,12 +1357,12 @@ index e0757bc410e488b1fceaa2d4da1d475ea854ed4d..36b7f3e9ae1ecf9dc5ecb37124e33432
              return;
          if (!authorizationUrl)
 -            throw new Error("OAuth flow did not produce an authorization URL");
-+            throw new Error("OAuth 流程未产生授权 URL");
++            throw new Error((process.env.RSI_LOCALE === "en" ? "OAuth flow did not produce an authorization URL" : "OAuth 流程未产生授权 URL"));
          const state = await provider.state();
          options.prompt.showAuthorizationUrl(authorizationUrl);
          const { code, iss } = await waitForAuthorizationResponse(callback, state, options.prompt);
 diff --git a/dist/extensions/mcp/resources.js b/dist/extensions/mcp/resources.js
-index a1afa8795f94d8f2d2241859c7c1f9e8538a39c9..922c48bafab025f377dcb631216820218b79f6ee 100644
+index a1afa8795f94d8f2d2241859c7c1f9e8538a39c9..c62c03d72f3b19292b8e1abca9b5ded644b5e99a 100644
 --- a/dist/extensions/mcp/resources.js
 +++ b/dist/extensions/mcp/resources.js
 @@ -158,7 +158,7 @@ export function createMcpResourceToolDefinitions(options) {
@@ -1370,7 +1370,7 @@ index a1afa8795f94d8f2d2241859c7c1f9e8538a39c9..922c48bafab025f377dcb63121682021
              return server;
          const available = servers.map((candidate) => candidate.name).join(", ");
 -        throw new Error(`MCP server "${name}" has no resources${available ? `. Servers with resources: ${available}` : ""}`);
-+        throw new Error(`MCP 服务器 "${name}" 没有资源${available ? `。有资源的服务器：${available}` : ""}`);
++        throw new Error((process.env.RSI_LOCALE === "en" ? `MCP server "${name}" has no resources${available ? `. Servers with resources: ${available}` : ""}` : `MCP 服务器 "${name}" 没有资源${available ? `。有资源的服务器：${available}` : ""}`));
      };
      /** One page of one server, or every page of every server. */
      const list = async (params, signal, key, page, all) => {
@@ -1379,12 +1379,12 @@ index a1afa8795f94d8f2d2241859c7c1f9e8538a39c9..922c48bafab025f377dcb63121682021
              ]);
              const converted = await toModelContent(server.name, blocks);
 -            const { content, fullOutputPath } = await limitMcpContent(converted.length > 0 ? converted : [{ type: "text", text: `Resource ${uri} is empty.` }]);
-+            const { content, fullOutputPath } = await limitMcpContent(converted.length > 0 ? converted : [{ type: "text", text: `资源 ${uri} 为空。` }]);
++            const { content, fullOutputPath } = await limitMcpContent(converted.length > 0 ? converted : [{ type: "text", text: (process.env.RSI_LOCALE === "en" ? `Resource ${uri} is empty.` : `资源 ${uri} 为空。`) }]);
              const contents = result.contents.map(({ _meta: _ignored, ...rest }) => rest);
              return {
                  content,
 diff --git a/dist/extensions/mcp/runtime.js b/dist/extensions/mcp/runtime.js
-index 2b767459cdc79eb664e89595d0ea1a133486fab7..0a12392ff5d5df01e95febf4a5ba0a9416928383 100644
+index 2b767459cdc79eb664e89595d0ea1a133486fab7..b6b53299427e94899a009778dada37a096713150 100644
 --- a/dist/extensions/mcp/runtime.js
 +++ b/dist/extensions/mcp/runtime.js
 @@ -176,7 +176,7 @@ export class McpServerConnection {
@@ -1392,7 +1392,7 @@ index 2b767459cdc79eb664e89595d0ea1a133486fab7..0a12392ff5d5df01e95febf4a5ba0a94
      getClient() {
          if (this.closed)
 -            return Promise.reject(new Error(`MCP server "${this.entry.name}" is shut down`));
-+            return Promise.reject(new Error(`MCP 服务器 "${this.entry.name}" 已关闭`));
++            return Promise.reject(new Error((process.env.RSI_LOCALE === "en" ? `MCP server "${this.entry.name}" is shut down` : `MCP 服务器 "${this.entry.name}" 已关闭`)));
          if (this.client?.connectionState === "connected")
              return Promise.resolve(this.client);
          this.opening ??= this.open().finally(() => {
@@ -1401,7 +1401,7 @@ index 2b767459cdc79eb664e89595d0ea1a133486fab7..0a12392ff5d5df01e95febf4a5ba0a94
                  throw new Error("shut down while connecting");
              if (client.connectionState !== "connected")
 -                throw new Error("connection closed during setup");
-+                throw new Error("连接在建立过程中关闭");
++                throw new Error((process.env.RSI_LOCALE === "en" ? "connection closed during setup" : "连接在建立过程中关闭"));
              this.client = client;
              this.tools = tools;
              this.hasResources = hasResources;
@@ -1410,12 +1410,12 @@ index 2b767459cdc79eb664e89595d0ea1a133486fab7..0a12392ff5d5df01e95febf4a5ba0a94
          this.error = this.stderrTail ? `${errorMessage(error)}\n${this.stderrTail}` : errorMessage(error);
          this.changed();
 -        return new Error(`MCP server "${this.entry.name}" failed to connect: ${this.error}`);
-+        return new Error(`MCP 服务器 "${this.entry.name}" 连接失败：${this.error}`);
++        return new Error((process.env.RSI_LOCALE === "en" ? `MCP server "${this.entry.name}" failed to connect: ${this.error}` : `MCP 服务器 "${this.entry.name}" 连接失败：${this.error}`));
      }
      /** The transport dropped. The next call reconnects; until then the status shows why. */
      handleClientClose(client, stdio) {
 diff --git a/dist/extensions/mcp/tools.js b/dist/extensions/mcp/tools.js
-index bbc1eddd9d96e35f213339f9e930c9928b1b08ce..c9253aedb828d72b242ef2e5bbdba3d1e70f8845 100644
+index bbc1eddd9d96e35f213339f9e930c9928b1b08ce..a7c0f6eec8b66f57aa86a04538fe89869f2f5c98 100644
 --- a/dist/extensions/mcp/tools.js
 +++ b/dist/extensions/mcp/tools.js
 @@ -89,10 +89,10 @@ export async function limitMcpContent(content, saveOutput = saveToTempFile) {
@@ -1423,11 +1423,11 @@ index bbc1eddd9d96e35f213339f9e930c9928b1b08ce..c9253aedb828d72b242ef2e5bbdba3d1
      try {
          fullOutputPath = await saveOutput(combined, ".txt");
 -        where = `[Full output: ${fullOutputPath} (read it with offset/limit)]`;
-+        where = `[完整输出：${fullOutputPath}（使用 offset/limit 读取）]`;
++        where = (process.env.RSI_LOCALE === "en" ? `[Full output: ${fullOutputPath} (read it with offset/limit)]` : `[完整输出：${fullOutputPath}（使用 offset/limit 读取）]`);
      }
      catch (error) {
 -        where = `[Could not save the full output: ${error instanceof Error ? error.message : String(error)}]`;
-+        where = `[无法保存完整输出：${error instanceof Error ? error.message : String(error)}]`;
++        where = (process.env.RSI_LOCALE === "en" ? `[Could not save the full output: ${error instanceof Error ? error.message : String(error)}]` : `[无法保存完整输出：${error instanceof Error ? error.message : String(error)}]`);
      }
      const tokens = Math.ceil(truncation.totalBytes / 4);
      const text = `Warning: truncated output (original token count: ${tokens})\nTotal output lines: ${truncation.totalLines}\n\n${truncation.content}\n\n${where}`;
@@ -1436,12 +1436,12 @@ index bbc1eddd9d96e35f213339f9e930c9928b1b08ce..c9253aedb828d72b242ef2e5bbdba3d1
      const converted = result.content.length > 0 ? await toModelContent(server, result.content, options) : toLlmContent(result);
      if (result.isError && textOf(converted) === "") {
 -        converted.push({ type: "text", text: `MCP tool ${server}/${tool} returned an error` });
-+        converted.push({ type: "text", text: `MCP 工具 ${server}/${tool} 返回错误` });
++        converted.push({ type: "text", text: (process.env.RSI_LOCALE === "en" ? `MCP tool ${server}/${tool} returned an error` : `MCP 工具 ${server}/${tool} 返回错误`) });
      }
      const { content, fullOutputPath } = await limitMcpContent(converted, options.saveOutput);
      const { _meta: _ignored, ...scriptResult } = result;
 diff --git a/dist/modes/rpc/rpc-mode.js b/dist/modes/rpc/rpc-mode.js
-index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..52f17b2c67c8eb817f0e84fa425120b35f8004dd 100644
+index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..c32247a92d9870e4ae46d6ad1c4090ad33541ecc 100644
 --- a/dist/modes/rpc/rpc-mode.js
 +++ b/dist/modes/rpc/rpc-mode.js
 @@ -366,7 +366,7 @@ export async function runRpcMode(runtimeHost) {
@@ -1449,7 +1449,7 @@ index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..52f17b2c67c8eb817f0e84fa425120b3
                  const model = models.find((m) => m.provider === command.provider && m.id === command.modelId);
                  if (!model) {
 -                    return error(id, "set_model", `Model not found: ${command.provider}/${command.modelId}`);
-+                    return error(id, "set_model", `找不到模型：${command.provider}/${command.modelId}`);
++                    return error(id, "set_model", (process.env.RSI_LOCALE === "en" ? `Model not found: ${command.provider}/${command.modelId}` : `找不到模型：${command.provider}/${command.modelId}`));
                  }
                  await session.setModel(model);
                  return success(id, "set_model", model);
@@ -1458,7 +1458,7 @@ index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..52f17b2c67c8eb817f0e84fa425120b3
                  const leafId = session.sessionManager.getLeafId();
                  if (!leafId) {
 -                    return error(id, "clone", "Cannot clone session: no current entry selected");
-+                    return error(id, "clone", "无法克隆会话记录：未选中当前条目");
++                    return error(id, "clone", (process.env.RSI_LOCALE === "en" ? "Cannot clone session: no current entry selected" : "无法克隆会话记录：未选中当前条目"));
                  }
                  const result = await runtimeHost.fork(leafId, { position: "at" });
                  if (!result.cancelled) {
@@ -1467,7 +1467,7 @@ index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..52f17b2c67c8eb817f0e84fa425120b3
                      const sinceIndex = entries.findIndex((e) => e.id === command.since);
                      if (sinceIndex === -1) {
 -                        return error(id, "get_entries", `Entry not found: ${command.since}`);
-+                        return error(id, "get_entries", `找不到条目：${command.since}`);
++                        return error(id, "get_entries", (process.env.RSI_LOCALE === "en" ? `Entry not found: ${command.since}` : `找不到条目：${command.since}`));
                      }
                      entries = entries.slice(sinceIndex + 1);
                  }
@@ -1476,7 +1476,7 @@ index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..52f17b2c67c8eb817f0e84fa425120b3
                  const name = command.name.trim();
                  if (!name) {
 -                    return error(id, "set_session_name", "Session name cannot be empty");
-+                    return error(id, "set_session_name", "会话记录名称不能为空");
++                    return error(id, "set_session_name", (process.env.RSI_LOCALE === "en" ? "Session name cannot be empty" : "会话记录名称不能为空"));
                  }
                  session.setSessionName(name);
                  return success(id, "set_session_name");
@@ -1485,12 +1485,12 @@ index 340f4dc1efc6be22dc313c230e5e282dbbb515cb..52f17b2c67c8eb817f0e84fa425120b3
              default: {
                  const unknownCommand = command;
 -                return error(id, unknownCommand.type, `Unknown command: ${unknownCommand.type}`);
-+                return error(id, unknownCommand.type, `未知命令：${unknownCommand.type}`);
++                return error(id, unknownCommand.type, (process.env.RSI_LOCALE === "en" ? `Unknown command: ${unknownCommand.type}` : `未知命令：${unknownCommand.type}`));
              }
          }
      };
 diff --git a/dist/utils/image-process.js b/dist/utils/image-process.js
-index 65b15afe6f7532d030e841d3ac163b462e833849..34d6b3e904e0031a85037fed012d362dd4b9a938 100644
+index 65b15afe6f7532d030e841d3ac163b462e833849..ac980c4d33e420d1f00c2c5a666b35b4d286c913 100644
 --- a/dist/utils/image-process.js
 +++ b/dist/utils/image-process.js
 @@ -36,7 +36,7 @@ async function normalizeImage(bytes, mimeType) {
@@ -1498,7 +1498,7 @@ index 65b15afe6f7532d030e841d3ac163b462e833849..34d6b3e904e0031a85037fed012d362d
      if (!from || from === to)
          return undefined;
 -    return `[Image converted from ${from} to ${to}.]`;
-+    return `[图片已从 ${from} 转换为 ${to}。]`;
++    return (process.env.RSI_LOCALE === "en" ? `[Image converted from ${from} to ${to}.]` : `[图片已从 ${from} 转换为 ${to}。]`);
  }
  export async function processImage(bytes, mimeType, options) {
      const autoResizeImages = options?.autoResizeImages ?? true;
@@ -1507,7 +1507,7 @@ index 65b15afe6f7532d030e841d3ac163b462e833849..34d6b3e904e0031a85037fed012d362d
          return {
              ok: false,
 -            message: "[Image omitted: could not be converted to a supported inline image format.]",
-+            message: "[图片已省略：无法转换为支持的内联图片格式。]",
++            message: (process.env.RSI_LOCALE === "en" ? "[Image omitted: could not be converted to a supported inline image format.]" : "[图片已省略：无法转换为支持的内联图片格式。]"),
          };
      }
      if (autoResizeImages) {
@@ -1516,7 +1516,7 @@ index 65b15afe6f7532d030e841d3ac163b462e833849..34d6b3e904e0031a85037fed012d362d
              return {
                  ok: false,
 -                message: "[Image omitted: could not be resized below the inline image size limit.]",
-+                message: "[图片已省略：无法压缩到内联图片大小上限以内。]",
++                message: (process.env.RSI_LOCALE === "en" ? "[Image omitted: could not be resized below the inline image size limit.]" : "[图片已省略：无法压缩到内联图片大小上限以内。]"),
              };
          }
          const hints = [];
