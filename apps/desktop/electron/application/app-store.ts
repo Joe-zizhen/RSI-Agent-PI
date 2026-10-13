@@ -116,6 +116,7 @@ import {
 } from "./app-store-utils";
 import type {
   CustomProviderConfig,
+  CustomProviderListEntry,
   McpServerScope,
   McpServersSnapshot,
   NewMcpServerInput,
@@ -1341,6 +1342,16 @@ export class DesktopAppStore {
     if (activeView === "threads") {
       this.markSelectedSessionViewedIfVisible();
     }
+    if (activeView === "settings") {
+      // Settings surfaces live runtime diagnostics such as modelsLoadError. Re-read
+      // the runtime snapshots here so a models.json problem that appeared after
+      // startup shows up when the panel opens, without an app restart.
+      await this.reloadRuntimeSnapshotsFromDisk();
+      this.state = {
+        ...this.state,
+        runtimeByWorkspace: await this.serializeRuntimeStateForCurrentWorkspaces(),
+      };
+    }
     await this.persistUiState();
     return this.emit();
   }
@@ -1559,6 +1570,30 @@ export class DesktopAppStore {
     });
   }
 
+  /**
+   * Rebuilds the loaded runtime snapshots from disk without reloading sessions.
+   * Settings reads live diagnostics from these snapshots, so opening it must see
+   * the current models.json instead of the copy taken at startup.
+   */
+  private async reloadRuntimeSnapshotsFromDisk(): Promise<void> {
+    await Promise.all(
+      [...this.runtimeByWorkspace.keys()].map(async (workspaceId) => {
+        const ws = this.workspaceRefFromState(workspaceId);
+        if (!ws) {
+          return;
+        }
+        try {
+          this.runtimeByWorkspace.set(
+            workspaceId,
+            await this.driver.runtimeSupervisor.getRuntimeSnapshot(ws),
+          );
+        } catch (error) {
+          console.error(`[pi-gui] runtime snapshot refresh failed for ${workspaceId}:`, error);
+        }
+      }),
+    );
+  }
+
   async setSessionModel(
     target: WorkspaceSessionTarget,
     provider: string,
@@ -1668,17 +1703,22 @@ export class DesktopAppStore {
     );
   }
 
-  async listCustomProviders(): Promise<readonly CustomProviderConfig[]> {
+  async listCustomProviders(): Promise<readonly CustomProviderListEntry[]> {
     await this.initialize();
     const entries = await this.driver.runtimeSupervisor.listCustomProviders();
     return entries.map((entry) => ({
       providerId: entry.providerId,
       baseUrl: entry.baseUrl,
-      ...(entry.apiKey !== undefined ? { apiKey: entry.apiKey } : {}),
+      // The stored key never crosses to the renderer; only its presence does.
+      hasApiKey: entry.apiKey !== undefined,
       models: entry.models.map((model) => ({
         id: model.id,
+        ...(model.input !== undefined ? { input: model.input } : {}),
+        ...(model.reasoning !== undefined ? { reasoning: model.reasoning } : {}),
         ...(model.contextWindow !== undefined ? { contextWindow: model.contextWindow } : {}),
+        ...(model.maxTokens !== undefined ? { maxTokens: model.maxTokens } : {}),
       })),
+      ...(entry.warnings !== undefined ? { warnings: entry.warnings } : {}),
     }));
   }
 
@@ -1695,7 +1735,10 @@ export class DesktopAppStore {
           ...(config.apiKey !== undefined ? { apiKey: config.apiKey } : {}),
           models: config.models.map((model) => ({
             id: model.id,
+            ...(model.input !== undefined ? { input: model.input } : {}),
+            ...(model.reasoning !== undefined ? { reasoning: model.reasoning } : {}),
             ...(model.contextWindow !== undefined ? { contextWindow: model.contextWindow } : {}),
+            ...(model.maxTokens !== undefined ? { maxTokens: model.maxTokens } : {}),
           })),
         }),
       { refreshAllWorkspaces: true },

@@ -35,6 +35,7 @@ import type {
   NewMcpServerInput,
   TerminalSize,
 } from "../../contracts/ipc";
+import { CUSTOM_PROVIDER_PLACEHOLDER_API_KEY } from "@rsi-agent-pi/pi-sdk-driver/custom-provider-types";
 import {
   assertScheduledTaskSchedule,
   assertScheduledTaskTarget,
@@ -359,9 +360,38 @@ export function expectCustomProviderConfig(value: unknown): CustomProviderConfig
       ) {
         throw new TypeError(`config.models[${index}].contextWindow must be a positive integer`);
       }
+      const maxTokens = entry.maxTokens;
+      if (
+        maxTokens !== undefined &&
+        (typeof maxTokens !== "number" || !Number.isSafeInteger(maxTokens) || maxTokens <= 0)
+      ) {
+        throw new TypeError(`config.models[${index}].maxTokens must be a positive integer`);
+      }
+      const reasoning = entry.reasoning;
+      if (reasoning !== undefined && typeof reasoning !== "boolean") {
+        throw new TypeError(`config.models[${index}].reasoning must be a boolean`);
+      }
+      let input: readonly ("text" | "image")[] | undefined;
+      if (entry.input !== undefined) {
+        if (!Array.isArray(entry.input)) {
+          throw new TypeError(`config.models[${index}].input must be an array`);
+        }
+        const kinds: readonly unknown[] = entry.input;
+        input = kinds.map((kind, kindIndex): "text" | "image" => {
+          if (kind !== "text" && kind !== "image") {
+            throw new TypeError(
+              `config.models[${index}].input[${kindIndex}] must be text or image`,
+            );
+          }
+          return kind;
+        });
+      }
       return {
         id: expectNonEmptyString(entry.id, `config.models[${index}].id`),
+        ...(input !== undefined ? { input } : {}),
+        ...(reasoning !== undefined ? { reasoning } : {}),
         contextWindow,
+        ...(maxTokens !== undefined ? { maxTokens } : {}),
       };
     }),
   };
@@ -401,9 +431,12 @@ export function expectNewMcpServerInput(value: unknown): NewMcpServerInput {
 
 export function expectCustomProviderProbeInput(value: unknown): CustomProviderProbeInput {
   const record = expectRecord(value, "input");
+  const apiKey = expectOptionalString(record.apiKey, "input.apiKey")?.trim();
   return {
     baseUrl: expectNonEmptyString(record.baseUrl, "input.baseUrl"),
-    apiKey: expectOptionalString(record.apiKey, "input.apiKey"),
+    // The placeholder is not a credential (CUSTOM_PROVIDER_PLACEHOLDER_API_KEY);
+    // a probe request must never carry it as one.
+    ...(apiKey && apiKey !== CUSTOM_PROVIDER_PLACEHOLDER_API_KEY ? { apiKey } : {}),
   };
 }
 

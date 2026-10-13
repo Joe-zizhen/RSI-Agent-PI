@@ -13,6 +13,7 @@ import {
   desktopIpc,
   type PiDesktopApi,
   type CustomProviderConfig,
+  type CustomProviderListEntry,
   type CustomProviderProbeInput,
   type CustomProviderProbeResult,
   type McpServerScope,
@@ -343,7 +344,7 @@ contextBridge.exposeInMainWorld("piApp", {
       apiKey,
     ) as Promise<DesktopAppState>,
   listCustomProviders: () =>
-    ipcRenderer.invoke(desktopIpc.listCustomProviders) as Promise<readonly CustomProviderConfig[]>,
+    ipcRenderer.invoke(desktopIpc.listCustomProviders) as Promise<readonly CustomProviderListEntry[]>,
   setCustomProvider: (workspaceId: string, config: CustomProviderConfig) =>
     ipcRenderer.invoke(
       desktopIpc.setCustomProvider,

@@ -160,6 +160,7 @@ export function SettingsProvidersSection({
 
       <SettingsCustomEndpointsSection
         existingProviderIds={existingProviderIds}
+        modelsLoadError={runtime?.modelsLoadError}
         onSaveCustomProvider={onSaveCustomProvider}
         onDeleteCustomProvider={onDeleteCustomProvider}
       />

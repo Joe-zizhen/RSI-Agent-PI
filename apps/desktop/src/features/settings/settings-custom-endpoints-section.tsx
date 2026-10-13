@@ -1,29 +1,36 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   CUSTOM_PROVIDER_ID_PATTERN,
+  CUSTOM_PROVIDER_PLACEHOLDER_API_KEY,
   isValidHttpBaseUrl,
 } from "@rsi-agent-pi/pi-sdk-driver/custom-provider-types";
 import { trapDialogFocus } from "../../ui/dialog-focus";
-import type { CustomProviderConfig, CustomProviderModelConfig } from "../../../contracts/ipc";
+import type {
+  CustomProviderConfig,
+  CustomProviderListEntry,
+  CustomProviderModelConfig,
+} from "../../../contracts/ipc";
 import { SettingsGroup } from "./settings-utils";
 import { t, useLocale } from "../../t";
 
 interface SettingsCustomEndpointsSectionProps {
   readonly existingProviderIds: readonly string[];
+  readonly modelsLoadError?: string;
   readonly onSaveCustomProvider: (config: CustomProviderConfig) => Promise<string | undefined>;
   readonly onDeleteCustomProvider: (providerId: string) => Promise<string | undefined>;
 }
 
 type DialogMode =
-  { kind: "closed" } | { kind: "create" } | { kind: "edit"; original: CustomProviderConfig };
+  { kind: "closed" } | { kind: "create" } | { kind: "edit"; original: CustomProviderListEntry };
 
 export function SettingsCustomEndpointsSection({
   existingProviderIds,
+  modelsLoadError,
   onSaveCustomProvider,
   onDeleteCustomProvider,
 }: SettingsCustomEndpointsSectionProps) {
   useLocale();
-  const [entries, setEntries] = useState<readonly CustomProviderConfig[]>([]);
+  const [entries, setEntries] = useState<readonly CustomProviderListEntry[]>([]);
   const [loadError, setLoadError] = useState<string | undefined>();
   const [dialog, setDialog] = useState<DialogMode>({ kind: "closed" });
   const [reloadKey, setReloadKey] = useState(0);
@@ -91,6 +98,13 @@ export function SettingsCustomEndpointsSection({
             <span className="settings-row__description settings-warning">{loadError}</span>
           </div>
         ) : null}
+        {modelsLoadError ? (
+          <div className="settings-row">
+            <span className="settings-row__description settings-warning">
+              {t("pi could not load models.json:", "pi 无法加载 models.json：")} {modelsLoadError}
+            </span>
+          </div>
+        ) : null}
         {entries.length === 0 ? (
           <div className="settings-row">
             <span className="settings-row__description">
@@ -105,6 +119,11 @@ export function SettingsCustomEndpointsSection({
                 <div className="settings-row__description">
                   {entry.baseUrl} · {entry.models.length} {t("models", "个模型")}
                 </div>
+                {entry.warnings?.map((warning) => (
+                  <div key={warning} className="settings-row__description settings-warning">
+                    {warning}
+                  </div>
+                ))}
               </div>
               <div className="settings-row__control">
                 <button
@@ -177,10 +196,15 @@ function CustomEndpointDialog({
   const initial = mode.kind === "edit" ? mode.original : undefined;
   const [providerId, setProviderId] = useState(initial?.providerId ?? "");
   const [baseUrl, setBaseUrl] = useState(initial?.baseUrl ?? "");
-  const [apiKey, setApiKey] = useState(initial?.apiKey ?? "");
+  // The stored key never renders into the input: the field only takes a
+  // replacement. An empty save keeps the stored key, so the DOM cannot leak it.
+  const [apiKey, setApiKey] = useState("");
+  const [clearApiKey, setClearApiKey] = useState(false);
   const [models, setModels] = useState<CustomProviderModelConfig[]>(
     initial ? [...initial.models] : [],
   );
+  /** Raw context-window text per model id, so invalid input keeps its original text. */
+  const [contextWindowDrafts, setContextWindowDrafts] = useState<Record<string, string>>({});
   const [probeCandidates, setProbeCandidates] = useState<readonly string[]>([]);
   const [probeError, setProbeError] = useState<string | undefined>();
   const [probePending, setProbePending] = useState(false);
@@ -228,9 +252,14 @@ function CustomEndpointDialog({
     restoreProbeFocusRef.current = document.activeElement === probeButtonRef.current;
     setProbePending(true);
     setProbeError(undefined);
+    // The probe sends only a key typed here. The stored key never reaches the
+    // renderer (list reports hasApiKey), so it cannot ride a probe request;
+    // blank probes without auth, and a cleared key never probes as a credential.
+    const typedKey = apiKey.trim();
+    const probeApiKey = clearApiKey || !typedKey ? undefined : typedKey;
     const result = await api.probeCustomProviderModels({
       baseUrl: baseUrl.trim(),
-      apiKey: apiKey.trim() ? apiKey.trim() : undefined,
+      apiKey: probeApiKey,
     });
     setProbePending(false);
     if (!result.ok) {
@@ -242,6 +271,16 @@ function CustomEndpointDialog({
   };
 
   const toggleModel = (id: string, contextWindow?: number) => {
+    if (models.some((model) => model.id === id)) {
+      setContextWindowDrafts((drafts) => {
+        if (!(id in drafts)) {
+          return drafts;
+        }
+        const next = { ...drafts };
+        delete next[id];
+        return next;
+      });
+    }
     setModels((current) => {
       const existing = current.find((model) => model.id === id);
       if (existing) {
@@ -249,6 +288,21 @@ function CustomEndpointDialog({
       }
       return [...current, contextWindow !== undefined ? { id, contextWindow } : { id }];
     });
+  };
+
+  const updateContextWindow = (id: string, raw: string) => {
+    setContextWindowDrafts((current) => ({ ...current, [id]: raw }));
+    const parsed = raw.trim() === "" ? undefined : Number(raw);
+    updateModel(id, {
+      contextWindow:
+        parsed !== undefined && Number.isSafeInteger(parsed) && parsed >= 1 ? parsed : undefined,
+    });
+  };
+
+  const updateModel = (id: string, patch: Partial<CustomProviderModelConfig>) => {
+    setModels((current) =>
+      current.map((model) => (model.id === id ? { ...model, ...patch } : model)),
+    );
   };
 
   const handleManualAdd = (id: string) => {
@@ -280,12 +334,32 @@ function CustomEndpointDialog({
       setFormError(t("Select at least one model.", "请至少选择一个模型。"));
       return;
     }
+    for (const model of models) {
+      const raw = (contextWindowDrafts[model.id] ?? "").trim();
+      if (raw === "") {
+        continue;
+      }
+      const parsed = Number(raw);
+      if (!Number.isSafeInteger(parsed) || parsed < 1) {
+        setFormError(
+          t(
+            `Context window for ${model.id} must be a positive integer.`,
+            `${model.id} 的上下文窗口必须为正整数。`,
+          ),
+        );
+        return;
+      }
+    }
     setSavePending(true);
     setFormError(undefined);
     const error = await onSave({
       providerId: providerId.trim(),
       baseUrl: baseUrl.trim(),
-      ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
+      ...(clearApiKey
+        ? { apiKey: CUSTOM_PROVIDER_PLACEHOLDER_API_KEY }
+        : apiKey.trim()
+          ? { apiKey: apiKey.trim() }
+          : {}),
       models,
     });
     if (error) {
@@ -378,8 +452,8 @@ function CustomEndpointDialog({
             <input
               aria-label="API key"
               className="settings-search"
-              disabled={savePending}
-              placeholder={t("vLLM: pass through; Ollama: leave blank", "vLLM：透传；Ollama：留空")}
+              disabled={savePending || clearApiKey}
+              placeholder={t("Leave blank to keep the original key", "留空保留原 key")}
               type="password"
               value={apiKey}
               onChange={(event) => setApiKey(event.target.value)}
@@ -391,11 +465,27 @@ function CustomEndpointDialog({
               )}
               <code>--api-key</code>{" "}
               {t(
-                ", enter that key. For Ollama or other servers without auth, leave blank and a placeholder is saved.",
-                "启动，请输入该密钥。若为 Ollama 或其他无认证服务器，请留空，系统会保存占位值。",
+                ", enter that key. Leave blank to keep the original key. A new endpoint, or a cleared key, stores a placeholder.",
+                "启动，请输入该密钥。留空则保留原 key。新端点或清除 key 后保存占位值。",
               )}
             </span>
           </label>
+          {isEdit && initial?.hasApiKey ? (
+            <label className="custom-endpoint-model-caps__item">
+              <input
+                checked={clearApiKey}
+                disabled={savePending}
+                type="checkbox"
+                onChange={(event) => {
+                  setClearApiKey(event.target.checked);
+                  if (event.target.checked) {
+                    setApiKey("");
+                  }
+                }}
+              />
+              <span>{t("Clear the saved API key", "清除已保存的 API key")}</span>
+            </label>
+          ) : null}
 
           <div className="settings-field">
             <div className="settings-field__header">
@@ -421,7 +511,10 @@ function CustomEndpointDialog({
             <ModelChecklist
               probed={probeCandidates}
               selected={models}
+              contextWindowDrafts={contextWindowDrafts}
+              onContextWindowChange={updateContextWindow}
               onToggle={toggleModel}
+              onUpdateModel={updateModel}
               onManualAdd={handleManualAdd}
               disabled={savePending}
             />
@@ -429,6 +522,12 @@ function CustomEndpointDialog({
               {t(
                 "Must support tool calling. Smaller models (< 7B) often cannot output OpenAI-style function calls correctly.",
                 "必须支持工具调用。较小的模型（< 7B）往往无法正确输出 OpenAI 风格的函数调用。",
+              )}
+            </p>
+            <p className="settings-row__description">
+              {t(
+                "Video/audio input is not in the pi 1.0.0 model schema (input is text|image only). Tool calling is always on and needs no setting.",
+                "视频/音频输入不在 pi 1.0.0 模型 schema（input 仅 text|image）；工具调用恒开无需配置。",
               )}
             </p>
           </div>
@@ -472,7 +571,10 @@ function CustomEndpointDialog({
 interface ModelChecklistProps {
   readonly probed: readonly string[];
   readonly selected: readonly CustomProviderModelConfig[];
+  readonly contextWindowDrafts: Readonly<Record<string, string>>;
+  readonly onContextWindowChange: (id: string, raw: string) => void;
   readonly onToggle: (id: string, contextWindow?: number) => void;
+  readonly onUpdateModel: (id: string, patch: Partial<CustomProviderModelConfig>) => void;
   readonly onManualAdd: (id: string) => void;
   readonly disabled: boolean;
 }
@@ -480,7 +582,10 @@ interface ModelChecklistProps {
 function ModelChecklist({
   probed,
   selected,
+  contextWindowDrafts,
+  onContextWindowChange,
   onToggle,
+  onUpdateModel,
   onManualAdd,
   disabled,
 }: ModelChecklistProps) {
@@ -510,20 +615,73 @@ function ModelChecklist({
         <ul className="settings-list custom-endpoint-model-list">
           {[...knownIds]
             .sort((a, b) => a.localeCompare(b))
-            .map((id) => (
-              <li key={id} className="settings-row">
-                <label className="custom-endpoint-model-list__item">
-                  <input
-                    aria-label={t(`Enable ${id}`, `启用 ${id}`)}
-                    type="checkbox"
-                    checked={selectedIds.has(id)}
-                    disabled={disabled}
-                    onChange={() => onToggle(id)}
-                  />
-                  <span className="settings-row__title">{id}</span>
-                </label>
-              </li>
-            ))}
+            .map((id) => {
+              const model = selected.find((entry) => entry.id === id);
+              return (
+                <li key={id} className="settings-row">
+                  <label className="custom-endpoint-model-list__item">
+                    <input
+                      aria-label={t(`Enable ${id}`, `启用 ${id}`)}
+                      type="checkbox"
+                      checked={selectedIds.has(id)}
+                      disabled={disabled}
+                      onChange={() => onToggle(id)}
+                    />
+                    <span className="settings-row__title">{id}</span>
+                  </label>
+                  {model ? (
+                    <div className="custom-endpoint-model-caps">
+                      <label className="custom-endpoint-model-caps__item">
+                        <span>{t("Context window", "上下文窗口")}</span>
+                        <input
+                          aria-label={t(`Context window for ${id}`, `${id} 的上下文窗口`)}
+                          className="settings-text-input"
+                          disabled={disabled}
+                          min={1}
+                          placeholder="128000"
+                          type="number"
+                          value={
+                            contextWindowDrafts[id] ??
+                            (model.contextWindow !== undefined ? String(model.contextWindow) : "")
+                          }
+                          onChange={(event) => onContextWindowChange(id, event.target.value)}
+                        />
+                      </label>
+                      <label className="custom-endpoint-model-caps__item">
+                        <span>{t("Image input", "图片输入")}</span>
+                        <input
+                          aria-label={t(`Image input for ${id}`, `${id} 的图片输入`)}
+                          checked={model.input?.includes("image") ?? false}
+                          disabled={disabled}
+                          type="checkbox"
+                          onChange={(event) => {
+                            const withImage = event.target.checked;
+                            const kinds = (model.input ?? ["text"]).filter(
+                              (kind) => kind !== "image",
+                            );
+                            onUpdateModel(id, {
+                              input: withImage ? [...kinds, "image"] : kinds,
+                            });
+                          }}
+                        />
+                      </label>
+                      <label className="custom-endpoint-model-caps__item">
+                        <span>{t("Reasoning", "思考")}</span>
+                        <input
+                          aria-label={t(`Reasoning for ${id}`, `${id} 的思考`)}
+                          checked={model.reasoning ?? false}
+                          disabled={disabled}
+                          type="checkbox"
+                          onChange={(event) => {
+                            onUpdateModel(id, { reasoning: event.target.checked });
+                          }}
+                        />
+                      </label>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
         </ul>
       )}
       <div className="settings-row">

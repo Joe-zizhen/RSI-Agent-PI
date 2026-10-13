@@ -129,6 +129,8 @@ export interface RuntimeSnapshot {
   readonly skills: readonly RuntimeSkillRecord[];
   readonly extensions: readonly RuntimeExtensionRecord[];
   readonly settings: RuntimeSettingsSnapshot;
+  /** pi model runtime load error (`ModelRuntime.getError()`), e.g. a rejected `models.json`. */
+  readonly modelsLoadError?: string;
 }
 
 export interface RuntimeLoginAuthInfo {

@@ -99,3 +99,138 @@ await test("the queue recovers once malformed saved data is repaired externally"
     assert.deepEqual(await store.list(), [endpoint]);
   });
 });
+
+await test("model capability fields round-trip through models.json", async () => {
+  await withStore(async (store, path) => {
+    await store.set({
+      providerId: "capable-endpoint",
+      baseUrl: "http://localhost:8080/v1",
+      models: [
+        {
+          id: "vision-model",
+          input: ["text", "image"],
+          reasoning: true,
+          contextWindow: 128_000,
+          maxTokens: 4_096,
+        },
+        { id: "plain-model" },
+      ],
+    });
+    const saved = JSON.parse(await readFile(path, "utf8")) as {
+      providers: Record<string, { models: unknown[] }>;
+    };
+    assert.deepEqual(saved.providers["capable-endpoint"].models, [
+      {
+        id: "vision-model",
+        input: ["text", "image"],
+        reasoning: true,
+        contextWindow: 128_000,
+        maxTokens: 4_096,
+      },
+      { id: "plain-model" },
+    ]);
+    assert.deepEqual(await store.list(), [
+      {
+        providerId: "capable-endpoint",
+        baseUrl: "http://localhost:8080/v1",
+        models: [
+          {
+            id: "vision-model",
+            input: ["text", "image"],
+            reasoning: true,
+            contextWindow: 128_000,
+            maxTokens: 4_096,
+          },
+          { id: "plain-model" },
+        ],
+      },
+    ]);
+  });
+});
+
+await test("entries without capability fields read back as id-only", async () => {
+  await withStore(async (store, path) => {
+    await writeFile(
+      path,
+      JSON.stringify({
+        providers: {
+          "legacy-endpoint": {
+            baseUrl: "http://localhost:8080/v1",
+            api: "openai-completions",
+            apiKey: "unused",
+            models: [{ id: "legacy-model" }, { id: "junk-kinds", input: ["video", "audio"] }],
+          },
+        },
+      }),
+    );
+    assert.deepEqual(await store.list(), [
+      {
+        providerId: "legacy-endpoint",
+        baseUrl: "http://localhost:8080/v1",
+        models: [{ id: "legacy-model" }, { id: "junk-kinds" }],
+        warnings: [
+          'Model "junk-kinds": unsupported input values: video, audio. Saving this endpoint removes them.',
+        ],
+      },
+    ]);
+  });
+});
+
+await test("rejects invalid model capability values without changing bytes", async () => {
+  await withStore(async (store, path) => {
+    const original = '{"providers":{"kept":{"future":"value"}}}';
+    await writeFile(path, original);
+    for (const model of [
+      { id: "m", input: ["video"] },
+      { id: "m", input: "text" },
+      { id: "m", reasoning: "yes" },
+      { id: "m", maxTokens: "4096" },
+      { id: "m", contextWindow: 0 },
+      { id: "m", contextWindow: -1 },
+      { id: "m", contextWindow: 1.5 },
+      { id: "m", maxTokens: 0 },
+      { id: "m", maxTokens: -1 },
+      { id: "m", maxTokens: 2.5 },
+    ]) {
+      await assert.rejects(
+        () =>
+          store.set({
+            providerId: "bad-caps",
+            baseUrl: "http://localhost:8080/v1",
+            models: [model],
+          }),
+        /Model m /,
+      );
+    }
+    assert.equal(await readFile(path, "utf8"), original);
+  });
+});
+
+await test("saving without a new apiKey keeps the stored key", async () => {
+  await withStore(async (store, path) => {
+    await store.set({ ...endpoint, apiKey: "sk-original" });
+    for (const apiKey of [undefined, "", "   "]) {
+      await store.set({ ...endpoint, apiKey });
+      const saved = JSON.parse(await readFile(path, "utf8")) as {
+        providers: Record<string, { apiKey: string }>;
+      };
+      assert.equal(saved.providers[endpoint.providerId].apiKey, "sk-original");
+    }
+    await store.set({ ...endpoint, apiKey: "sk-replaced" });
+    const replaced = JSON.parse(await readFile(path, "utf8")) as {
+      providers: Record<string, { apiKey: string }>;
+    };
+    assert.equal(replaced.providers[endpoint.providerId].apiKey, "sk-replaced");
+  });
+});
+
+await test("saving a new endpoint without an apiKey still writes the placeholder", async () => {
+  await withStore(async (store, path) => {
+    await store.set({ ...endpoint, apiKey: undefined });
+    const saved = JSON.parse(await readFile(path, "utf8")) as {
+      providers: Record<string, { apiKey: string }>;
+    };
+    assert.equal(saved.providers[endpoint.providerId].apiKey, "unused");
+    assert.deepEqual(await store.list(), [endpoint]);
+  });
+});

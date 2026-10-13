@@ -55,14 +55,30 @@ export type DesktopNotificationPermissionStatus =
 
 export interface CustomProviderModelConfig {
   readonly id: string;
+  readonly input?: readonly ("text" | "image")[];
+  readonly reasoning?: boolean;
   readonly contextWindow?: number;
+  readonly maxTokens?: number;
 }
 
 export interface CustomProviderConfig {
   readonly providerId: string;
   readonly baseUrl: string;
+  /** Write-only: the key to store. The list response never carries keys back. */
   readonly apiKey?: string;
   readonly models: readonly CustomProviderModelConfig[];
+  /** Parse warnings for stored values the form cannot represent, shown in settings. */
+  readonly warnings?: readonly string[];
+}
+
+/** Read shape of one custom endpoint. The stored key is reported as a boolean. */
+export interface CustomProviderListEntry {
+  readonly providerId: string;
+  readonly baseUrl: string;
+  readonly hasApiKey: boolean;
+  readonly models: readonly CustomProviderModelConfig[];
+  /** Parse warnings for stored values the form cannot represent, shown in settings. */
+  readonly warnings?: readonly string[];
 }
 
 export interface CustomProviderProbeInput {
@@ -780,7 +796,7 @@ export interface PiDesktopApi {
     providerId: string,
     apiKey: string,
   ): Promise<DesktopAppState>;
-  listCustomProviders(): Promise<readonly CustomProviderConfig[]>;
+  listCustomProviders(): Promise<readonly CustomProviderListEntry[]>;
   setCustomProvider(workspaceId: string, config: CustomProviderConfig): Promise<DesktopAppState>;
   deleteCustomProvider(workspaceId: string, providerId: string): Promise<DesktopAppState>;
   probeCustomProviderModels(input: CustomProviderProbeInput): Promise<CustomProviderProbeResult>;

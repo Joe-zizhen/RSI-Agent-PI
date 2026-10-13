@@ -434,7 +434,9 @@ test("custom endpoint dialog supports a long-list keyboard flow with sticky acti
     const window = await harness.firstWindow();
     video = window.video();
     await harness.electronApp.evaluate(({ BrowserWindow }) => {
-      BrowserWindow.getAllWindows()[0]?.setSize(900, 600);
+      // setContentSize, not setSize: the 900x600 layout and the recorded video
+      // size are content-area sizes, and setSize only matches that on macOS.
+      BrowserWindow.getAllWindows()[0]?.setContentSize(900, 600);
     });
     await expect
       .poll(() =>
@@ -576,5 +578,212 @@ test("custom endpoint dialog supports a long-list keyboard flow with sticky acti
     await harness.close();
     await saveCustomEndpointVideo(video, proofDir);
     await modelServer.close();
+  }
+});
+
+test("custom endpoint edit dialog fills model capability metadata for legacy entries", async () => {
+  test.setTimeout(60_000);
+  const userDataDir = await makeUserDataDir();
+  const agentDir = join(userDataDir, "agent");
+  const workspacePath = await makeWorkspace("custom-endpoints-capabilities-workspace");
+  await seedAgentDir(agentDir, { enabledModels: [] });
+  await writeFile(
+    join(agentDir, "models.json"),
+    `${JSON.stringify(
+      {
+        providers: {
+          "xiaomi-plan": {
+            baseUrl: "http://localhost:11434/v1",
+            api: "openai-completions",
+            apiKey: "unused",
+            models: [{ id: "xiaomi-plan" }],
+          },
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  const harness = await launchDesktop(userDataDir, {
+    agentDir,
+    initialWorkspaces: [workspacePath],
+    scrubProviderEnv: true,
+    testMode: "background",
+  });
+
+  try {
+    const window = await harness.firstWindow();
+    await openProvidersSettings(window);
+
+    const customEndpoints = window.locator(".settings-section", {
+      has: window.locator(".settings-section__title", { hasText: "自定义端点" }),
+    });
+    const entryRow = customEndpoints.locator(".settings-row", {
+      has: window.locator(".settings-row__title", { hasText: /^xiaomi-plan$/ }),
+    });
+    await entryRow.getByRole("button", { name: "编辑", exact: true }).click();
+
+    const dialog = window.getByTestId("custom-endpoint-dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel("启用 xiaomi-plan", { exact: true })).toBeChecked();
+    const contextWindowInput = dialog.getByLabel("xiaomi-plan 的上下文窗口");
+    // An invalid draft keeps its text and blocks the save instead of being clobbered.
+    await contextWindowInput.fill("12.5");
+    await dialog.getByRole("button", { name: "保存更改", exact: true }).click();
+    await expect(dialog.getByText("xiaomi-plan 的上下文窗口必须为正整数")).toBeVisible();
+    await expect(contextWindowInput).toHaveValue("12.5");
+    await contextWindowInput.fill("128000");
+    await dialog.getByLabel("xiaomi-plan 的图片输入").check();
+    await dialog.getByLabel("xiaomi-plan 的思考").check();
+    await dialog.getByRole("button", { name: "保存更改", exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+
+    const savedModels = await readModelsJson(agentDir);
+    const savedProviders = savedModels.providers as Record<string, Record<string, unknown>>;
+    expect(savedProviders["xiaomi-plan"].models).toEqual([
+      {
+        id: "xiaomi-plan",
+        input: ["text", "image"],
+        reasoning: true,
+        contextWindow: 128000,
+      },
+    ]);
+
+    // Reopening the edit dialog shows the saved capability values.
+    await entryRow.getByRole("button", { name: "编辑", exact: true }).click();
+    const reopenDialog = window.getByTestId("custom-endpoint-dialog");
+    await expect(reopenDialog.getByLabel("xiaomi-plan 的上下文窗口")).toHaveValue("128000");
+    await expect(reopenDialog.getByLabel("xiaomi-plan 的图片输入")).toBeChecked();
+    await expect(reopenDialog.getByLabel("xiaomi-plan 的思考")).toBeChecked();
+
+    // Toggling the model off drops its context-window draft: re-adding shows an
+    // empty field, not the stale draft text.
+    await reopenDialog.getByLabel("xiaomi-plan 的上下文窗口").fill("12.5");
+    await reopenDialog.getByLabel("启用 xiaomi-plan", { exact: true }).click();
+    await expect(reopenDialog.getByText("或在下方输入模型 ID 以手动添加")).toBeVisible();
+    await reopenDialog.getByLabel("手动添加模型 ID").fill("xiaomi-plan");
+    await reopenDialog.getByRole("button", { name: "添加", exact: true }).click();
+    await expect(reopenDialog.getByLabel("xiaomi-plan 的上下文窗口")).toHaveValue("");
+
+    // An empty context window saves the model without the field.
+    await reopenDialog.getByRole("button", { name: "保存更改", exact: true }).click();
+    await expect(reopenDialog).toHaveCount(0);
+    const finalModels = await readModelsJson(agentDir);
+    const finalProviders = finalModels.providers as Record<string, Record<string, unknown>>;
+    expect(finalProviders["xiaomi-plan"].models).toEqual([{ id: "xiaomi-plan" }]);
+  } finally {
+    await harness.close();
+  }
+});
+
+test("custom endpoint API key is not backfilled and the clear checkbox resets it", async () => {
+  test.setTimeout(60_000);
+  const userDataDir = await makeUserDataDir();
+  const agentDir = join(userDataDir, "agent");
+  const workspacePath = await makeWorkspace("custom-endpoints-api-key-workspace");
+  await seedAgentDir(agentDir, { enabledModels: [] });
+  await writeFile(
+    join(agentDir, "models.json"),
+    `${JSON.stringify(
+      {
+        providers: {
+          "keyed-endpoint": {
+            baseUrl: "http://localhost:11434/v1",
+            api: "openai-completions",
+            apiKey: "sk-original",
+            piGuiCustomEndpoint: true,
+            models: [{ id: "llama3.1" }],
+          },
+        },
+      },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+
+  const harness = await launchDesktop(userDataDir, {
+    agentDir,
+    initialWorkspaces: [workspacePath],
+    scrubProviderEnv: true,
+    testMode: "background",
+  });
+
+  try {
+    const window = await harness.firstWindow();
+    await openProvidersSettings(window);
+    const customEndpoints = window.locator(".settings-section", {
+      has: window.locator(".settings-section__title", { hasText: "自定义端点" }),
+    });
+    const entryRow = customEndpoints.locator(".settings-row", {
+      has: window.locator(".settings-row__title", { hasText: /^keyed-endpoint$/ }),
+    });
+
+    await entryRow.getByRole("button", { name: "编辑", exact: true }).click();
+    const dialog = window.getByTestId("custom-endpoint-dialog");
+    // The stored key never renders into the DOM, and the copy states the
+    // keep-the-original-key semantics of an empty save.
+    await expect(dialog.getByLabel("API key", { exact: true })).toHaveValue("");
+    await expect(dialog.getByLabel("API key", { exact: true })).toHaveAttribute(
+      "placeholder",
+      "留空保留原 key",
+    );
+    await expect(dialog).toContainText("留空则保留原 key");
+    await dialog.getByRole("button", { name: "保存更改", exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    const keptModels = await readModelsJson(agentDir);
+    const keptProviders = keptModels.providers as Record<string, Record<string, unknown>>;
+    expect(keptProviders["keyed-endpoint"].apiKey).toBe("sk-original");
+
+    // The clear checkbox is the explicit way back to the placeholder key.
+    await entryRow.getByRole("button", { name: "编辑", exact: true }).click();
+    const clearDialog = window.getByTestId("custom-endpoint-dialog");
+    await clearDialog.getByLabel("清除已保存的 API key").check();
+    await clearDialog.getByRole("button", { name: "保存更改", exact: true }).click();
+    await expect(clearDialog).toHaveCount(0);
+    const clearedModels = await readModelsJson(agentDir);
+    const clearedProviders = clearedModels.providers as Record<string, Record<string, unknown>>;
+    expect(clearedProviders["keyed-endpoint"].apiKey).toBe("unused");
+  } finally {
+    await harness.close();
+  }
+});
+
+test("settings shows a models.json load error without restarting the app", async () => {
+  test.setTimeout(60_000);
+  const userDataDir = await makeUserDataDir();
+  const agentDir = join(userDataDir, "agent");
+  const workspacePath = await makeWorkspace("custom-endpoints-models-load-error-workspace");
+  await seedAgentDir(agentDir, { enabledModels: [] });
+
+  const harness = await launchDesktop(userDataDir, {
+    agentDir,
+    initialWorkspaces: [workspacePath],
+    scrubProviderEnv: true,
+    testMode: "background",
+  });
+
+  try {
+    const window = await harness.firstWindow();
+    await openProvidersSettings(window);
+    const customEndpoints = window.locator(".settings-section", {
+      has: window.locator(".settings-section__title", { hasText: "自定义端点" }),
+    });
+    await expect(customEndpoints).toContainText("暂无自定义端点。");
+    await expect(customEndpoints).not.toContainText("pi 无法加载 models.json");
+
+    // Break models.json from outside the app while it keeps running.
+    await writeFile(join(agentDir, "models.json"), "not json", "utf8");
+    await window.keyboard.press("Escape");
+    await expect(window.getByTestId("settings-surface")).toHaveCount(0);
+
+    // Reopening the settings panel re-reads the runtime snapshot, so the alert
+    // appears without an app restart.
+    await openProvidersSettings(window);
+    await expect(customEndpoints).toContainText("pi 无法加载 models.json");
+  } finally {
+    await harness.close();
   }
 });

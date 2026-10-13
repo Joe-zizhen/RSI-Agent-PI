@@ -26,6 +26,7 @@ import { pathToFileURL } from "node:url";
 import { augmentPosixPath } from "../scripts/augment-path.cjs";
 import { DesktopAppStore } from "./application/app-store";
 import { resolveAgentDir, seedBundledPlugins } from "./persistence/plugin-seeding";
+import { ensureWindowsShellPath } from "./persistence/windows-git-bash";
 import { WindowOwner } from "./windows/window-owner";
 import { PendingComposerDraftFlusher } from "./windows/pending-draft-flush";
 import { TurnCheckpointStore } from "./workbench/checkpoint-store";
@@ -945,6 +946,20 @@ app
       }
     } catch (error) {
       console.error("[plugin-seeding] bundled plugin seeding failed:", error);
+    }
+
+    // On Windows, record a detected Git Bash as pi's global shellPath before any
+    // session spawns a shell. A user-set shellPath is kept unless it is provably
+    // gone, and failures never block startup.
+    try {
+      const shell = await ensureWindowsShellPath(resolveAgentDir());
+      if (shell.written && shell.shellPath) {
+        console.log(`[shell-path] recorded Git Bash at ${shell.shellPath}`);
+      } else if (shell.written) {
+        console.log("[shell-path] removed a provably gone shellPath; pi will search on its own");
+      }
+    } catch (error) {
+      console.error("[shell-path] Git Bash detection failed:", error);
     }
 
     let generateThreadTitleOverride:

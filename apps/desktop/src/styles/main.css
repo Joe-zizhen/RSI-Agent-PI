@@ -2982,6 +2982,26 @@
   list-style: none;
 }
 
+.custom-endpoint-model-caps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px 14px;
+  color: var(--muted-soft);
+  font-size: 12.5px;
+}
+
+.custom-endpoint-model-caps__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-endpoint-model-caps .settings-text-input {
+  width: 110px;
+}
+
 .custom-endpoint-dialog__footer {
   position: sticky;
   bottom: 0;

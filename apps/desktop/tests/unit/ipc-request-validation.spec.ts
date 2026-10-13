@@ -3,6 +3,7 @@ import {
   expectAppView,
   expectCreateScheduledTaskInput,
   expectCustomProviderConfig,
+  expectCustomProviderProbeInput,
   expectForkThreadInput,
   expectHostUiResponse,
   expectMcpServerScope,
@@ -112,6 +113,67 @@ test("IPC request validation decodes persisted settings records", () => {
       models: [{ id: "model-a", contextWindow: -1 }],
     }),
   ).toThrow("config.models[0].contextWindow must be a positive integer");
+});
+
+test("IPC request validation passes through custom provider model capabilities", () => {
+  expect(
+    expectCustomProviderConfig({
+      providerId: "local",
+      baseUrl: "http://localhost:8080",
+      models: [
+        {
+          id: "model-a",
+          input: ["text", "image"],
+          reasoning: true,
+          contextWindow: 32_000,
+          maxTokens: 4_096,
+        },
+        { id: "model-b" },
+      ],
+    }).models,
+  ).toEqual([
+    {
+      id: "model-a",
+      input: ["text", "image"],
+      reasoning: true,
+      contextWindow: 32_000,
+      maxTokens: 4_096,
+    },
+    { id: "model-b", contextWindow: undefined },
+  ]);
+
+  expect(() =>
+    expectCustomProviderConfig({
+      providerId: "local",
+      baseUrl: "http://localhost:8080",
+      models: [{ id: "model-a", input: ["video"] }],
+    }),
+  ).toThrow("config.models[0].input[0] must be text or image");
+  expect(() =>
+    expectCustomProviderConfig({
+      providerId: "local",
+      baseUrl: "http://localhost:8080",
+      models: [{ id: "model-a", reasoning: "yes" }],
+    }),
+  ).toThrow("config.models[0].reasoning must be a boolean");
+  expect(() =>
+    expectCustomProviderConfig({
+      providerId: "local",
+      baseUrl: "http://localhost:8080",
+      models: [{ id: "model-a", maxTokens: 0 }],
+    }),
+  ).toThrow("config.models[0].maxTokens must be a positive integer");
+});
+
+test("IPC request validation strips the placeholder key from probe requests", () => {
+  expect(
+    expectCustomProviderProbeInput({ baseUrl: "http://localhost:8080", apiKey: "sk-typed " }),
+  ).toEqual({ baseUrl: "http://localhost:8080", apiKey: "sk-typed" });
+  // The placeholder satisfies pi's auth composition in models.json; it is not a
+  // credential and must not reach the probe request.
+  expect(
+    expectCustomProviderProbeInput({ baseUrl: "http://localhost:8080", apiKey: "unused" }),
+  ).toEqual({ baseUrl: "http://localhost:8080" });
 });
 
 test("IPC request validation checks discriminated command records", () => {

@@ -56,7 +56,10 @@ export class CustomProviderStore {
           `Provider ID "${input.providerId}" already exists in models.json and is not managed by pi-gui.`,
         );
       }
-      providers[input.providerId] = toProviderConfig(input);
+      providers[input.providerId] = toProviderConfig(
+        input,
+        isRecord(existing) ? existing : undefined,
+      );
       await atomicWriteJson(this.modelsJsonPath, data);
     });
   }
@@ -103,23 +106,63 @@ function validateInput(input: CustomProviderInput): void {
     if (!model.id || typeof model.id !== "string") {
       throw new Error("Model id is required.");
     }
-    if (model.contextWindow !== undefined && !Number.isFinite(model.contextWindow)) {
-      throw new Error(`Model ${model.id} has non-numeric contextWindow.`);
+    if (
+      model.contextWindow !== undefined &&
+      (typeof model.contextWindow !== "number" ||
+        !Number.isSafeInteger(model.contextWindow) ||
+        model.contextWindow < 1)
+    ) {
+      throw new Error(`Model ${model.id} has invalid contextWindow; expected a positive integer.`);
+    }
+    if (
+      model.maxTokens !== undefined &&
+      (typeof model.maxTokens !== "number" ||
+        !Number.isSafeInteger(model.maxTokens) ||
+        model.maxTokens < 1)
+    ) {
+      throw new Error(`Model ${model.id} has invalid maxTokens; expected a positive integer.`);
+    }
+    if (model.reasoning !== undefined && typeof model.reasoning !== "boolean") {
+      throw new Error(`Model ${model.id} has non-boolean reasoning.`);
+    }
+    if (model.input !== undefined) {
+      if (!Array.isArray(model.input)) {
+        throw new Error(`Model ${model.id} has non-array input.`);
+      }
+      for (const kind of model.input) {
+        if (kind !== "text" && kind !== "image") {
+          throw new Error(`Model ${model.id} has unsupported input kind ${JSON.stringify(kind)}.`);
+        }
+      }
     }
   }
 }
 
-function toProviderConfig(input: CustomProviderInput): Record<string, unknown> {
+function toProviderConfig(
+  input: CustomProviderInput,
+  existing?: Record<string, unknown>,
+): Record<string, unknown> {
   const trimmedKey = input.apiKey?.trim();
+  const existingKey = typeof existing?.apiKey === "string" ? existing.apiKey.trim() : "";
   return {
     baseUrl: input.baseUrl,
     api: OPENAI_COMPLETIONS_API,
-    apiKey: trimmedKey ? trimmedKey : CUSTOM_PROVIDER_PLACEHOLDER_API_KEY,
+    // An empty key input keeps the stored key; only an explicit value replaces it.
+    apiKey: trimmedKey || existingKey || CUSTOM_PROVIDER_PLACEHOLDER_API_KEY,
     [PI_GUI_CUSTOM_PROVIDER_MARKER]: true,
     models: input.models.map((model) => {
       const entry: Record<string, unknown> = { id: model.id };
+      if (model.input !== undefined) {
+        entry.input = [...model.input];
+      }
+      if (model.reasoning !== undefined) {
+        entry.reasoning = model.reasoning;
+      }
       if (model.contextWindow !== undefined) {
         entry.contextWindow = model.contextWindow;
+      }
+      if (model.maxTokens !== undefined) {
+        entry.maxTokens = model.maxTokens;
       }
       return entry;
     }),
@@ -144,6 +187,7 @@ function readCustomProviders(data: ModelsJson): readonly CustomProviderEntry[] {
     if (!baseUrl) {
       continue;
     }
+    const modelWarnings: string[] = [];
     const models = Array.isArray(config.models)
       ? (config.models as unknown[])
           .map((raw): CustomProviderModelInput | undefined => {
@@ -154,14 +198,31 @@ function readCustomProviders(data: ModelsJson): readonly CustomProviderEntry[] {
             if (typeof modelConfig.id !== "string" || !modelConfig.id) {
               return undefined;
             }
-            const contextWindow =
-              typeof modelConfig.contextWindow === "number" ? modelConfig.contextWindow : undefined;
-            return contextWindow !== undefined
-              ? { id: modelConfig.id, contextWindow }
-              : { id: modelConfig.id };
+            const { input, ignored } = readModelInput(modelConfig.input);
+            if (ignored && ignored.length > 0) {
+              modelWarnings.push(
+                `Model "${modelConfig.id}": unsupported input values: ${ignored.join(", ")}. Saving this endpoint removes them.`,
+              );
+            }
+            const entry: CustomProviderModelInput = {
+              id: modelConfig.id,
+              ...(input !== undefined ? { input } : {}),
+              ...(typeof modelConfig.reasoning === "boolean"
+                ? { reasoning: modelConfig.reasoning }
+                : {}),
+              ...(typeof modelConfig.contextWindow === "number"
+                ? { contextWindow: modelConfig.contextWindow }
+                : {}),
+              ...(typeof modelConfig.maxTokens === "number"
+                ? { maxTokens: modelConfig.maxTokens }
+                : {}),
+            };
+            return entry;
           })
           .filter((entry): entry is CustomProviderModelInput => entry !== undefined)
       : [];
+    // The placeholder is not a credential (see CUSTOM_PROVIDER_PLACEHOLDER_API_KEY):
+    // read-back reports it as "no key".
     const rawApiKey = typeof config.apiKey === "string" ? config.apiKey : undefined;
     const apiKey = rawApiKey === CUSTOM_PROVIDER_PLACEHOLDER_API_KEY ? undefined : rawApiKey;
     entries.push({
@@ -169,6 +230,7 @@ function readCustomProviders(data: ModelsJson): readonly CustomProviderEntry[] {
       baseUrl,
       ...(apiKey !== undefined ? { apiKey } : {}),
       models,
+      ...(modelWarnings.length > 0 ? { warnings: modelWarnings } : {}),
     });
   }
   entries.sort((left, right) => left.providerId.localeCompare(right.providerId));
@@ -192,6 +254,30 @@ function isPiGuiCustomProviderConfig(providerId: string, config: Record<string, 
 
 function ensureProvidersRecord(data: ModelsJson): Record<string, unknown> {
   return (data.providers ??= {});
+}
+
+/**
+ * pi's `input` capability list. Values that are not `text` or `image` cannot be
+ * represented in the schema; they come back in `ignored` so the caller can warn
+ * instead of dropping them silently.
+ */
+function readModelInput(value: unknown): {
+  input?: readonly ("text" | "image")[];
+  ignored?: readonly string[];
+} {
+  if (!Array.isArray(value)) {
+    return {};
+  }
+  const input = value.filter(
+    (kind): kind is "text" | "image" => kind === "text" || kind === "image",
+  );
+  const ignored = value
+    .filter((kind) => kind !== "text" && kind !== "image")
+    .map((kind) => String(kind));
+  return {
+    ...(input.length > 0 ? { input } : {}),
+    ...(ignored.length > 0 ? { ignored } : {}),
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

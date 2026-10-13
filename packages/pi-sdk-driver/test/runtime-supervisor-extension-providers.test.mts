@@ -317,3 +317,26 @@ await test("extension providers survive a runtime refresh", async () => {
     "extension-registered provider should still be listed after refreshRuntime",
   );
 });
+
+await test("runtime snapshot surfaces pi models.json load errors", async () => {
+  const { agentDir, workspacePath } = await createAgentDir();
+  // Schema-invalid input kinds make pi reject the whole models.json and record the reason.
+  await writeFile(
+    join(agentDir, "models.json"),
+    JSON.stringify({
+      providers: {
+        "bad-input": {
+          baseUrl: "http://localhost:9/v1",
+          api: "openai-completions",
+          apiKey: "test-key",
+          models: [{ id: "bad-model", input: ["video"] }],
+        },
+      },
+    }),
+  );
+  const supervisor = new RuntimeSupervisor({ agentDir });
+  const workspace = { workspaceId: "workspace-1", path: workspacePath };
+
+  const snapshot = await supervisor.getRuntimeSnapshot(workspace);
+  assert.match(snapshot.modelsLoadError ?? "", /Invalid models\.json schema/);
+});

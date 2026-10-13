@@ -720,6 +720,8 @@ export class RuntimeSupervisor implements RuntimeResourceDriver {
       enabledModelPatterns: context.settingsManager.getEnabledModels() ?? [],
     };
 
+    const modelsLoadError = context.modelRuntime.getError();
+
     return {
       workspace: context.workspace,
       providers,
@@ -727,6 +729,7 @@ export class RuntimeSupervisor implements RuntimeResourceDriver {
       skills,
       extensions,
       settings,
+      ...(modelsLoadError ? { modelsLoadError } : {}),
     };
   }
 
