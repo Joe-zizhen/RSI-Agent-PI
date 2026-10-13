@@ -46,7 +46,10 @@ test("P3: memory audit/show presentation and promote confirm draft on real Elect
     "memloop",
     `${path
       .basename(workspacePath)
-      .replace(/[^A-Za-z0-9._-]/g, "_")}-${createHash("sha1").update(workspacePath).digest("hex").slice(0, 10)}.db`,
+      .replace(
+        /[^A-Za-z0-9._-]/g,
+        "_",
+      )}-${createHash("sha1").update(workspacePath).digest("hex").slice(0, 10)}.db`,
   );
   rmSync(evidenceDir, { recursive: true, force: true });
 
@@ -206,10 +209,9 @@ test("P3: memory audit/show presentation and promote confirm draft on real Elect
     // the user approves on the UI surface (确认 = the confirm dialog's approve button)
     await dialog.getByTestId("extension-dialog-confirm").click();
     await expect(dialog).toHaveCount(0);
-    await expect(window.locator(".timeline-item--assistant .message__content").last()).toContainText(
-      "P3-PROMO-DONE",
-      { timeout: 180_000 },
-    );
+    await expect(
+      window.locator(".timeline-item--assistant .message__content").last(),
+    ).toContainText("P3-PROMO-DONE", { timeout: 180_000 });
     const promoteRow = window
       .locator(".timeline-tool")
       .filter({ hasText: /memory_promote(?!_list)/ });

@@ -63,7 +63,9 @@ test("Review shows the diff beside a filterable file tree with Staged and Unstag
     await expect(diff.locator(".diff-line--unmodified").first()).toHaveText(/6 unmodified lines/);
     await window.screenshot({ path: test.info().outputPath("review-uncommitted.png") });
 
-    await tree.getByRole("textbox", { name: /^(Filter changed files|筛选变更的文件)$/ }).fill("todo");
+    await tree
+      .getByRole("textbox", { name: /^(Filter changed files|筛选变更的文件)$/ })
+      .fill("todo");
     await expect(tree.locator(".diff-panel__file")).toHaveCount(1);
     await tree.getByRole("button", { name: "todo.txt", exact: true }).click();
     await expect(diff.locator(".diff-line--added .diff-line__content")).toHaveText([

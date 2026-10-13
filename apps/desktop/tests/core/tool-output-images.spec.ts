@@ -65,7 +65,7 @@ test("shows images a tool returned in its row, not their base64 text", async () 
     const tool = window.locator(".timeline-tool", {
       has: window.locator("[data-testid=timeline-tool-images]"),
     });
-    const thumb = tool.getByRole("button", { name: "View read image 1" });
+    const thumb = tool.getByRole("button", { name: /^(View read image 1|查看 read 图片 1)$/ });
     await expect(thumb).toBeVisible({ timeout: 15_000 });
     await expect
       .poll(() =>

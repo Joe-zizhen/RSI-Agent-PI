@@ -443,7 +443,7 @@ async function attachTinyAndClear(
   await stubNextOpenDialog(harness, [tinyPath]);
   await window.getByRole("button", { name: "添加文件" }).click();
   await expect(window.locator(".composer-attachment--image")).toHaveCount(1);
-  await window.getByRole("button", { name: "Remove tiny.png" }).click();
+  await window.getByRole("button", { name: /^(Remove|移除) tiny\.png$/ }).click();
   await expect(window.locator(".composer-attachment")).toHaveCount(0);
   await expect(window.getByTestId("composer-error-banner")).toHaveCount(0);
 }

@@ -137,23 +137,23 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
     await expect(diffPanel.locator(".diff-panel__file")).toHaveCount(3);
 
     const counter = diffPanel.getByTestId("diff-panel-counter");
-    await expect(counter).toHaveText("Reviewed 0 of 3");
+    await expect(counter).toHaveText(/^(Reviewed|已审查)0 \/ 3$/);
 
     await diffPanel.getByTestId("diff-panel-reviewed-src/foo.ts").click();
-    await expect(counter).toHaveText("Reviewed 1 of 3");
+    await expect(counter).toHaveText(/^(Reviewed|已审查)1 \/ 3$/);
     await expect(diffPanel.locator('.diff-panel__file[data-file-path="src/foo.ts"]')).toHaveClass(
       /diff-panel__file--reviewed/,
     );
 
     await diffPanel.getByTestId("diff-panel-reviewed-src/foo.ts").click();
-    await expect(counter).toHaveText("Reviewed 0 of 3");
+    await expect(counter).toHaveText(/^(Reviewed|已审查)0 \/ 3$/);
     await expect(
       diffPanel.locator('.diff-panel__file[data-file-path="src/foo.ts"]'),
     ).not.toHaveClass(/diff-panel__file--reviewed/);
 
     await diffPanel.getByTestId("diff-panel-reviewed-src/foo.ts").click();
     await diffPanel.getByTestId("diff-panel-reviewed-script.py").click();
-    await expect(counter).toHaveText("Reviewed 2 of 3");
+    await expect(counter).toHaveText(/^(Reviewed|已审查)2 \/ 3$/);
   } finally {
     await harness.close();
   }
@@ -165,7 +165,9 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
     await selectSidePanel(window, "审查");
     const reopenedPanel = window.locator(".diff-panel");
     await expect(reopenedPanel).toBeVisible();
-    await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 2 of 3");
+    await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText(
+      /^(Reviewed|已审查)2 \/ 3$/,
+    );
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-src/foo.ts")).toBeChecked();
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-script.py")).toBeChecked();
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-notes.md")).not.toBeChecked();
@@ -173,7 +175,9 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
     await commitFiles(workspacePath, ["src/foo.ts"], "land foo");
     await reopenedPanel.getByRole("button", { name: /^(Refresh|刷新)$/ }).click();
     await expect(reopenedPanel.locator(".diff-panel__file")).toHaveCount(2);
-    await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 1 of 2");
+    await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText(
+      /^(Reviewed|已审查)1 \/ 2$/,
+    );
 
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-script.py")).toBeChecked();
     await writeFile(
@@ -183,7 +187,9 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
     );
     await reopenedPanel.getByRole("button", { name: "刷新", exact: true }).click();
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-script.py")).not.toBeChecked();
-    await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 0 of 2");
+    await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText(
+      /^(Reviewed|已审查)0 \/ 2$/,
+    );
     expect(await window.evaluate((key) => globalThis.localStorage.getItem(key), storageKey)).toBe(
       legacyValue,
     );
@@ -222,7 +228,9 @@ test("Files mode shows a file browser and reader instead of the changes reviewer
     const diffPanel = window.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
     await expect(diffPanel).toHaveAttribute("aria-label", /^(Review|审查)$/);
-    await expect(diffPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 0 of 3");
+    await expect(diffPanel.getByTestId("diff-panel-counter")).toHaveText(
+      /^(Reviewed|已审查)0 \/ 3$/,
+    );
 
     await diffPanel
       .locator('.diff-panel__file[data-file-path="src/foo.ts"] .diff-panel__file-name')

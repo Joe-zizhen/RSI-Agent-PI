@@ -122,8 +122,8 @@ test("an extension tool's row shows the label it registered, live and after rest
     );
     await expectLabelledRow(window);
     // The reply summary counts it as a tool, not as an explored file.
-    await expect(window.getByTestId("transcript")).toContainText("Used 1 tool");
-    await expect(window.getByTestId("transcript")).not.toContainText("Explored");
+    await expect(window.getByTestId("transcript")).toContainText(/Used 1 tool|使用了 1 个工具/);
+    await expect(window.getByTestId("transcript")).not.toContainText(/Explored|浏览了/);
   } finally {
     await firstRun.close();
   }

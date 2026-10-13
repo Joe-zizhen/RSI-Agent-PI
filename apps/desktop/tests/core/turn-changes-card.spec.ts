@@ -63,7 +63,10 @@ async function expectCompleted(window: Page, text: string): Promise<void> {
   await expect(
     window.locator(".timeline-item--assistant .message__content").filter({ hasText: text }),
   ).toBeVisible();
-  await expect(window.getByTestId("send")).not.toHaveAttribute("aria-label", /^(Stop run|停止运行)$/);
+  await expect(window.getByTestId("send")).not.toHaveAttribute(
+    "aria-label",
+    /^(Stop run|停止运行)$/,
+  );
 }
 
 test("a turn that edits files gets a changes card whose rows open that file's diff", async () => {

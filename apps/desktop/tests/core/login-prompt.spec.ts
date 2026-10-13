@@ -121,7 +121,7 @@ test("rejects the login prompt when cancelled", async () => {
     const outcome = await readPromptOutcome(harness.electronApp);
     expect(outcome.ok).toBe(false);
     if (!outcome.ok) {
-      expect(outcome.error).toContain("cancelled");
+      expect(outcome.error).toMatch(/cancelled|登录已取消/);
     }
   } finally {
     await harness.close();

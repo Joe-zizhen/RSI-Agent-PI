@@ -42,9 +42,11 @@ test("memory settings gate the memloop extension and persist verdictCmd", async 
     await enableMemory.click();
     await expect(enableMemory).not.toBeChecked();
     await window.getByRole("button", { name: "技能与扩展", exact: true }).click();
-    await window.getByRole("tab", { name: /^Extensions/ }).click();
+    await window.getByRole("tab", { name: /^(Extensions|扩展)/ }).click();
     await expect(window.getByTestId("extensions-surface")).toBeVisible();
-    await expect(window.getByRole("switch", { name: "Enable memloop 长期记忆" })).not.toBeChecked();
+    await expect(
+      window.getByRole("switch", { name: /^(Enable|启用) memloop 长期记忆$/ }),
+    ).not.toBeChecked();
   } finally {
     await harness.close();
   }

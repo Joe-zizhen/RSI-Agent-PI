@@ -10,7 +10,7 @@ interface ControlLayout {
 async function layoutOf(
   window: Page,
   buttonSelector: string,
-  label: string,
+  label: string | RegExp,
 ): Promise<ControlLayout> {
   const button = await window.locator(buttonSelector).boundingBox();
   const text = await window
@@ -35,11 +35,16 @@ test("Back to app lines up with New thread below the window buttons", async ({},
   try {
     const window = await harness.firstWindow();
     await expect(window.locator(".sidebar__new")).toBeVisible();
-    const newThread = await layoutOf(window, ".sidebar__new", "New thread");
+    const newThread = await layoutOf(window, ".sidebar__new", /New thread|新建会话/);
     await window.screenshot({ path: testInfo.outputPath("threads.png") });
 
     for (const view of ["Settings", "Skills", "Extensions"] as const) {
-      await window.getByRole("button", { name: view, exact: true }).click();
+      const viewName = {
+        Settings: /^(Settings|设置)$/,
+        Skills: /^(Skills|技能)$/,
+        Extensions: /^(Extensions|扩展)$/,
+      }[view];
+      await window.getByRole("button", { name: viewName }).click();
       const back = window.getByRole("button", { name: "返回应用", exact: true });
       await expect(back).toBeVisible();
       await window.screenshot({ path: testInfo.outputPath(`${view.toLowerCase()}.png`) });

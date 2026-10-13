@@ -91,7 +91,7 @@ test("logs a completion notification and blue dot for a focused different sessio
       .toContain("Session A");
     await expect
       .poll(() => readOptionalLog(notificationLogPath), { timeout: 30_000 })
-      .toContain('"body":"Agent finished responding"');
+      .toMatch(/"body":"(Agent finished responding|智能体已完成回复)"/);
     await expect(window.locator(".session-row", { hasText: "Session A" })).toHaveAttribute(
       "data-sidebar-indicator",
       "unseen",
@@ -141,7 +141,7 @@ test("logs a completion notification and blue dot for a selected session after t
       .toContain("Selected Session");
     await expect
       .poll(() => readOptionalLog(notificationLogPath), { timeout: 30_000 })
-      .toContain('"body":"Agent finished responding"');
+      .toMatch(/"body":"(Agent finished responding|智能体已完成回复)"/);
     await expect(row).toHaveAttribute("data-sidebar-indicator", "unseen");
   } finally {
     await harness.close();

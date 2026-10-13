@@ -29,7 +29,11 @@ test("supports workspace rename and remove from the sidebar menu", async () => {
     assertExists(workspace, "Expected first workspace");
 
     await window
-      .getByRole("button", { name: `Workspace actions for ${basename(workspaceA)}` })
+      .getByRole("button", {
+        name: new RegExp(
+          `^(Workspace actions for ${basename(workspaceA)}|${basename(workspaceA)} 的项目操作)$`,
+        ),
+      })
       .click();
     const workspaceMenu = window.locator(".workspace-menu").last();
     await expect(workspaceMenu.getByRole("button", { name: "打开文件夹" })).toBeVisible();

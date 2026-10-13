@@ -137,7 +137,7 @@ test("right-click thread menu supports rename, archive/restore, mark read, and c
 
     await row.click({ button: "right" });
     await row.getByRole("menu").getByRole("button", { name: "重命名会话" }).click();
-    const renameInput = window.getByLabel(`Rename thread ${targetTitle}`);
+    const renameInput = window.getByLabel(new RegExp(`(Rename thread|重命名会话) ${targetTitle}`));
     await renameInput.fill(renamedTitle);
     await window.getByRole("button", { name: "保存" }).click();
     row = window.locator(".session-row", { hasText: renamedTitle }).first();
@@ -210,7 +210,7 @@ test("header and right-click menus match, show shortcuts, and Shift chords renam
 
     // Hovering the row's archive button shows the shortcut.
     await row.hover();
-    await row.getByRole("button", { name: `Archive ${targetTitle}` }).hover();
+    await row.getByRole("button", { name: new RegExp(`(Archive|归档) ${targetTitle}`) }).hover();
     const tooltip = row.locator(".session-row__tooltip");
     await expect(tooltip).toHaveCSS("opacity", "1");
     await expect(tooltip.locator("kbd")).toHaveText(isMac ? "⇧⌘A" : "Ctrl+Shift+A");
@@ -220,7 +220,7 @@ test("header and right-click menus match, show shortcuts, and Shift chords renam
     await window.keyboard.press(`${modifier}+B`);
     await expect(window.locator(".session-row")).toHaveCount(0);
     await window.keyboard.press(`${modifier}+Shift+R`);
-    const renameInput = window.getByLabel(`Rename thread ${targetTitle}`);
+    const renameInput = window.getByLabel(new RegExp(`(Rename thread|重命名会话) ${targetTitle}`));
     await expect(renameInput).toBeFocused();
     await renameInput.fill(renamedTitle);
     await window.getByRole("button", { name: "保存" }).click();

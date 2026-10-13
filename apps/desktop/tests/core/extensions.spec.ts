@@ -281,23 +281,25 @@ test("shows extensions above files in @ mentions and enables disabled extensions
     const mentionMenu = window.getByTestId("mention-menu");
     await expect(mentionMenu).toBeVisible();
     await expect(mentionMenu.locator(".mention-menu__section-title")).toHaveText([
-      "Extensions",
-      "Files",
+      /^(Extensions|扩展)$/,
+      /^(Files|文件)$/,
     ]);
     await expect(mentionMenu.locator(".mention-menu__section").first()).toContainText(
       "demo-extension",
     );
-    await expect(mentionMenu.locator(".mention-menu__section").first()).toContainText("Disabled");
+    await expect(mentionMenu.locator(".mention-menu__section").first()).toContainText(
+      /Disabled|已禁用/,
+    );
     await expect(
       mentionMenu
         .locator(".mention-menu__section")
         .first()
-        .getByRole("button", { name: /Enable demo-extension/ }),
+        .getByRole("button", { name: /(Enable|启用) demo-extension/ }),
     ).toBeVisible();
 
     await composer.fill("@demo");
     await expect(mentionMenu.locator(".mention-menu__section-title").first()).toHaveText(
-      "Extensions",
+      /^(Extensions|扩展)$/,
     );
     await expect(mentionMenu.locator(".mention-menu__section").first()).toContainText(
       "demo-extension",
@@ -305,7 +307,7 @@ test("shows extensions above files in @ mentions and enables disabled extensions
     await mentionMenu
       .locator(".mention-menu__section")
       .first()
-      .getByRole("button", { name: /Enable demo-extension/ })
+      .getByRole("button", { name: /(Enable|启用) demo-extension/ })
       .click();
     await expect
       .poll(async () => {
@@ -368,7 +370,7 @@ test("inserts npm package extension mentions without source prefixes or pinned v
     const mentionMenu = window.getByTestId("mention-menu");
     await expect(mentionMenu).toBeVisible();
     await expect(mentionMenu.locator(".mention-menu__section-title").first()).toHaveText(
-      "Extensions",
+      /^(Extensions|扩展)$/,
     );
     await expect(mentionMenu.locator(".mention-menu__section").first()).toContainText(packageName);
 
@@ -414,7 +416,7 @@ test("preserves scoped npm package names in extension mentions", async () => {
     const mentionMenu = window.getByTestId("mention-menu");
     await expect(mentionMenu).toBeVisible();
     await expect(mentionMenu.locator(".mention-menu__section-title").first()).toHaveText(
-      "Extensions",
+      /^(Extensions|扩展)$/,
     );
 
     await composer.press("Tab");
@@ -459,7 +461,7 @@ test("inserts git package extension mentions from the resolved package root", as
     const mentionMenu = window.getByTestId("mention-menu");
     await expect(mentionMenu).toBeVisible();
     await expect(mentionMenu.locator(".mention-menu__section-title").first()).toHaveText(
-      "Extensions",
+      /^(Extensions|扩展)$/,
     );
     await expect(mentionMenu.locator(".mention-menu__section").first()).toContainText(repo);
 
@@ -626,9 +628,7 @@ test("keeps a single subscription path when an extension creates a child session
 
     const beforeState = await getDesktopState(window);
     const beforeSelectedSessionId = beforeState.selectedSessionId;
-    const resumedCountBefore = await window
-      .getByText(/^(Resumed session|已恢复会话记录)$/)
-      .count();
+    const resumedCountBefore = await window.getByText(/^(Resumed session|已恢复会话记录)$/).count();
 
     const composer = window.getByTestId("composer");
     await composer.fill("/spawn-child ");
@@ -671,8 +671,12 @@ test("switches pi-gui tools off app-wide and keeps them off after a restart", as
     if (!(await list.isVisible())) {
       await openButton.click();
     }
-    await expect(list.getByRole("heading", { name: /pi-gui tools/ })).toBeVisible();
-    return list.getByRole("switch", { name: "Enable Thread orchestration" });
+    await expect(
+      list.getByRole("heading", { name: /RSI-Agent-PI tools|RSI-Agent-PI 工具/ }),
+    ).toBeVisible();
+    return list.getByRole("switch", {
+      name: /^(Enable Thread orchestration|启用 会话编排)$/,
+    });
   };
 
   let harness = await launchDesktop(userDataDir, {
@@ -726,17 +730,18 @@ test("lists pi's add-ons as Built into pi and switches them in pi's extensions s
     await window.getByRole("button", { name: "扩展", exact: true }).click();
     const list = window.getByTestId("extensions-list");
     const addons = list.locator("section", {
-      has: window.getByRole("heading", { name: /Built into pi/ }),
+      has: window.getByRole("heading", { name: /Built into pi|pi 内置/ }),
     });
     const piGuiTools = list.locator("section", {
-      has: window.getByRole("heading", { name: /pi-gui tools/ }),
+      has: window.getByRole("heading", { name: /RSI-Agent-PI tools|RSI-Agent-PI 工具/ }),
     });
     for (const name of ["MCP servers", "Code mode", "Tool search"]) {
-      await expect(addons.getByRole("switch", { name: `Enable ${name}` })).toBeChecked();
-      await expect(piGuiTools.getByRole("switch", { name: `Enable ${name}` })).toHaveCount(0);
+      const toggle = new RegExp(`^(Enable|启用) ${name}$`);
+      await expect(addons.getByRole("switch", { name: toggle })).toBeChecked();
+      await expect(piGuiTools.getByRole("switch", { name: toggle })).toHaveCount(0);
     }
 
-    const mcpSwitch = addons.getByRole("switch", { name: "Enable MCP servers" });
+    const mcpSwitch = addons.getByRole("switch", { name: /^(Enable|启用) MCP servers$/ });
     await mcpSwitch.click();
     await expect(mcpSwitch).not.toBeChecked();
     await expect(mcpSwitch).toBeEnabled();

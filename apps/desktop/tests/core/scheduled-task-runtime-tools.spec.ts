@@ -51,7 +51,9 @@ test("create_scheduled_task tool writes the same catalog the list UI reads", asy
     expect(listed.content[0]?.text).toContain("Tool ping");
     await window.getByTestId("sidebar-scheduled").click();
     await expect(window.getByTestId("scheduled-task-row")).toContainText("Tool ping");
-    await expect(window.getByTestId("scheduled-task-row")).toContainText("Every 15 minutes");
+    await expect(window.getByTestId("scheduled-task-row")).toContainText(
+      /Every 15 minutes|每 15 分钟/,
+    );
   } finally {
     await harness.close();
   }

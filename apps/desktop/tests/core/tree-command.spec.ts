@@ -103,7 +103,7 @@ test("opens /tree from the composer, navigates branches, and blocks it on the ne
     await expect(window.getByTestId("slash-menu")).toHaveCount(0);
     await newThreadComposer.press("Enter");
     await expect(window.getByTestId("composer-error-banner")).toContainText(
-      "/tree is only available inside an existing session.",
+      /\/tree is only available inside an existing session\.|\/tree 只能在已有会话记录内使用。/,
     );
     await expect(newThreadComposer).toHaveValue("/tree");
   } finally {

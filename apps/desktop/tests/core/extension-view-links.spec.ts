@@ -111,13 +111,15 @@ test("an extension view opens https links and threads beside its own", async () 
       .poll(openedLinks)
       .toEqual(["https://github.com/minghinmatthewlam/pi-gui/pull/220"]);
     await frame.getByRole("button", { name: "Open plain link" }).click();
-    await expect(status).toHaveText("Extensions can only open https links");
+    await expect(status).toHaveText(/Extensions can only open https links|扩展只能打开 https 链接/);
     expect(await openedLinks()).toHaveLength(1);
 
     // Only threads in the view's own folder open; the app stays where it was otherwise.
     await frame.getByLabel("Thread id").fill(otherFolderThread);
     await frame.getByRole("button", { name: "Open thread" }).click();
-    await expect(status).toHaveText("That thread isn't open in this folder");
+    await expect(status).toHaveText(
+      /That thread isn't open in this folder|该会话未在此文件夹中打开/,
+    );
     await expect(window.locator(".chat-header__title")).toHaveText("Current thread");
 
     await frame.getByLabel("Thread id").fill(earlierThread);

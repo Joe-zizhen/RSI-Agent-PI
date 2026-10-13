@@ -156,7 +156,7 @@ test("Branch compares committed revisions and reports a missing base explicitly"
     await expect(patch).not.toContainText("unsaved working revision");
     await expect(panel.getByRole("button", { name: /^(暂存|已暂存|取消暂存)$/ })).toHaveCount(0);
     await fileRow(panel, "result.txt").getByRole("checkbox").click();
-    await expect(panel.getByTestId("diff-panel-counter")).toHaveText("已审查 1 / 1");
+    await expect(panel.getByTestId("diff-panel-counter")).toHaveText(/^(Reviewed|已审查)1 \/ 1$/);
 
     await chooseReviewScope(window, "未提交");
     await expect(panel.locator(".diff-panel__file")).toHaveCount(2);
@@ -208,7 +208,7 @@ test("an outdated comparison cannot mark or stage newer working content", async 
       "changed after comparison",
     );
     await fileRow(panel, "result.txt").getByRole("checkbox").click();
-    await expect(panel.getByTestId("diff-panel-counter")).toHaveText("已审查 1 / 1");
+    await expect(panel.getByTestId("diff-panel-counter")).toHaveText(/^(Reviewed|已审查)1 \/ 1$/);
   } finally {
     await harness.close();
   }
@@ -322,7 +322,9 @@ test("an existing task without captures shows Last turn as unavailable", async (
   try {
     await chooseReviewScope(window, "上一轮");
     await expect(panel.getByTestId("changed-files-unavailable")).toBeVisible();
-    await expect(panel.getByTestId("changed-files-unavailable")).toContainText(/captur|turn/i);
+    await expect(panel.getByTestId("changed-files-unavailable")).toContainText(
+      /captur|turn|捕获|轮次/i,
+    );
     await expect(panel.locator(".diff-panel__file")).toHaveCount(0);
     await expect(panel.getByText("无变更", { exact: true })).toHaveCount(0);
     await chooseReviewScope(window, "未提交");

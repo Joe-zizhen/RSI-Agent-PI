@@ -55,7 +55,7 @@ test("a second pi-gui process cannot open a thread the first one holds", async (
     await expect(secondRow).toBeVisible({ timeout: 20_000 });
     await secondRow.click();
     await expect(secondWindow.getByTestId("composer-error-banner")).toContainText(
-      "This session is currently open in another pi instance",
+      /This session is currently open in another pi instance|此会话记录当前在 另一个 pi 实例 打开/,
     );
 
     const [leasePath] = await findLeaseFiles(agentDir);

@@ -147,7 +147,7 @@ test("selects pinned threads first with 1-9 and paints badges while the modifier
 
     const charlieRow = window.locator(".session-row", { hasText: "Charlie" });
     await charlieRow.hover();
-    await window.getByRole("button", { name: /Pin Charlie/ }).click();
+    await window.getByRole("button", { name: /(Pin|置顶) Charlie/ }).click();
 
     const pinned = window.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ });
     await expect(pinned.locator(".session-row__title")).toHaveText(["Charlie"]);
@@ -429,7 +429,7 @@ test("caps a long Last 7 Days bucket and sorts the folder by last send", async (
     ]);
     await window
       .locator(".workspace-group")
-      .getByRole("button", { name: `Show more ${workspaceName}` })
+      .getByRole("button", { name: new RegExp(`^(Show more |展开更多 )${workspaceName}$`) })
       .click();
     await expect(folderThreads).toHaveText([
       "Sent later",

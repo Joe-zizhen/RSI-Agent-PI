@@ -272,7 +272,7 @@ test("providers flags the default model's provider when it is not connected", as
     const available = window.getByTestId("settings-available-providers");
     await expect(available.locator(".settings-row")).toHaveCount(8);
     await expect(available.locator(".settings-row").first()).toContainText("OAuth");
-    await window.getByRole("button", { name: /^Show \d+ more$/ }).click();
+    await window.getByRole("button", { name: /^(Show ?\d+ ?more|再显示\d+ ?个)$/ }).click();
     await expect.poll(() => available.locator(".settings-row").count()).toBeGreaterThan(8);
 
     const attention = window.locator(".settings-section", {

@@ -93,7 +93,9 @@ test("creates and selects a worktree-backed workspace from the desktop UI", asyn
     }
 
     await expect(window.locator(".topbar__session")).toContainText(worktreeWorkspace.name);
-    await expect(window.locator(".empty-panel")).toContainText("Create a thread for this folder");
+    await expect(window.locator(".empty-panel")).toContainText(
+      /Create a thread for this folder|为此文件夹创建会话/,
+    );
     await expect(window.locator(".empty-panel")).not.toContainText("/Users/");
 
     await window
@@ -350,7 +352,11 @@ test("a git worktree the user opens is its own folder and nests the worktrees ma
     }
 
     // The user's own checkout offers to make a worktree, never to delete itself.
-    await window.getByRole("button", { name: `Workspace actions for ${checkout.name}` }).click();
+    await window
+      .getByRole("button", {
+        name: new RegExp(`^(Workspace actions for ${checkout.name}|${checkout.name} 的项目操作)$`),
+      })
+      .click();
     await expect(window.getByRole("button", { name: "移除工作树" })).toHaveCount(0);
     await window.getByRole("button", { name: "创建永久工作树" }).click();
 

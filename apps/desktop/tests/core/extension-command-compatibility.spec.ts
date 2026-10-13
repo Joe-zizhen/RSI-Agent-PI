@@ -90,7 +90,7 @@ test("fails fast for unsupported handoff-like commands and learns terminal-only 
     await composer.press("Enter");
 
     await expect(composerError).toContainText(
-      "/handoff-gui-test requires terminal-only custom UI and is not supported in pi-gui yet.",
+      /\/handoff-gui-test (requires terminal-only custom UI and is not supported in RSI-Agent-PI yet|需要终端专属的 自定义界面，RSI-Agent-PI 暂不支持)/,
     );
     await expect(window.getByTestId("extension-dialog")).toHaveCount(0);
     await expect(window.getByTestId("extension-notices")).not.toContainText(
@@ -105,14 +105,14 @@ test("fails fast for unsupported handoff-like commands and learns terminal-only 
       .toBe(sessionCountBefore);
 
     await composer.fill("/handoff-g");
-    await expect(window.getByTestId("slash-menu")).toContainText("仅限终端");
+    await expect(window.getByTestId("slash-menu")).toContainText(/Terminal only|仅终端可用/);
 
     const transcriptCountBeforeSecondAttempt =
       (await getSelectedTranscript(window))?.transcript.length ?? 0;
     await composer.fill("/handoff-gui-test local block");
     await composer.press("Enter");
     await expect(composerError).toContainText(
-      "/handoff-gui-test requires terminal-only custom UI and is not supported in pi-gui yet.",
+      /\/handoff-gui-test (requires terminal-only custom UI and is not supported in RSI-Agent-PI yet|需要终端专属的 自定义界面，RSI-Agent-PI 暂不支持)/,
     );
     await expect
       .poll(async () => (await getSelectedTranscript(window))?.transcript.length ?? 0)
@@ -178,7 +178,7 @@ test("persists learned terminal-only command compatibility across relaunch", asy
     await composer.fill("/handoff-gui-test persist this");
     await composer.press("Enter");
     await expect(firstWindow.getByTestId("composer-error-banner")).toContainText(
-      "/handoff-gui-test requires terminal-only custom UI and is not supported in pi-gui yet.",
+      /\/handoff-gui-test (requires terminal-only custom UI and is not supported in RSI-Agent-PI yet|需要终端专属的 自定义界面，RSI-Agent-PI 暂不支持)/,
     );
   } finally {
     await firstHarness.close();
@@ -210,7 +210,7 @@ test("persists learned terminal-only command compatibility across relaunch", asy
       .toBe(true);
     const composer = secondWindow.getByTestId("composer");
     await composer.fill("/handoff-g");
-    await expect(secondWindow.getByTestId("slash-menu")).toContainText("仅限终端");
+    await expect(secondWindow.getByTestId("slash-menu")).toContainText(/Terminal only|仅终端可用/);
   } finally {
     await secondHarness.close();
   }

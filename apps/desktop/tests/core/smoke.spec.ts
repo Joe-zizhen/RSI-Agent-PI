@@ -52,7 +52,9 @@ test("boots an existing workspace and starts a new thread through the real UI", 
     const prompt = window.getByLabel("新建会话输入");
     await expect(prompt).toBeVisible();
     await expect(prompt).toBeFocused();
-    await expect(window.getByRole("heading", { name: "Let's build" })).toBeVisible();
+    await expect(
+      window.getByRole("heading", { name: /^(Start building|开始构建)$/ }),
+    ).toBeVisible();
     await prompt.fill(promptText);
 
     await window.getByRole("button", { name: "开始会话" }).click();

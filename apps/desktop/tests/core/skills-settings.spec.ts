@@ -126,7 +126,9 @@ test("skills and extensions live inside settings as one tabbed page", async () =
     await window.keyboard.press("ArrowRight");
     const extensionsSurface = window.getByTestId("extensions-surface");
     await expect(extensionsSurface).toBeVisible();
-    await expect(extensionsSurface.getByRole("tab", { name: /^(Extensions|扩展)\s*\d+$/ })).toBeFocused();
+    await expect(
+      extensionsSurface.getByRole("tab", { name: /^(Extensions|扩展)\s*\d+$/ }),
+    ).toBeFocused();
     await expect(extensionsSurface.getByLabel(/^(Search extensions|搜索扩展)$/)).toHaveValue("");
 
     await window.getByRole("button", { name: "通用", exact: true }).click();

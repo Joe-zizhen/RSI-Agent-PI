@@ -1,13 +1,15 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   createNamedThread,
+  getDesktopState,
   launchDesktop,
   makeUserDataDir,
   makeWorkspace,
   seedAgentDir,
   selectSession,
+  waitForSessionByTitle,
   waitForTimelineLayout,
   waitForWorkspaceByPath,
   writeProjectExtension,
@@ -83,6 +85,27 @@ export default function ciButtons(pi) {
 }
 `;
 
+// Extension commands register per session after launch. An unregistered /command is sent as
+// plain chat text instead, so wait for registration before submitting one.
+async function waitForSessionCommand(
+  window: Page,
+  workspacePath: string,
+  sessionTitle: string,
+  commandName: string,
+): Promise<void> {
+  const workspace = await waitForWorkspaceByPath(window, workspacePath);
+  const session = await waitForSessionByTitle(window, workspace.id, sessionTitle);
+  await expect
+    .poll(
+      async () =>
+        (await getDesktopState(window)).sessionCommandsBySession[
+          `${workspace.id}:${session.id}`
+        ]?.some((command) => command.name === commandName) ?? false,
+      { timeout: 15_000 },
+    )
+    .toBe(true);
+}
+
 test("card buttons run through main: a keyed card updates in place, and non-extension commands are refused", async () => {
   test.setTimeout(120_000);
   const userDataDir = await makeUserDataDir();
@@ -126,6 +149,7 @@ test("card buttons run through main: a keyed card updates in place, and non-exte
     await createNamedThread(window, THREAD_TITLE);
     const composer = window.getByTestId("composer");
     await composer.click();
+    await waitForSessionCommand(window, workspacePath, THREAD_TITLE, "ci");
     await composer.fill("/ci ");
     await composer.press("Enter");
     await expect(composer).toHaveValue("");
@@ -164,7 +188,7 @@ test("card buttons run through main: a keyed card updates in place, and non-exte
     await card.getByRole("button", { name: /Rerun CI/ }).click();
     await expect(card).toHaveCount(1);
     await expect(card).toContainText("CI passed on main");
-    await expect(card.locator(".extension-card__tone")).toHaveText("Passed");
+    await expect(card.locator(".extension-card__tone")).toHaveText(/^(Passed|通过)$/);
     await expect(composer).toHaveValue("My own draft\nFix the failing search test.");
     await expect(window.locator(".timeline-item--assistant")).toHaveCount(0);
     await expect(userRows).toHaveCount(userRowsBefore);
@@ -182,6 +206,7 @@ test("card buttons run through main: a keyed card updates in place, and non-exte
 
     // Back to the failing card: its open-file button opens the checked file at the line.
     const composer = window.getByTestId("composer");
+    await waitForSessionCommand(window, workspacePath, THREAD_TITLE, "ci");
     await composer.fill("/ci ");
     await composer.press("Enter");
     await expect(card).toHaveCount(1);

@@ -167,7 +167,7 @@ test("extension cards appear live beside a streaming reply, survive relaunch onc
     await expect(assistant).toHaveText(["Checking CI."]);
     await expect(card).toHaveCount(1);
     await expect(card).toContainText("CI failed on main");
-    await expect(card.locator(".extension-card__tone")).toHaveText("Failed");
+    await expect(card.locator(".extension-card__tone")).toHaveText(/^(Failed|失败)$/);
     await expect(window.getByTestId("send")).toHaveAttribute("aria-label", "停止运行");
     // Where the session file has it: pi saves the reply after the card, when the reply ends.
     await waitForTimelineLayout(window);
@@ -183,7 +183,7 @@ test("extension cards appear live beside a streaming reply, survive relaunch onc
     await sendComposer(window, "/deploy ");
     await expect(card).toHaveCount(2);
     await expect(card.nth(1)).toContainText("Deployed to production");
-    await expect(card.nth(1).locator(".extension-card__tone")).toHaveText("Passed");
+    await expect(card.nth(1).locator(".extension-card__tone")).toHaveText(/^(Passed|通过)$/);
 
     await sendComposer(window, "/broken-card ");
     const broken = window.getByTestId("timeline-custom-message");

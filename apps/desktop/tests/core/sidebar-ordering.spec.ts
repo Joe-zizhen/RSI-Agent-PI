@@ -100,7 +100,7 @@ test("pinned sidebar threads stay above history, persist across relaunch, and un
 
     const threadARow = window.locator(".session-row", { hasText: "Thread A" });
     await threadARow.hover();
-    await window.getByRole("button", { name: /Pin Thread A/ }).click();
+    await window.getByRole("button", { name: /(Pin|置顶) Thread A/ }).click();
 
     const pinnedSection = window.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ });
     await expect(pinnedSection).toBeVisible();
@@ -121,12 +121,16 @@ test("pinned sidebar threads stay above history, persist across relaunch, and un
 
     const reopenedWindow = await harness.firstWindow();
     await waitForWorkspaceByPath(reopenedWindow, workspacePath);
-    const reopenedPinnedSection = reopenedWindow.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ });
+    const reopenedPinnedSection = reopenedWindow.getByRole("region", {
+      name: /^(Pinned threads|已置顶会话)$/,
+    });
     await expect(reopenedPinnedSection).toBeVisible();
     await expect(reopenedPinnedSection.locator(".session-row__title")).toHaveText(["Thread A"]);
 
-    await reopenedPinnedSection.getByRole("button", { name: /Unpin Thread A/ }).click();
-    await expect(reopenedWindow.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ })).toHaveCount(0);
+    await reopenedPinnedSection.getByRole("button", { name: /(Unpin|取消置顶) Thread A/ }).click();
+    await expect(
+      reopenedWindow.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ }),
+    ).toHaveCount(0);
 
     await expect
       .poll(async () => {
@@ -194,18 +198,20 @@ test("pinned sidebar threads can be reordered and repinned threads return to the
 
     const reopenedWindow = await harness.firstWindow();
     await waitForWorkspaceByPath(reopenedWindow, workspacePath);
-    const reopenedPinnedSection = reopenedWindow.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ });
+    const reopenedPinnedSection = reopenedWindow.getByRole("region", {
+      name: /^(Pinned threads|已置顶会话)$/,
+    });
     await expect(reopenedPinnedSection.locator(".session-row__title")).toHaveText([
       "Thread A",
       "Thread B",
     ]);
 
-    await reopenedPinnedSection.getByRole("button", { name: /Unpin Thread A/ }).click();
+    await reopenedPinnedSection.getByRole("button", { name: /(Unpin|取消置顶) Thread A/ }).click();
     await expect(reopenedPinnedSection.locator(".session-row__title")).toHaveText(["Thread B"]);
 
     const threadAHistoryRow = reopenedWindow.locator(".session-row", { hasText: "Thread A" });
     await threadAHistoryRow.hover();
-    await reopenedWindow.getByRole("button", { name: /Pin Thread A/ }).click();
+    await reopenedWindow.getByRole("button", { name: /(Pin|置顶) Thread A/ }).click();
     await expect(reopenedPinnedSection.locator(".session-row__title")).toHaveText([
       "Thread A",
       "Thread B",
@@ -218,13 +224,13 @@ test("pinned sidebar threads can be reordered and repinned threads return to the
 async function pinThread(window: Page, title: string): Promise<void> {
   const row = window.locator(".session-row", { hasText: title });
   await row.hover();
-  await window.getByRole("button", { name: new RegExp(`Pin ${title}`) }).click();
+  await window.getByRole("button", { name: new RegExp(`(Pin|置顶) ${title}`) }).click();
   // Pinning round-trips through the main process before the row moves into the
   // Pinned section. Wait for that move so the next hover isn't lost to the shift.
   await expect(
     window
       .getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ })
-      .getByRole("button", { name: new RegExp(`Unpin ${title}`) }),
+      .getByRole("button", { name: new RegExp(`(Unpin|取消置顶) ${title}`) }),
   ).toHaveAttribute("aria-pressed", "true");
 }
 

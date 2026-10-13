@@ -135,7 +135,7 @@ test("the GitHub example reads gh only when opened, opens links and drafts a fix
       .toEqual(["https://github.com/minghinmatthewlam/pi-gui/pull/223"]);
 
     // Start thread opens an editable draft in a new thread, never a sent message.
-    await frame.getByRole("button", { name: "开始会话", exact: true }).click();
+    await frame.getByRole("button", { name: "Start thread", exact: true }).click();
     await expect(window.locator(".chat-header__title")).toHaveText("Fix failing CI on PR #223");
     const composer = window.getByTestId("composer");
     await expect(composer).toHaveValue(/- desktop-package-linux\n- typecheck/);

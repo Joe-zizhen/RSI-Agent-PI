@@ -238,7 +238,10 @@ test("ensureWindowsShellPath clears a stale shellPath and rediscovers", async ()
   });
 
   // Stale shellPath with a discoverable replacement: the key is replaced, never kept stale.
-  await writeFile(settingsPath, '{"defaultThinkingLevel":"max","shellPath":"C:\\\\gone\\\\bash.exe"}\n');
+  await writeFile(
+    settingsPath,
+    '{"defaultThinkingLevel":"max","shellPath":"C:\\\\gone\\\\bash.exe"}\n',
+  );
   const replaced = await ensureWindowsShellPath(agentDir, { platform: "win32", deps });
   expect(replaced).toEqual({ written: true, shellPath: bash });
   expect(JSON.parse(await readFile(settingsPath, "utf8"))).toEqual({
@@ -247,7 +250,10 @@ test("ensureWindowsShellPath clears a stale shellPath and rediscovers", async ()
   });
 
   // Stale shellPath with no discovery hit: the key is deleted so pi falls back to its own search.
-  await writeFile(settingsPath, '{"defaultThinkingLevel":"max","shellPath":"C:\\\\gone\\\\bash.exe"}\n');
+  await writeFile(
+    settingsPath,
+    '{"defaultThinkingLevel":"max","shellPath":"C:\\\\gone\\\\bash.exe"}\n',
+  );
   const cleared = await ensureWindowsShellPath(agentDir, {
     platform: "win32",
     deps: fakeDeps({ existing: ["C:\\"] }),

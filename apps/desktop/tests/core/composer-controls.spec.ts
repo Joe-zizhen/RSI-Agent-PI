@@ -121,7 +121,9 @@ test("supports keyboard shortcuts, slash menus, and topbar controls through the 
     await composer.press("ArrowDown");
     await composer.press("Enter");
     await expect(optionsMenu).toHaveCount(0);
-    await expect(window.getByTestId("transcript")).toContainText("Thinking set to max");
+    await expect(window.getByTestId("transcript")).toContainText(
+      /Thinking set to max|思考力度已设置为 max/,
+    );
     await expect(
       window.locator(".composer").getByRole("button", { name: "max", exact: true }),
     ).toBeVisible();

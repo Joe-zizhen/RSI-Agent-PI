@@ -487,7 +487,9 @@ test("keeps one resizable width across tools, chooser, tasks, and restart", asyn
     await selectSession(window, TASK_A);
     await addTool(window, "Terminal");
     const activeTab = (await window.getByRole("tab", { name: "终端", exact: true }).boundingBox())!;
-    const strip = (await window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).boundingBox())!;
+    const strip = (await window
+      .getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ })
+      .boundingBox())!;
     expect(activeTab.x).toBeGreaterThanOrEqual(strip.x);
     expect(activeTab.x + activeTab.width).toBeLessThanOrEqual(strip.x + strip.width + 1);
     await handle.focus();

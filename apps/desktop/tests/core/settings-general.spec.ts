@@ -82,8 +82,8 @@ test("settings nav search filters sections, opens the first match and clears on 
     await window.keyboard.press(desktopShortcut(","));
     const surface = window.getByTestId("settings-surface");
     await expect(surface).toBeVisible();
-    const nav = surface.getByRole("navigation", { name: "Settings sections" });
-    const search = surface.getByLabel("Search settings");
+    const nav = surface.getByRole("navigation", { name: /^(Settings sections|设置分区)$/ });
+    const search = surface.getByLabel(/Search settings|搜索设置/);
 
     await search.fill("dark");
     await expect(nav.getByRole("button")).toHaveText(["外观"]);
