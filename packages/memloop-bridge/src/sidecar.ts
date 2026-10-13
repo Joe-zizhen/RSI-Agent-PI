@@ -955,9 +955,7 @@ export class MemloopSidecar {
     return { deleted: rec.deleted === true };
   }
 
-  async noticesFlush(args: {
-    episode_id?: string | undefined;
-  }): Promise<NoticesFlushResult> {
+  async noticesFlush(args: { episode_id?: string | undefined }): Promise<NoticesFlushResult> {
     const record: Record<string, unknown> = {};
     if (args.episode_id !== undefined) record.episode_id = args.episode_id;
     const raw = await this.request<unknown>("notices_flush", record);
@@ -1050,9 +1048,7 @@ export class MemloopSidecar {
   }
 
   /** The contract draft behind the confirm path: commands 全文 + hash. */
-  async promoteRequest(args: {
-    claim_id: string | number;
-  }): Promise<PromoteRequestResult> {
+  async promoteRequest(args: { claim_id: string | number }): Promise<PromoteRequestResult> {
     const raw = await this.request<unknown>("promote_request", {
       claim_id: args.claim_id,
     });
@@ -1099,23 +1095,19 @@ export class MemloopSidecar {
           count: typeof r.count === "number" ? r.count : 0,
         };
       }),
-      false_triggers: (Array.isArray(rec.false_triggers) ? rec.false_triggers : []).map(
-        (item) => {
-          const r = asRecord(item);
-          return {
-            claim_id: r.claim_id as string | number,
-            key: typeof r.key === "string" ? r.key : null,
-            episode_id: typeof r.episode_id === "string" ? r.episode_id : null,
-          };
-        },
-      ),
+      false_triggers: (Array.isArray(rec.false_triggers) ? rec.false_triggers : []).map((item) => {
+        const r = asRecord(item);
+        return {
+          claim_id: r.claim_id as string | number,
+          key: typeof r.key === "string" ? r.key : null,
+          episode_id: typeof r.episode_id === "string" ? r.episode_id : null,
+        };
+      }),
     };
   }
 
   /** P3 /memory show backing (plan 5.3): one claim's full disclosure. */
-  async claimDetail(args: {
-    claim_id: string | number;
-  }): Promise<ClaimDetailResult> {
+  async claimDetail(args: { claim_id: string | number }): Promise<ClaimDetailResult> {
     const raw = await this.request<unknown>("claim_detail", {
       claim_id: args.claim_id,
     });
@@ -1382,8 +1374,7 @@ function normalizeNotices(value: unknown[]): NoticeRow[] {
 }
 
 function normalizeVerifyStatus(value: unknown): VerifyStatus | undefined {
-  return value === "ok" || value === "falsified" || value === "unknown" ||
-    value === "hearsay"
+  return value === "ok" || value === "falsified" || value === "unknown" || value === "hearsay"
     ? value
     : undefined;
 }

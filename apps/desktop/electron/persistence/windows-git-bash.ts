@@ -85,11 +85,7 @@ export function findGitBashPath(deps: GitBashFinderDeps = defaultDeps()): string
     const stdout = deps.regQuery(key);
     const installPath = stdout === undefined ? undefined : parseGitForWindowsInstallPath(stdout);
     const candidate = installPath && win32.join(installPath, "bin", "bash.exe");
-    if (
-      candidate &&
-      deps.fileExists(candidate) &&
-      isPairedGitBash(candidate, deps.fileExists)
-    ) {
+    if (candidate && deps.fileExists(candidate) && isPairedGitBash(candidate, deps.fileExists)) {
       return candidate;
     }
   }

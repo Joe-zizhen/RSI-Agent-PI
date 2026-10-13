@@ -344,7 +344,9 @@ contextBridge.exposeInMainWorld("piApp", {
       apiKey,
     ) as Promise<DesktopAppState>,
   listCustomProviders: () =>
-    ipcRenderer.invoke(desktopIpc.listCustomProviders) as Promise<readonly CustomProviderListEntry[]>,
+    ipcRenderer.invoke(desktopIpc.listCustomProviders) as Promise<
+      readonly CustomProviderListEntry[]
+    >,
   setCustomProvider: (workspaceId: string, config: CustomProviderConfig) =>
     ipcRenderer.invoke(
       desktopIpc.setCustomProvider,

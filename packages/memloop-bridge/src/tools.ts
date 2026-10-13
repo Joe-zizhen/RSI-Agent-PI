@@ -288,10 +288,7 @@ function createMemorySignalTool(ensureClient: EnsureClient, getLastUserInput: ()
   });
 }
 
-function formatCommandsBlock(
-  commands: string[],
-  hash: string | null | undefined,
-): string {
+function formatCommandsBlock(commands: string[], hash: string | null | undefined): string {
   const body =
     commands.length > 0 ? commands.map((c) => `  ${c}`).join("\n") : t("  (none)", "  （无）");
   return [

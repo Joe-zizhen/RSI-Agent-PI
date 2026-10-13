@@ -552,7 +552,11 @@ async function main() {
     assert.ok(hit, "the proven card must be a promotion candidate");
     assert.equal(hit.suggest, "confirm", "commands non-empty forces confirm");
     const draft = await client.promoteRequest({ claim_id: pid });
-    assert.deepEqual(draft.draft.commands, ["npm run verify"], "draft carries the full command list");
+    assert.deepEqual(
+      draft.draft.commands,
+      ["npm run verify"],
+      "draft carries the full command list",
+    );
     assert.equal(draft.draft.content_hash?.length, 64, "draft carries the content hash");
     // a pending draft must not disarm the guard (plan 5.2)
     const g2 = await client.guard({
@@ -600,7 +604,10 @@ async function main() {
     assert.equal(det.claim?.id, pid);
     assert.equal(det.contract?.path, yes.path);
     assert.equal(det.contract?.status, "active");
-    assert.ok(det.chain.some((r) => r.id === pid), "chain lists the card");
+    assert.ok(
+      det.chain.some((r) => r.id === pid),
+      "chain lists the card",
+    );
     // /memory audit backing: both arrays come back from the real traces
     const aud = await client.audit();
     assert.ok(Array.isArray(aud.missed), "audit missed must be an array");
@@ -777,10 +784,22 @@ async function main() {
 
     // (1) model passes approved=true with no dialog surface: refused
     let confirmCalls = 0;
-    const denied = await promote.execute("tc-k1", { claim_id: pid, approved: true }, undefined, undefined, {
-      hasUI: false,
-      ui: { notify: () => {}, confirm: async () => { confirmCalls += 1; return true; } },
-    });
+    const denied = await promote.execute(
+      "tc-k1",
+      { claim_id: pid, approved: true },
+      undefined,
+      undefined,
+      {
+        hasUI: false,
+        ui: {
+          notify: () => {},
+          confirm: async () => {
+            confirmCalls += 1;
+            return true;
+          },
+        },
+      },
+    );
     assert.equal(confirmCalls, 0, "no dialog may be skipped into a commit");
     const deniedText = denied.content[0].text;
     assert.ok(
@@ -791,10 +810,22 @@ async function main() {
 
     // (2) model passes approved=true, the user rejects in the dialog
     confirmCalls = 0;
-    const rejected = await promote.execute("tc-k2", { claim_id: pid, approved: true }, undefined, undefined, {
-      hasUI: true,
-      ui: { notify: () => {}, confirm: async () => { confirmCalls += 1; return false; } },
-    });
+    const rejected = await promote.execute(
+      "tc-k2",
+      { claim_id: pid, approved: true },
+      undefined,
+      undefined,
+      {
+        hasUI: true,
+        ui: {
+          notify: () => {},
+          confirm: async () => {
+            confirmCalls += 1;
+            return false;
+          },
+        },
+      },
+    );
     assert.equal(confirmCalls, 1, "the user confirmation dialog must gate the commit");
     const rejectedText = rejected.content[0].text;
     assert.ok(
@@ -815,7 +846,10 @@ async function main() {
         },
       },
     });
-    assert.ok(confirmMessage.includes("npm run verify"), "the dialog must show the full command list");
+    assert.ok(
+      confirmMessage.includes("npm run verify"),
+      "the dialog must show the full command list",
+    );
     const approvedText = approved.content[0].text;
     assert.ok(
       approvedText.includes("已批准升格") || approvedText.includes("Promotion approved"),
@@ -829,10 +863,7 @@ async function main() {
     const body = readFileSync(skillPath, "utf8").replace(/\r\n/g, "\n");
     const landedHash = createHash("sha256").update(body).digest("hex");
     const hashes = approvedText.match(/[0-9a-f]{64}/g) ?? [];
-    assert.ok(
-      hashes.includes(landedHash),
-      "the landed bytes must match the approved content hash",
-    );
+    assert.ok(hashes.includes(landedHash), "the landed bytes must match the approved content hash");
     assert.ok(/[0-9a-f]{64}/.test(confirmMessage), "the dialog must show the content hash");
 
     // (4) the hash gate: a stale or missing hash is refused, nothing written
@@ -957,7 +988,7 @@ async function main() {
       // single consumption: the next tool result carries no repeat
       const res2 = await onToolResult({ ...event, toolCallId: "it-l-tr2" }, hookCtx);
       assert.ok(
-        !((res2?.content?.[0]?.text ?? "").includes("<memloop-notice>")),
+        !(res2?.content?.[0]?.text ?? "").includes("<memloop-notice>"),
         "deliverable notices consume once",
       );
       // the hook owns a self-built client: release its sidecar with the

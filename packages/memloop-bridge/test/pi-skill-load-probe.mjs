@@ -112,7 +112,8 @@ const FIXTURES = [
     frontmatter: {
       name: "exp-p43-load",
       title: "加载探针 A",
-      description: "加载探测用契约 A。用于验证 pi 是否接受自定义 frontmatter。何时用：仅测试。何时不要用：生产。",
+      description:
+        "加载探测用契约 A。用于验证 pi 是否接受自定义 frontmatter。何时用：仅测试。何时不要用：生产。",
       version: 1,
       status: "active",
       source_claim: "probe-claim-a",
@@ -128,7 +129,8 @@ const FIXTURES = [
     frontmatter: {
       name: "exp-p43-cmds",
       title: "加载探针 B",
-      description: "加载探测用契约 B。用于验证含命令清单段的契约能否加载。何时用：仅测试。何时不要用：生产。",
+      description:
+        "加载探测用契约 B。用于验证含命令清单段的契约能否加载。何时用：仅测试。何时不要用：生产。",
       version: 1,
       status: "active",
       source_claim: "probe-claim-b",
@@ -160,7 +162,8 @@ const FIXTURES = [
     frontmatter: {
       name: "exp-p43-superseded",
       title: "加载探针 C2",
-      description: "加载探测用契约 C2。模拟原地打作废标记的契约。何时用：仅测试。何时不要用：生产。",
+      description:
+        "加载探测用契约 C2。模拟原地打作废标记的契约。何时用：仅测试。何时不要用：生产。",
       version: 2,
       status: "superseded",
       source_claim: "probe-claim-c2",
@@ -359,7 +362,10 @@ try {
   // Observable 1: the usable skill set as pi reports it over RPC.
   const commandsRes = await rpc.send({ type: "get_commands" });
   const commands = commandsRes.data?.commands;
-  assert.ok(Array.isArray(commands), `get_commands must return commands, got ${JSON.stringify(commandsRes.data)}`);
+  assert.ok(
+    Array.isArray(commands),
+    `get_commands must return commands, got ${JSON.stringify(commandsRes.data)}`,
+  );
   const skillEntries = commands.filter((c) => c.source === "skill");
   const viaCommands = new Map(skillEntries.map((c) => [c.name.replace(/^skill:/, ""), c]));
 
@@ -408,8 +414,12 @@ try {
   const c2 = facts.get("C2");
   console.log(`  (a) custom frontmatter loads: ${a.viaCommands && a.viaPrompt ? "YES" : "NO"}`);
   console.log(`  (b) ## commands section loads: ${b.viaCommands && b.viaPrompt ? "YES" : "NO"}`);
-  console.log(`  (c) _retired/ excluded by loader: ${c1.viaCommands || c1.viaPrompt ? "NO" : "YES"}`);
-  console.log(`  (c) status:superseded excluded by loader: ${c2.viaCommands || c2.viaPrompt ? "NO" : "YES"}`);
+  console.log(
+    `  (c) _retired/ excluded by loader: ${c1.viaCommands || c1.viaPrompt ? "NO" : "YES"}`,
+  );
+  console.log(
+    `  (c) status:superseded excluded by loader: ${c2.viaCommands || c2.viaPrompt ? "NO" : "YES"}`,
+  );
   if (rpc.stderr.trim() !== "") {
     console.log("pi stderr:");
     console.log(rpc.stderr.trim());
@@ -438,17 +448,12 @@ try {
   const dump2 = existsSync(dumpPath2) ? readFileSync(dumpPath2, "utf8") : "";
   assert.ok(dump2.length > 0, "phase 2 faux dump must capture the request transcript");
   const ignoreFacts = {
-    archived:
-      viaCommands2.has("exp-p43-retired") && dump2.includes("<name>exp-p43-retired</name>"),
+    archived: viaCommands2.has("exp-p43-retired") && dump2.includes("<name>exp-p43-retired</name>"),
     live: viaCommands2.has("exp-p43-load") && dump2.includes("<name>exp-p43-load</name>"),
   };
   console.log("probe (d) after .pi/skills/.ignore gains _retired/:");
-  console.log(
-    `  archived exp-p43-retired  -> ${ignoreFacts.archived ? "LOADED" : "NOT LOADED"}`,
-  );
-  console.log(
-    `  live exp-p43-load (control)  -> ${ignoreFacts.live ? "LOADED" : "NOT LOADED"}`,
-  );
+  console.log(`  archived exp-p43-retired  -> ${ignoreFacts.archived ? "LOADED" : "NOT LOADED"}`);
+  console.log(`  live exp-p43-load (control)  -> ${ignoreFacts.live ? "LOADED" : "NOT LOADED"}`);
   console.log(
     `  (d) .ignore excludes the archived contract: ${!ignoreFacts.archived && ignoreFacts.live ? "YES" : "NO"}`,
   );

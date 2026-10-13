@@ -57,7 +57,9 @@ async function showDetail(
       return;
     }
     const lines: string[] = [formatClaim(detail.claim)];
-    const judged = detail.evidence.filter((row) => row.outcome !== undefined && row.outcome !== null);
+    const judged = detail.evidence.filter(
+      (row) => row.outcome !== undefined && row.outcome !== null,
+    );
     const losses = judged.filter((row) => row.outcome === false).length;
     const recent = judged
       .slice(-3)
@@ -72,7 +74,10 @@ async function showDetail(
     );
     lines.push(t(`  recent verdicts: ${recent || "—"}`, `  最近判决：${recent || "—"}`));
     const chain = detail.chain
-      .map((row) => `${row.id}(${row.status ?? "?"}${row.status_reason ? `: ${row.status_reason}` : ""})`)
+      .map(
+        (row) =>
+          `${row.id}(${row.status ?? "?"}${row.status_reason ? `: ${row.status_reason}` : ""})`,
+      )
       .join(" -> ");
     lines.push(t(`Lineage: ${chain || "—"}`, `谱系链：${chain || "—"}`));
     if (detail.contract !== null && detail.contract !== undefined) {
