@@ -58,6 +58,8 @@ class Policy:
     w_overlap: float = 1.0
     w_confidence: float = 2.0
     w_recency: float = 1.0
+    w_semantic: float = 0.3
+    semantic_floor: float = 0.3
     hearsay_penalty: float = 0.5
     limit: int = 8
     # lifecycle thresholds
@@ -83,14 +85,20 @@ class Policy:
         created_at: float,
         ctx: str,
         now: float,
+        sem: float | None = None,
     ) -> float:
         overlap = match_count(f"{key} {text}", ctx)
-        if overlap == 0:
+        if sem is None:
+            if overlap == 0:
+                return 0.0
+        elif overlap == 0 and sem < self.semantic_floor:
             return 0.0
         recency = 1.0 / (1.0 + max(0.0, now - created_at) / 86400.0)
         score = (self.w_overlap * overlap
                  + self.w_confidence * confidence
                  + self.w_recency * recency)
+        if sem is not None:
+            score += self.w_semantic * sem
         if hearsay:
             score -= self.hearsay_penalty
         return score

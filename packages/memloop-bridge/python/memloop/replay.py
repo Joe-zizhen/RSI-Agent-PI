@@ -229,6 +229,7 @@ def _rank(policy: Policy, ep: Episode) -> list[str]:
             key=c["key"], text=c["text"], confidence=c["confidence"],
             hearsay=c["hearsay"], created_at=c["created_at"],
             ctx=ep.context, now=ep.ts,
+            sem=c.get("sem"),
         )
         if s > 0:
             scored.append((s, c["created_at"], c["id"]))
@@ -377,6 +378,7 @@ def generate_candidates(incumbent: Policy) -> list[Policy]:
     out += _mutants(incumbent, "w_overlap", (0.5, 1.0), None, None)
     out += _mutants(incumbent, "w_confidence", (0.5, 1.0), None, None)
     out += _mutants(incumbent, "w_recency", (0.5, 1.0), None, None)
+    out += _mutants(incumbent, "w_semantic", (0.25, 0.5), 0.0, None)
     out += _mutants(incumbent, "hearsay_penalty", (0.25, 0.5), None, None)
     out += _mutants(incumbent, "l1_min_confidence", (0.05, 0.1), 0.0, 1.0)
     out += _mutants(incumbent, "l2_min_confidence", (0.05, 0.1), 0.0, 1.0)

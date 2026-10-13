@@ -1,6 +1,7 @@
 /**
- * memloop user commands: /memory (list, show, forget) and /dreaming (dream
- * replay audit). These are the transparency surface; capture stays zero-touch.
+ * memloop user commands: /memory (list, show, forget, audit) and /dreaming
+ * (dream replay audit). These are the transparency surface; capture stays
+ * zero-touch.
  */
 
 import type {
@@ -50,14 +51,81 @@ async function showDetail(
   id: string,
 ): Promise<void> {
   try {
-    const result = await client.getClaim({ claim_id: id });
-    if (result.claim === null) {
+    const detail = await client.claimDetail({ claim_id: id });
+    if (detail.claim === null) {
       ctx.ui.notify(t(`Memory card not found: ${id}`, `未找到记忆卡：${id}`), "warning");
       return;
     }
-    ctx.ui.notify(formatClaim(result.claim), "info");
+    const lines: string[] = [formatClaim(detail.claim)];
+    const judged = detail.evidence.filter((row) => row.outcome !== undefined && row.outcome !== null);
+    const losses = judged.filter((row) => row.outcome === false).length;
+    const recent = judged
+      .slice(-3)
+      .map((row) => (row.outcome ? "win" : "loss"))
+      .join(" -> ");
+    lines.push(t("Evidence:", "证据摘要："));
+    lines.push(
+      t(
+        `  rows ${detail.evidence.length}, counterexamples ${losses}`,
+        `  行数 ${detail.evidence.length}，反例数 ${losses}`,
+      ),
+    );
+    lines.push(t(`  recent verdicts: ${recent || "—"}`, `  最近判决：${recent || "—"}`));
+    const chain = detail.chain
+      .map((row) => `${row.id}(${row.status ?? "?"}${row.status_reason ? `: ${row.status_reason}` : ""})`)
+      .join(" -> ");
+    lines.push(t(`Lineage: ${chain || "—"}`, `谱系链：${chain || "—"}`));
+    if (detail.contract !== null && detail.contract !== undefined) {
+      lines.push(
+        t(
+          `Contract: ${detail.contract.path} (status: ${detail.contract.status ?? "—"})`,
+          `契约：${detail.contract.path}（status：${detail.contract.status ?? "—"}）`,
+        ),
+      );
+    } else {
+      lines.push(t("Contract: none", "契约：无"));
+    }
+    if (detail.notices.length === 0) {
+      lines.push(t("Notices: none", "通告：无"));
+    } else {
+      lines.push(t("Notices (retention, audit rows included):", "通告保留区（含审计行）："));
+      for (const row of detail.notices.slice(-10)) {
+        lines.push(`  [${row.kind}] ${row.text}`);
+      }
+    }
+    ctx.ui.notify(lines.join("\n"), "info");
   } catch (err) {
     ctx.ui.notify(t(`Query failed: ${String(err)}`, `查询失败：${String(err)}`), "warning");
+  }
+}
+
+async function showAudit(ctx: ExtensionCommandContext, client: MemloopSidecar): Promise<void> {
+  try {
+    const rep = await client.audit();
+    const lines = [t("/memory audit", "/memory 审计")];
+    lines.push(
+      t("Missed (candidates - picked, no re-scoring):", "漏召（candidates − picked，不重打分）："),
+    );
+    if (rep.missed.length === 0) {
+      lines.push(t("  none", "  无"));
+    } else {
+      for (const row of rep.missed.slice(0, 20)) {
+        lines.push(`  [${row.claim_id}] ${row.key ?? ""} x ${row.count ?? 0}`);
+      }
+    }
+    lines.push(
+      t("False triggers (injected into a loss episode):", "误触发（注入后 episode loss）："),
+    );
+    if (rep.false_triggers.length === 0) {
+      lines.push(t("  none", "  无"));
+    } else {
+      for (const row of rep.false_triggers.slice(0, 20)) {
+        lines.push(`  [${row.claim_id}] ${row.key ?? ""} @ ${row.episode_id ?? "—"}`);
+      }
+    }
+    ctx.ui.notify(lines.join("\n"), "info");
+  } catch (err) {
+    ctx.ui.notify(t(`Audit failed: ${String(err)}`, `审计失败：${String(err)}`), "warning");
   }
 }
 
@@ -155,9 +223,9 @@ export function registerMemloopCommands(
   registry: ClaimRegistry,
 ): void {
   pi.registerCommand("memory", {
-    description: "memloop memory: list | show <id> | forget <id>",
+    description: "memloop memory: list | show <id> | forget <id> | audit",
     getArgumentCompletions: (prefix) => {
-      const sub = ["list", "show", "forget"].filter((s) => s.startsWith(prefix));
+      const sub = ["list", "show", "forget", "audit"].filter((s) => s.startsWith(prefix));
       return sub.length > 0 ? sub.map((s) => ({ value: s, label: s })) : null;
     },
     handler: async (args, ctx) => {
@@ -188,11 +256,13 @@ export function registerMemloopCommands(
           return;
         }
         await forgetClaim(ctx, active, id);
+      } else if (sub === "audit") {
+        await showAudit(ctx, active);
       } else {
         ctx.ui.notify(
           t(
-            "Usage: /memory list | show <id> | forget <id>",
-            "用法：/memory list | show <id> | forget <id>",
+            "Usage: /memory list | show <id> | forget <id> | audit",
+            "用法：/memory list | show <id> | forget <id> | audit",
           ),
           "warning",
         );

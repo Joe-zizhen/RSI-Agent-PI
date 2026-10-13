@@ -25,6 +25,7 @@ import {
   type ClaimRegistry,
   type ConflictEntry,
   type GuardResult,
+  type NoticeRow,
   type RetrievedClaim,
   type SignalKind,
 } from "./sidecar.ts";
@@ -36,6 +37,9 @@ import { t } from "./t.ts";
 // Storage never truncates; full text stays reachable via memory_search.
 const CARD_DISPLAY_MAX_CHARS = 600;
 const BLOCK_BUDGET_CHARS = 1800;
+// Notice section budget (plan 4.1): independent of BLOCK_BUDGET_CHARS, so
+// notices never squeeze the card budget. Mirrors loops.py.
+const NOTICE_DISPLAY_MAX_CHARS = 600;
 const MEMORY_SECTION = "memory";
 const MEMLOOP_HINT_TYPE = "memloop-hint";
 
@@ -98,7 +102,26 @@ function formatClaimLine(claim: RetrievedClaim, conflicted: boolean): string {
   return `- (${claim.key}) ${truncateForDisplay(claim.text)} [${confidence} ${tag}]${flag}`;
 }
 
-function renderMemoryBlock(picked: RetrievedClaim[], conflicts: ConflictEntry[]): string {
+// The <memloop-notice> section (plan 4.1): same bytes in the injection block
+// and as the mid-task tool-result prefix. Mirrors loops.py _notice_block.
+function renderNoticeBlock(notices: NoticeRow[]): string {
+  if (notices.length === 0) return "";
+  const parts: string[] = [];
+  let used = 0;
+  for (const notice of notices) {
+    const line = `- ${notice.text}`;
+    if (parts.length > 0 && used + 1 + line.length > NOTICE_DISPLAY_MAX_CHARS) break;
+    parts.push(line);
+    used += 1 + line.length;
+  }
+  return `<memloop-notice>\n${parts.join("\n")}\n</memloop-notice>`;
+}
+
+function renderMemoryBlock(
+  picked: RetrievedClaim[],
+  conflicts: ConflictEntry[],
+  notices: NoticeRow[] = [],
+): string {
   const conflictKeys = new Set<string>();
   const conflictIds = new Set<string>();
   for (const entry of conflicts) {
@@ -117,7 +140,11 @@ function renderMemoryBlock(picked: RetrievedClaim[], conflicts: ConflictEntry[])
     lines.push(line);
     used += line.length + 1;
   }
-  return `<memloop>\n${lines.join("\n")}\n</memloop>`;
+  // The notice section sits inside the wrapper under its own budget and
+  // never squeezes BLOCK_BUDGET_CHARS (plan 4.1).
+  const noticeBlock = renderNoticeBlock(notices);
+  const tail = noticeBlock === "" ? "" : `\n${noticeBlock}`;
+  return `<memloop>\n${lines.join("\n")}${tail}\n</memloop>`;
 }
 
 /** Pi's global settings file (`~/.pi/agent/settings.json`), matching the app's resolution. */
@@ -149,6 +176,73 @@ function readVerdictCmdFrom(settingsPath: string): string | undefined {
   return undefined;
 }
 
+// Vendor embeddings endpoint (OpenAI-compatible /embeddings). Absent config
+// means lexical-only retrieval: degrade, never fail (plan 3.5).
+interface EmbeddingsConfig {
+  url: string;
+  model: string;
+  apiKey: string | undefined;
+}
+
+export interface QueryEmbedding {
+  vector: number[];
+  model: string;
+}
+
+const EMBED_TIMEOUT_MS = 3000;
+
+function readEmbeddingsFrom(settingsPath: string): EmbeddingsConfig | undefined {
+  // A missing settings file is the normal case, so parse failures stay silent.
+  try {
+    const raw = readFileSync(settingsPath, "utf8");
+    const root = JSON.parse(raw) as unknown;
+    const rootRec =
+      root !== null && typeof root === "object" ? (root as Record<string, unknown>) : {};
+    const section = rootRec.memloop;
+    const sectionRec =
+      section !== null && typeof section === "object" ? (section as Record<string, unknown>) : {};
+    const emb = sectionRec.embeddings;
+    const rec =
+      emb !== null && typeof emb === "object" ? (emb as Record<string, unknown>) : {};
+    const url = typeof rec.url === "string" ? rec.url.trim() : "";
+    const model = typeof rec.model === "string" ? rec.model.trim() : "";
+    if (url === "" || model === "") return undefined;
+    const key = typeof rec.apiKey === "string" ? rec.apiKey.trim() : "";
+    return { url, model, apiKey: key !== "" ? key : undefined };
+  } catch {
+    return undefined;
+  }
+}
+
+// Any failure degrades to the lexical path silently: no config, timeout,
+// HTTP error, malformed body. The 3s cap keeps task startup bounded.
+async function fetchEmbedding(
+  cfg: EmbeddingsConfig,
+  text: string,
+): Promise<QueryEmbedding | undefined> {
+  try {
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (cfg.apiKey !== undefined) headers.authorization = `Bearer ${cfg.apiKey}`;
+    const res = await fetch(cfg.url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ model: cfg.model, input: text }),
+      signal: AbortSignal.timeout(EMBED_TIMEOUT_MS),
+    });
+    if (!res.ok) return undefined;
+    const body = (await res.json()) as unknown;
+    const rec = inputToRecord(body);
+    const first = Array.isArray(rec.data) ? rec.data[0] : undefined;
+    const vector = inputToRecord(first).embedding;
+    if (!Array.isArray(vector) || vector.some((x) => typeof x !== "number")) {
+      return undefined;
+    }
+    return { vector: vector as number[], model: cfg.model };
+  } catch {
+    return undefined;
+  }
+}
+
 export default function memloop(pi: ExtensionAPI) {
   const extensionDir = path.dirname(fileURLToPath(import.meta.url));
   const registry: ClaimRegistry = createClaimRegistry();
@@ -159,8 +253,14 @@ export default function memloop(pi: ExtensionAPI) {
   let lastDiagnostic = "";
   let taskPickedCount = 0;
   let hintShownThisTask = false;
+  // Active episode stamp for the notice channel (plan 4.1): the flush of a
+  // mid-task push is bound to it.
+  let currentEpisodeId: string | undefined;
   const guardCache = new Map<string, GuardResult>();
   let pendingFailures: PendingFailure[] = [];
+  // Most recent user message, verbatim: the memory_signal tool attaches it
+  // as the correction card body so a model's reason never becomes card text.
+  let lastUserInput = "";
 
   // Priority: MEMLOOP_VERDICT_CMD env > ~/.pi/agent/settings.json memloop.verdictCmd
   // (the Settings → 记忆 control writes this file) > <cwd>/.pi/settings.json > none.
@@ -171,6 +271,52 @@ export default function memloop(pi: ExtensionAPI) {
       readVerdictCmdFrom(agentSettingsPath()) ??
       readVerdictCmdFrom(path.join(projectRoot, ".pi", "settings.json"))
     );
+  };
+
+  // Same chain for the embeddings endpoint (plan 3.5): MEMLOOP_EMBEDDINGS_URL
+  // + MEMLOOP_EMBEDDINGS_MODEL (+ MEMLOOP_EMBEDDINGS_API_KEY) env >
+  // ~/.pi/agent/settings.json memloop.embeddings {url, model, apiKey} >
+  // <cwd>/.pi/settings.json > none (degrade to lexical).
+  const resolveEmbeddings = (): EmbeddingsConfig | undefined => {
+    const url = process.env.MEMLOOP_EMBEDDINGS_URL;
+    const model = process.env.MEMLOOP_EMBEDDINGS_MODEL;
+    if (url !== undefined && url.trim() !== "" && model !== undefined && model.trim() !== "") {
+      const key = process.env.MEMLOOP_EMBEDDINGS_API_KEY;
+      return {
+        url: url.trim(),
+        model: model.trim(),
+        apiKey: key !== undefined && key.trim() !== "" ? key.trim() : undefined,
+      };
+    }
+    return (
+      readEmbeddingsFrom(agentSettingsPath()) ??
+      readEmbeddingsFrom(path.join(projectRoot, ".pi", "settings.json"))
+    );
+  };
+
+  // Never throws: every failure is the lexical degrade path (plan 3.5).
+  const embedQuery = async (text: string): Promise<QueryEmbedding | undefined> => {
+    const cfg = resolveEmbeddings();
+    if (cfg === undefined) return undefined;
+    return fetchEmbedding(cfg, text);
+  };
+
+  // Best-effort card embedding after cardify (plan 3.5): fire and forget,
+  // silent on every failure, never blocks the turn.
+  const storeCardEmbedding = async (
+    active: MemloopSidecar,
+    claim: RetrievedClaim | null,
+  ): Promise<void> => {
+    try {
+      if (claim === null || claim.id === undefined) return;
+      const cfg = resolveEmbeddings();
+      if (cfg === undefined) return;
+      const emb = await fetchEmbedding(cfg, claim.text);
+      if (emb === undefined) return;
+      await active.setEmbedding({ claim_id: claim.id, vector: emb.vector, model: emb.model });
+    } catch {
+      // degrade to lexical silently
+    }
   };
 
   const ensureClient = async (ctx: ExtensionContext): Promise<MemloopSidecar | undefined> => {
@@ -242,15 +388,23 @@ export default function memloop(pi: ExtensionAPI) {
     // says nothing about this task's failures.
     pendingFailures = [];
     try {
-      await active.beginTask({ prompt: event.prompt, session: sessionKey });
-      const result = await active.retrieve({ context: event.prompt });
+      const begun = await active.beginTask({ prompt: event.prompt, session: sessionKey });
+      currentEpisodeId = begun.episode_id;
+      const qemb = await embedQuery(event.prompt);
+      const result = await active.retrieve({
+        context: event.prompt,
+        ctx_embedding: qemb?.vector,
+        ctx_model: qemb?.model,
+      });
       const picked = result.picked;
-      if (picked.length > 0) {
+      const notices = result.notices ?? [];
+      if (picked.length > 0 || notices.length > 0) {
         taskPickedCount = picked.length;
         for (const claim of picked) registry.record(claim);
         event.systemPromptOptions.sections[MEMORY_SECTION] = renderMemoryBlock(
           picked,
           result.conflicts ?? [],
+          notices,
         );
       } else {
         delete event.systemPromptOptions.sections[MEMORY_SECTION];
@@ -316,6 +470,8 @@ export default function memloop(pi: ExtensionAPI) {
     }
 
     let result: ToolResultEventResult | undefined;
+    const content = [...event.content];
+    let contentChanged = false;
 
     // L1 reminder: prepend to model-visible content, the earliest point the
     // model sees a warning (tool_call has no insert-before channel).
@@ -325,13 +481,35 @@ export default function memloop(pi: ExtensionAPI) {
       guard.message !== undefined &&
       guard.message !== ""
     ) {
-      const content = [...event.content];
       const first = content[0];
       if (first !== undefined && first.type === "text") {
         content[0] = { type: "text", text: `${guard.message}\n${first.text}` };
       } else {
         content.unshift({ type: "text", text: guard.message });
       }
+      contentChanged = true;
+    }
+
+    // Plan 4.1 mid-task push (4.2 rides the same channel): undelivered
+    // notices of the active episode ride the next tool result as a
+    // <memloop-notice> prefix. Single consumption: the flush marks them.
+    try {
+      const flushed = await active.noticesFlush({ episode_id: currentEpisodeId });
+      const noticeBlock = renderNoticeBlock(flushed.notices);
+      if (noticeBlock !== "") {
+        const first = content[0];
+        if (first !== undefined && first.type === "text") {
+          content[0] = { type: "text", text: `${noticeBlock}\n${first.text}` };
+        } else {
+          content.unshift({ type: "text", text: noticeBlock });
+        }
+        contentChanged = true;
+      }
+    } catch {
+      // Memory must never block a tool result; the queue retries next time.
+    }
+
+    if (contentChanged) {
       result = { content };
       // Replacing content alone drops structuredContent; carry it over.
       if (event.structuredContent !== undefined) result.structuredContent = event.structuredContent;
@@ -372,7 +550,7 @@ export default function memloop(pi: ExtensionAPI) {
             if (failure === undefined || failure.command === command) continue;
             pendingFailures.splice(i, 1);
             try {
-              await active.cardify({
+              const cardified = await active.cardify({
                 event_id: failure.eventId,
                 key: firstCommandToken(failure.command),
                 text: t(
@@ -383,6 +561,7 @@ export default function memloop(pi: ExtensionAPI) {
                 verify_cmd: command,
                 match_pattern: failure.command,
               });
+              void storeCardEmbedding(active, cardified.claim);
             } catch (err) {
               ctx.ui.notify(
                 t(`memloop cardify failed: ${String(err)}`, `memloop 成卡失败：${String(err)}`),
@@ -399,9 +578,10 @@ export default function memloop(pi: ExtensionAPI) {
   });
 
   pi.on("input", async (event, ctx) => {
+    const text = event.text;
+    lastUserInput = text;
     const active = await ensureClient(ctx);
     if (active === undefined) return;
-    const text = event.text;
     // InputEvent carries no entry id, so the origin key uses timestamp+hash.
     const originKey = `pi:${sessionKey}:${Date.now()}-${createHash("sha1").update(text).digest("hex").slice(0, 8)}`;
     let signal: SignalKind = "none";
@@ -449,7 +629,11 @@ export default function memloop(pi: ExtensionAPI) {
       (signal === "correction" || STRONG_INSTRUCTION_PATTERN.test(text))
     ) {
       try {
-        await active.cardify({ event_id: eventId, key: normalizeKey(text.slice(0, 24)) });
+        const cardified = await active.cardify({
+          event_id: eventId,
+          key: normalizeKey(text.slice(0, 24)),
+        });
+        void storeCardEmbedding(active, cardified.claim);
       } catch (err) {
         ctx.ui.notify(
           t(`memloop cardify failed: ${String(err)}`, `memloop 成卡失败：${String(err)}`),
@@ -501,6 +685,6 @@ export default function memloop(pi: ExtensionAPI) {
     }
   });
 
-  registerMemloopTools(pi, ensureClient);
+  registerMemloopTools(pi, ensureClient, () => lastUserInput, embedQuery);
   registerMemloopCommands(pi, ensureClient, registry);
 }

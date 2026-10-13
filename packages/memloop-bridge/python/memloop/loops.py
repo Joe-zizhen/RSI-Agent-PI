@@ -14,11 +14,14 @@ model "is this worth saving". Salience comes from friction signals only.
 
 from __future__ import annotations
 
+import math
 import subprocess
 import time
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from .core import (
+    CORRECTED_REASON_PREFIX,
     Claim,
     ClaimKind,
     ClaimStatus,
@@ -27,7 +30,16 @@ from .core import (
     Store,
 )
 from .policy import DEFAULT_POLICY, Policy, match_count
-from .promote_skill import write_skill
+from .promote_skill import (
+    _slug,
+    archive_contract,
+    contract_in_scope,
+    evict_contract,
+    extract_commands,
+    locate_contract,
+    plan_skill,
+    write_skill,
+)
 
 # Salience: everything except chatter. Objective events (observations of
 # file/cmd/test state, corrections, instructions, failure->fix) are always
@@ -53,10 +65,20 @@ _EVENT_TO_CLAIM_KIND = {
 
 # promotion threshold: a lesson used this many times with a verify_cmd
 # becomes a procedure (code/test/check) and leaves the claim store.
+# Decision criteria (this gate and the 4.6 evidence gate) stay out of the
+# dream's evolvable axes; the knob lives in Policy but is never mutated.
 PROMOTE_AFTER_SUCCESSES = 3  # legacy alias; the knob lives in Policy
+
+# evidence-gate window (plan 4.6): a loss among the newest
+# VETO_RECENT_OUTCOMES non-null outcome rows vetoes the candidate
+VETO_RECENT_OUTCOMES = 5
 
 # display budget per card in the injection block; storage is never truncated
 CARD_DISPLAY_MAX_CHARS = 600
+
+# notice section budget (plan 4.1): independent of injection_max_chars, so
+# notices never squeeze the card budget
+NOTICE_DISPLAY_MAX_CHARS = 600
 
 # standing usage rules; injected with every non-empty block so the model is
 # taught how to treat the cards, not just handed data
@@ -80,6 +102,7 @@ class RetrieveResult:
     claims: list[Claim]
     conflicts: dict[str, list[str]]
     injected: str  # what actually goes into the prompt
+    notices: list[dict] = field(default_factory=list)  # flushed deliverable rows
 
 
 @dataclass
@@ -99,6 +122,64 @@ class ConsolidateReport:
     decayed: list[str] = field(default_factory=list)
     promoted: list[str] = field(default_factory=list)
     skills_written: list[str] = field(default_factory=list)
+    candidates: list[str] = field(default_factory=list)
+
+
+class PromoteHashMismatch(ValueError):
+    """promote_commit refusal (user-confirmation gate): a commands-carrying
+    commit binds to the exact draft bytes, so a missing or stale content
+    hash refuses the write. The serve layer maps it to code=hash_mismatch."""
+
+
+def promotion_veto(evidence: Sequence[dict]) -> list[str]:
+    """Evidence-gate veto reasons (plan 4.6, 否决式). Empty list = no veto;
+    an empty evidence list never vetoes (空 evidence 不否决).
+
+    "counterexample" -- a row with rubric_pass true and outcome false (过宽
+    反例: the oracle passed but the world lost; the lesson is too broad).
+    "recent_loss" -- a loss among the VETO_RECENT_OUTCOMES most recent rows
+    that carry a non-null outcome. A row is judged on the columns it has
+    (single-column merge rows count once)."""
+    reasons: list[str] = []
+    for row in evidence:
+        if row.get("rubric_pass") is True and row.get("outcome") is False:
+            reasons.append("counterexample")
+            break
+    with_outcome = [r for r in evidence if r.get("outcome") is not None]
+    if any(r.get("outcome") is False
+           for r in with_outcome[-VETO_RECENT_OUTCOMES:]):
+        reasons.append("recent_loss")
+    return reasons
+
+
+def promotion_decision(claim: Claim, evidence: Sequence[dict] = (),
+                       promote_after: int = PROMOTE_AFTER_SUCCESSES) -> str:
+    """The promotion classifier (plan 4.5/4.6): returns "auto_ok",
+    "requires_confirm" or "rejected". Pure in (claim state, evidence
+    snapshot, threshold): no store, no clock, and nothing here is a dream
+    axis (决策口径不进梦境进化).
+
+    Eligibility is the four current conditions: EXPERIENCE + verify_cmd +
+    success_count >= promote_after + ACTIVE. AUTO_OK = eligible + no veto +
+    empty command list. REQUIRES_CONFIRM = a non-empty command list
+    (mandatory, attack-surface gate) or CONFIG / user-preference semantics
+    (含 correction 修订升格: preferences never auto-promote). A veto, or a
+    claim outside both tracks, is 拒出候选 ("rejected"); only the user's
+    explicit request (Memory.promote_request) re-grades a vetoed card, and
+    that override is traced."""
+    if claim.status != ClaimStatus.ACTIVE:
+        return "rejected"
+    if promotion_veto(evidence):
+        return "rejected"
+    if claim.kind == ClaimKind.CONFIG:
+        return "requires_confirm"
+    eligible = (claim.kind == ClaimKind.EXPERIENCE
+                and claim.verify_cmd is not None
+                and claim.success_count >= promote_after
+                and claim.status == ClaimStatus.ACTIVE)
+    if not eligible:
+        return "rejected"
+    return "auto_ok" if not extract_commands(claim.text) else "requires_confirm"
 
 
 def _guard_target(tool_name: str, args: dict) -> str | None:
@@ -113,6 +194,32 @@ def _guard_target(tool_name: str, args: dict) -> str | None:
     return val if isinstance(val, str) and val else None
 
 
+def feedback_key(text: str) -> str:
+    """Deterministic claim key for a feedback-derived card: the first 24
+    characters of the user's words, whitespace-collapsed and lowercased.
+    Mirrors the TypeScript input path's normalizeKey(text.slice(0, 24)) so
+    the same words cardified from either channel share a key and the
+    correction chain's same-key supersede can hit (plan 8)."""
+    return " ".join(text[:24].split()).lower()
+
+
+def _cosine(a: list[float], b: list[float]) -> float | None:
+    """Cosine similarity of two embedding vectors (stdlib math only).
+    Dimension mismatch, empty vectors and zero-norm vectors return None:
+    an incomparable pair must degrade to "no semantic signal", never
+    raise (plan 3.5)."""
+    if len(a) != len(b) or not a:
+        return None
+    dot = na = nb = 0.0
+    for x, y in zip(a, b):
+        dot += x * y
+        na += x * x
+        nb += y * y
+    if na <= 0.0 or nb <= 0.0:
+        return None
+    return dot / math.sqrt(na * nb)
+
+
 def _card_line(c: Claim, conflicted: bool) -> str:
     conf = f"{c.confidence:.2f}"
     tag = "HEARSAY" if c.hearsay else f"verify: {c.verify_cmd}"
@@ -121,6 +228,25 @@ def _card_line(c: Claim, conflicted: bool) -> str:
     if len(text) > CARD_DISPLAY_MAX_CHARS:
         text = text[:CARD_DISPLAY_MAX_CHARS] + "（全文见 memory_search）"
     return f"- ({c.key}) {text} [{conf} {tag}]{flag}"
+
+
+def _notice_block(notices: list[dict]) -> str:
+    """The <memloop-notice> section of the injection block (plan 4.1). The
+    same tag opens the mid-task tool-result prefix. Independent
+    NOTICE_DISPLAY_MAX_CHARS budget; empty input renders nothing."""
+    if not notices:
+        return ""
+    parts: list[str] = []
+    size = 0
+    for n in notices:
+        text = n["text"] if isinstance(n, dict) else str(n)
+        line = f"- {text}"
+        if parts and size + 1 + len(line) > NOTICE_DISPLAY_MAX_CHARS:
+            break
+        parts.append(line)
+        size += 1 + len(line)
+    return "<memloop-notice>" + "".join("\n" + p for p in parts) \
+        + "\n</memloop-notice>"
 
 
 def _l2_message(c: Claim) -> str:
@@ -154,6 +280,7 @@ class Memory:
         self.session = session
         self.policy = policy if policy is not None else DEFAULT_POLICY
         self.project_root = project_root
+        self.store.migrate_lineage(project_root)  # startup backfill (plan 3.2)
         # session-scoped guard state, never persisted: one block per
         # (claim, call_key), plus the explicit-override allowlist
         self._blocked_once: set[tuple[str, str]] = set()
@@ -234,23 +361,54 @@ class Memory:
         )
         # a correction supersedes prior non-terminal claims on the same key
         # (I4: explicit, not silent coexistence -- including dormant ones,
-        # which would otherwise revive into a zombie conflict)
+        # which would otherwise revive into a zombie conflict) and runs the
+        # 4.1 chain on every displaced sibling
         if ev.kind == EventKind.USER_CORRECTION:
-            for other in self.store.claims(key=key):
-                if other.id != claim.id and other.status in (
-                    ClaimStatus.ACTIVE,
-                    ClaimStatus.CONFLICTED,
-                    ClaimStatus.DORMANT,
-                ):
-                    self.store.resolve_conflict(
-                        key, claim.id, reason=f"correction event {event_id}"
-                    )
-                    break
+            self._correction_supersede(claim, event_id)
+        elif ev.kind == EventKind.EXPLICIT_INSTRUCTION:
+            # plan 4.2: instruction cards push mid-task over the notice channel
+            self._notice(claim, "instructed", claim_text=claim_text)
         self.store.log_trace("cardify", {
             "claim": claim.id, "key": key, "event": event_id,
             "kind": claim.kind.value,
         }, ts=ts)
         return claim
+
+    def _correction_supersede(self, claim: Claim, event_id: str) -> None:
+        """The correction chain (plan 4.1 + (5)): same-key displaced siblings
+        are superseded through resolve_conflict, each gets a corrected notice
+        naming the successor card (the dedup keeps corrected over
+        resolve_conflict's superseded rows), and rule A retracts their
+        contracts. A PROMOTED sibling keeps its status and records the
+        correction source in status_reason -- the (5) write side the anchor
+        collector reads."""
+        key = claim.key
+        displaced: list[Claim] = []
+        for other in self.store.claims(key=key):
+            if other.id == claim.id:
+                continue
+            if other.status == ClaimStatus.PROMOTED:
+                self.store.set_status(
+                    other.id, ClaimStatus.PROMOTED,
+                    f"{CORRECTED_REASON_PREFIX}{claim.id}",
+                )
+                displaced.append(other)
+            elif other.status in (
+                ClaimStatus.ACTIVE,
+                ClaimStatus.CONFLICTED,
+                ClaimStatus.DORMANT,
+            ):
+                displaced.append(other)
+        if not displaced:
+            return
+        self.store.resolve_conflict(
+            key, claim.id, reason=f"correction event {event_id}",
+            episode_id=self._episode_id,
+        )
+        for other in displaced:
+            # plan 4.1 order: notice INSERT first, file handling after
+            self._notice(other, "corrected", new_id=claim.id)
+            self._retract(other, source=f"corrected:{claim.id}")
 
     # -- loop 3: retrieve -------------------------------------------------
 
@@ -260,6 +418,8 @@ class Memory:
         limit: int | None = None,
         now: float | None = None,
         include_dormant: bool = False,
+        ctx_embedding: list[float] | None = None,
+        ctx_model: str | None = None,
     ) -> RetrieveResult:
         """Situational injection. Ranking is whatever ``self.policy`` says
         (deterministic rules; the offline replay may swap the policy).
@@ -268,53 +428,103 @@ class Memory:
         Dormant (demoted) claims are excluded by default but recoverable:
         pass include_dormant=True to resurface them -- usage revives them
         (I3: demotion is reversible, deletion is not).
-        """
+
+        ``ctx_embedding`` is the query vector from the embedder (plan 3.5).
+        A card joins the semantic channel only when it has a stored
+        embedding of the same model/dimension; otherwise its sem is None
+        and the lexical path scores it exactly as before."""
         now = time.time() if now is None else now
         ctx = context.lower()
+        # plan 4.1 carry-over injection: retrieve flushes the deliverable
+        # notice queue for the current episode (NULL rows included) so a
+        # task-internal falsify with no later tool call still reaches the
+        # next task's injection block
+        notices = self.store.notices_flush(self._episode_id)
         allowed = {ClaimStatus.ACTIVE, ClaimStatus.CONFLICTED}
         if include_dormant:
             allowed.add(ClaimStatus.DORMANT)
-        scored: list[tuple[float, Claim]] = []
-        for c in self.store.claims():
-            if c.status not in allowed:
-                continue
-            score = self._score(c, ctx, now)
-            if score > 0:
-                scored.append((score, c))
+        scored = self._rank_candidates(ctx, now, allowed,
+                                       ctx_embedding, ctx_model)
         scored.sort(key=lambda t: (-t[0], t[1].created_at))
-        picked = [c for _, c in scored[: self.policy.limit if limit is None else limit]]
+        picked = [c for _, c, _ in scored[: self.policy.limit if limit is None else limit]]
         conflicts = self.store.active_conflicts()
         # structured log: candidate snapshot, so the offline replay can
-        # re-rank exactly what was in front of the agent at that moment
+        # re-rank exactly what was in front of the agent at that moment.
+        # sem is the cosine in force at that moment, or null (plan 3.5)
         self._log("retrieve", {
             "context": context,
             "policy": self.policy.name,
             "picked": [c.id for c in picked],
+            "notices": [n["id"] for n in notices],
             "candidates": [
                 {"id": c.id, "key": c.key, "text": c.text,
                  "confidence": c.confidence, "hearsay": c.hearsay,
-                 "created_at": c.created_at}
-                for _, c in scored
+                 "created_at": c.created_at, "sem": sem}
+                for _, c, sem in scored
             ],
         }, ts=now)
         return RetrieveResult(
             claims=picked,
             conflicts=conflicts,
-            injected=self.render(picked, conflicts),
+            injected=self.render(picked, conflicts, notices),
+            notices=notices,
         )
 
-    def _score(self, c: Claim, ctx: str, now: float) -> float:
+    def _rank_candidates(
+        self,
+        ctx: str,
+        now: float,
+        allowed: set[ClaimStatus],
+        ctx_embedding: list[float] | None,
+        ctx_model: str | None,
+    ) -> list[tuple[float, Claim, float | None]]:
+        """Score every allowed card against the context. Zero-score cards
+        never enter the candidate snapshot."""
+        scored: list[tuple[float, Claim, float | None]] = []
+        for c in self.store.claims():
+            if c.status not in allowed:
+                continue
+            sem = self._sem_for(c, ctx_embedding, ctx_model)
+            score = self._score(c, ctx, now, sem=sem)
+            if score > 0:
+                scored.append((score, c, sem))
+        return scored
+
+    def _sem_for(self, c: Claim, ctx_embedding: list[float] | None,
+                 ctx_model: str | None) -> float | None:
+        """Cosine of one card against the query vector, or None when the
+        card has no embedding or its vector is incomparable (dimension or
+        model mismatch, judged via the model column). None never raises:
+        the card falls back to the lexical path (plan 3.5)."""
+        if not ctx_embedding:
+            return None
+        emb = self.store.embedding(c.id)
+        if emb is None:
+            return None
+        if (ctx_model is not None and emb["model"] is not None
+                and emb["model"] != ctx_model):
+            return None
+        return _cosine(emb["vector"], ctx_embedding)
+
+    def _score(self, c: Claim, ctx: str, now: float,
+               sem: float | None = None) -> float:
         return self.policy.score(
             key=c.key, text=c.text, confidence=c.confidence,
             hearsay=c.hearsay, created_at=c.created_at, ctx=ctx, now=now,
+            sem=sem,
         )
 
-    def render(self, claims: list[Claim], conflicts: dict[str, list[str]]) -> str:
+    def render(self, claims: list[Claim], conflicts: dict[str, list[str]],
+               notices: list[dict] | None = None) -> str:
         """Prompt block: standing usage rules + one line per claim carrying
         provenance, confidence and verify path (or HEARSAY). Display is
         budgeted per card and in total; storage is never truncated -- the
-        cutoff only redirects the reader to memory_search."""
-        if not claims:
+        cutoff only redirects the reader to memory_search. The notice section
+        (plan 4.1) sits inside the same wrapper under its own
+        NOTICE_DISPLAY_MAX_CHARS budget and never squeezes
+        injection_max_chars."""
+        notice_block = _notice_block(notices or [])
+        if not claims and not notice_block:
             return ""
         conflicted_keys = set(conflicts)
         head = "<memloop>\n" + USAGE_RULES
@@ -328,21 +538,38 @@ class Memory:
                 break  # fill in score order, stop at the budget
             parts.append(line)
             size += 1 + len(line)
-        return head + "".join("\n" + p for p in parts) + tail
+        body = head + "".join("\n" + p for p in parts)
+        if notice_block:
+            body += "\n" + notice_block
+        return body + tail
 
-    def search(self, query: str, k: int = 5) -> list[Claim]:
+    def search(self, query: str, k: int = 5,
+               ctx_embedding: list[float] | None = None,
+               ctx_model: str | None = None) -> list[Claim]:
         """Deep retrieval for the memory_search tool. Only the overlap==0
         hard gate filters; ranking is policy.score and truncation redirects
-        here, so hearsay and dormant cards stay reachable."""
+        here, so hearsay and dormant cards stay reachable. Returned cards
+        join the episode attribution set (plan 3); the search path never
+        calls record_use, so use_count keeps its retrieve mark_used
+        semantics.
+
+        The lexical pre-filter softens with semantics (plan 3.5): a
+        zero-overlap card is skipped only when its sem is missing or below
+        semantic_floor. Without a query embedding every card has sem=None
+        and the original hard filter holds."""
         now = time.time()
         ctx = query.lower()
         scored: list[tuple[float, float, Claim]] = []
         for c in self.store.claims():
+            sem = self._sem_for(c, ctx_embedding, ctx_model)
             if match_count(f"{c.key} {c.text}", ctx) == 0:
-                continue
-            scored.append((self._score(c, ctx, now), c.created_at, c))
+                if sem is None or sem < self.policy.semantic_floor:
+                    continue
+            scored.append((self._score(c, ctx, now, sem=sem), c.created_at, c))
         scored.sort(key=lambda t: (-t[0], t[1]))
         picked = [c for _, _, c in scored[:k]]
+        for c in picked:
+            self._episode_claims.setdefault(c.id, None)
         self.store.log_trace("search", {
             "query": query, "k": k, "picked": [c.id for c in picked],
         })
@@ -415,7 +642,10 @@ class Memory:
         if not (target.startswith(c.match_pattern)
                 or target == c.match_pattern.rstrip()):
             return False
-        if c.status not in (ClaimStatus.ACTIVE, ClaimStatus.CONFLICTED):
+        # PROMOTED stays live (plan 5.2): promotion must not disarm the
+        # guard; a superseded card leaves the set and stops firing.
+        if c.status not in (ClaimStatus.ACTIVE, ClaimStatus.CONFLICTED,
+                            ClaimStatus.PROMOTED):
             return False
         if c.id in self._override_allowlist:
             return False
@@ -455,9 +685,13 @@ class Memory:
 
     def verify(self, claim_id: str, timeout_s: float = 30.0) -> bool | None:
         """Usage-time fact check. Returns True/False, or None if the claim
-        has no oracle (hearsay -- cannot be verified, only decayed).
-        False (including timeout) falsifies the claim: the oracle said no.
-        """
+        has no oracle (hearsay -- cannot be verified, only decayed) or the
+        oracle timed out (plan 1 behavior (1): UNKNOWN, no falsify, no
+        retraction, no notice). Only a deterministic non-zero exit falsifies
+        the claim and runs the 4.1 chain. A real result fills the
+        rubric_pass column of the open episode's evidence row (single-column
+        merge, plan 3.3); outside a task there is no episode to attribute
+        to (I6)."""
         c = self.store.claim(claim_id)
         if c is None:
             raise KeyError(claim_id)
@@ -474,11 +708,98 @@ class Memory:
             )
             ok = proc.returncode == 0
         except subprocess.TimeoutExpired:
-            ok = False
+            self.store.log_trace("verify", {
+                "claim": claim_id, "ok": None, "status": "unknown",
+            })
+            return None
         if not ok:
             self.store.falsify(claim_id, reason=f"verify failed: {c.verify_cmd}")
+            # plan 4.1 order: notice INSERT first, file handling after
+            self._notice(c, "retracted")
+            self._retract(c, source="falsified")
         self.store.log_trace("verify", {"claim": claim_id, "ok": ok})
+        if self._episode_id is not None:
+            self.book_evidence(claim_id, self._episode_id, rubric_pass=ok)
         return ok
+
+    def delete_claim(self, claim_id: str, purge_events: bool = False) -> bool:
+        """Explicit deletion entry (plan 4.1): the store's notice-first
+        cascade runs, then rule A retracts the card's contract. Returns
+        False when the claim does not exist."""
+        c = self.store.claim(claim_id)
+        if c is None:
+            return False
+        line = self.store.lineage(claim_id)
+        deleted = self.store.delete_claim(
+            claim_id, purge_events=purge_events, episode_id=self._episode_id)
+        if deleted:
+            self._retract(c, source="deleted", line=line)
+        return deleted
+
+    def _notice(self, c: Claim, kind: str, new_id: str | None = None,
+                claim_text: str = "") -> None:
+        """Plan 4.1 enqueue, best-effort and first in the chain: the store
+        fans out the deliverable row (active episode or NULL) and the audit
+        rows, and traces a failed INSERT as fatal without raising."""
+        self.store.notice_enqueue(
+            c.id, kind, episode_id=self._episode_id,
+            claim_text=claim_text or c.text, new_id=new_id,
+        )
+
+    def _retract(self, c: Claim, source: str = "",
+                 line: dict | None = None) -> None:
+        """Rule A file side (plan 4.1, move per the 4.3 decision). Scope
+        gate: only a contract this card owns moves. Best-effort: one retry,
+        then a trace; the notice chain already ran and is never blocked
+        from here."""
+        if self.project_root is None:
+            return
+        if line is None:
+            line = self.store.lineage(c.id)
+        try:
+            self._retract_once(c, line, source)
+            return
+        except Exception as exc:
+            first = f"{type(exc).__name__}: {exc}"
+        try:
+            self._retract_once(c, line, source)
+        except Exception as exc:
+            self._log("retract_failed", {
+                "claim": c.id, "source": source, "error": first,
+                "retry_error": f"{type(exc).__name__}: {exc}",
+            })
+
+    def _retract_once(self, c: Claim, line: dict | None,
+                      source: str = "") -> None:
+        """One retraction attempt: locate -> scope gate -> archive move.
+        A file that cannot be archived keeps no loadable copy: the fallback
+        evicts it out of the .pi/skills tree (evict_contract). Raises only
+        when nothing can be written at all."""
+        path = locate_contract(self.project_root, c, line)
+        if path is None:
+            self._log("retract_skipped", {
+                "claim": c.id, "source": source,
+                "reason": "contract_not_found",
+            })
+            return
+        if not contract_in_scope(c, path, line):
+            self._log("retract_skipped", {
+                "claim": c.id, "source": source, "reason": "out_of_scope",
+                "path": str(path),
+            })
+            return
+        anchor = c.id if line is None else line["anchor"]
+        version = 0 if line is None else int(line["last_version"])
+        try:
+            archived = archive_contract(path, self.project_root,
+                                        _slug(anchor), version)
+        except Exception:
+            archived = evict_contract(path, self.project_root,
+                                      _slug(anchor), version)
+        self._log("retract", {
+            "claim": c.id, "source": source, "archived": archived,
+            "version": version,
+        })
 
     # -- loop 5: outcome -> confidence (I5) -------------------------------
 
@@ -506,6 +827,22 @@ class Memory:
         self._log("outcome", payload, ts=ts)
         return self.store.record_outcome(claim_id, success, weight=weight, ts=ts)
 
+    def book_evidence(self, claim_id: str, episode_id: str,
+                      rubric_pass: bool | None = None,
+                      outcome: bool | None = None) -> None:
+        """Best-effort evidence row write (plan 3.3): the usage/verdict
+        record must never roll back a booked verdict, so a failed write is
+        traced and swallowed. Single-column merge: only the columns passed
+        here change; a later write to the same column wins."""
+        try:
+            self.store.add_evidence(claim_id, episode_id,
+                                    rubric_pass=rubric_pass, outcome=outcome)
+        except Exception as exc:
+            self.store.log_trace("evidence_write_failed", {
+                "claim": claim_id, "episode_id": episode_id,
+                "error": f"{type(exc).__name__}: {exc}",
+            })
+
     def mark_used(self, claim_ids: list[str]) -> int:
         """Record usage per claim (I3 revival) and fold the ids into the
         episode's attribution set. Unknown ids are skipped; the return value
@@ -530,6 +867,14 @@ class Memory:
         self._blocked_once.clear()
         self._episode_id = episode_id
 
+    def end_episode(self) -> None:
+        """Close the open episode (behavior 6): after a successful
+        close_episode nothing may claim this episode id any more. The
+        episode's undelivered deliverable notices rebind to NULL so they
+        stay deliverable in later tasks (plan 4.1 carry-over)."""
+        self.store.rebind_episode_notices(self._episode_id)
+        self._episode_id = None
+
     @property
     def current_episode_id(self) -> str | None:
         """The episode stamp applied to loop traces, if a task is open."""
@@ -538,8 +883,8 @@ class Memory:
     @property
     def episode_claim_ids(self) -> list[str]:
         """Claims attributed to the current episode: picked + guard hits +
-        overridden + verified cards. The world verdict lands on exactly
-        this set."""
+        overridden + verified + search-returned cards. The world verdict
+        lands on exactly this set."""
         return list(self._episode_claims)
 
     def _log(self, op: str, payload: dict, ts: float | None = None) -> int:
@@ -551,12 +896,127 @@ class Memory:
 
     # -- loop 6: consolidate / forget / promote ---------------------------
 
+    def promote_request(self, claim_id: str) -> dict:
+        """Plan 4.5 proposal: the contract draft behind the confirm path
+        (the P3 UI shows commands 全文 + content hash; the hash binds the
+        approval to exact bytes). A request on a veto-rejected card is the
+        user's explicit request: the decision re-grades to REQUIRES_CONFIRM
+        and the override is traced (留审计). A card outside both tracks
+        raises ValueError: 拒出候选 stands. Writes the pending queue row
+        and a promote_request trace."""
+        c = self.store.claim(claim_id)
+        if c is None:
+            raise KeyError(claim_id)
+        if self.project_root is None:
+            raise ValueError("promote_request needs a project_root")
+        evidence = self.store.evidence(claim_id)
+        decision = promotion_decision(c, evidence,
+                                      self.policy.promote_after_successes)
+        veto = promotion_veto(evidence)
+        override = False
+        if decision == "rejected":
+            if not veto:
+                raise ValueError(
+                    f"claim {claim_id} is not a promotion candidate")
+            override = True
+            decision = "requires_confirm"
+        line = self.store.lineage(claim_id)
+        plan = plan_skill(c, self.project_root,
+                          anchor=None if line is None else line["anchor"])
+        self.store.put_promotion(claim_id, decision, "pending")
+        self._log("promote_request", {
+            "claim": claim_id, "decision": decision, "override": override,
+            "veto": veto, "commands": plan["commands"],
+            "content_hash": plan["content_hash"],
+            "version": plan["version"],
+        })
+        return {
+            "claim_id": claim_id, "decision": decision,
+            "suggest": "auto" if decision == "auto_ok" else "confirm",
+            "override": override, "veto": veto,
+            "slug": plan["slug"], "anchor": plan["anchor"],
+            "version": plan["version"], "path": plan["path"],
+            "commands": plan["commands"],
+            "content_hash": plan["content_hash"],
+        }
+
+    def promote_commit(self, claim_id: str, approved: bool,
+                       content_hash: str | None = None) -> dict:
+        """Plan 4.5: the single skill-write port. The consolidate auto path
+        and the user confirm path both land here; nothing else writes
+        .pi/skills contracts.
+
+        content_hash binds a commands-carrying commit to the exact draft
+        bytes the approval saw: when the command list is non-empty, a
+        missing or stale hash refuses the commit (PromoteHashMismatch ->
+        op code hash_mismatch). Empty-command cards (the AUTO_OK path) are
+        not gated.
+
+        approved=True: write_skill (stamps set_lineage_version) + claim
+        PROMOTED/promoted_to + claim_lineage.skill_path writeback.
+        approved=False: the queue row goes rejected and the card is
+        untouched (拒绝零回退). A commit on a rejected-decision card is a
+        user override and is traced as one. Every approval and rejection
+        writes a promote_commit trace carrying commands 全文 and the content
+        hash."""
+        c = self.store.claim(claim_id)
+        if c is None:
+            raise KeyError(claim_id)
+        evidence = self.store.evidence(claim_id)
+        raw = promotion_decision(c, evidence,
+                                 self.policy.promote_after_successes)
+        veto = promotion_veto(evidence)
+        override = raw == "rejected"
+        decision = "requires_confirm" if override else raw
+        plan, anchor, commands, plan_hash = self._promote_plan(c)
+        if commands and (plan_hash is None or content_hash != plan_hash):
+            raise PromoteHashMismatch(
+                f"claim {claim_id}: content hash mismatch; the draft "
+                f"changed since the request, re-request it")
+        content_hash = plan_hash
+        path = None
+        if approved:
+            if plan is not None:
+                path = write_skill(c, self.project_root, anchor=anchor,
+                                   version=plan["version"], store=self.store)
+                self.store.set_lineage_skill_path(claim_id, path)
+            self.store.promote(claim_id, target=f"procedure:{c.key}")
+        self.store.put_promotion(
+            claim_id, decision, "approved" if approved else "rejected")
+        self._log("promote_commit", {
+            "claim": claim_id, "approved": approved, "decision": decision,
+            "override": override, "veto": veto, "path": path,
+            "commands": commands, "content_hash": content_hash,
+        })
+        return {
+            "claim_id": claim_id, "decision": decision,
+            "override": override, "veto": veto,
+            "state": "approved" if approved else "rejected",
+            "path": path, "commands": commands,
+            "content_hash": content_hash,
+        }
+
+    def _promote_plan(self, c: Claim) -> tuple[dict | None, str | None,
+                                               list[str], str | None]:
+        """Build the skill plan for one promotion, or fall back to command
+        extraction when there is no project_root. The commands and content
+        hash feed the promote traces either way."""
+        line = self.store.lineage(c.id)
+        anchor = None if line is None else line["anchor"]
+        plan = (plan_skill(c, self.project_root, anchor=anchor)
+                if self.project_root is not None else None)
+        commands = (plan["commands"] if plan is not None
+                    else extract_commands(c.text))
+        content_hash = None if plan is None else plan["content_hash"]
+        return plan, anchor, commands, content_hash
+
     def consolidate(self, now: float | None = None) -> ConsolidateReport:
         """Periodic replay. Deletion is reserved for falsified claims (I3):
         unused claims are demoted out of the default injection set, never
         deleted -- "never used" is indistinguishable from "never retrieved".
         Promotes proven lessons to procedures (and, with a project_root, to
-        loadable skill files).
+        loadable skill files) through the single commit port; a lesson that
+        requires confirm becomes a pending candidate and is not written.
         """
         now = time.time() if now is None else now
         report = ConsolidateReport()
@@ -571,6 +1031,7 @@ class Memory:
             "evicted": report.evicted, "decayed": report.decayed,
             "promoted": report.promoted,
             "skills_written": report.skills_written,
+            "candidates": report.candidates,
         }, ts=now)
         return report
 
@@ -580,18 +1041,30 @@ class Memory:
 
         Order matters: a proven lesson is promoted before silence can demote
         it, and terminal statuses are left alone (idempotent reruns).
-        Thresholds come from the policy (the offline-replay-swappable part).
+        Promotion is decision-driven (plan 4.5): AUTO_OK commits through the
+        single write port, REQUIRES_CONFIRM becomes a pending candidate with
+        nothing written, and a decided queue row is never re-proposed
+        (拒绝零回退). The drop ladder then applies as before.
         """
         if c.status == ClaimStatus.FALSIFIED:
             self.store.set_status(c.id, ClaimStatus.EVICTED, "falsified cleanup")
             return "evicted", None
         if c.status not in (ClaimStatus.ACTIVE, ClaimStatus.CONFLICTED):
             return None, None
-        if self._is_promotable(c):
-            skill_path = (write_skill(c, self.project_root)
-                          if self.project_root is not None else None)
-            self.store.promote(c.id, target=f"procedure:{c.key}")
-            return "promoted", skill_path
+        if self.store.promotion_row(c.id) is None:
+            decision = promotion_decision(
+                c, self.store.evidence(c.id),
+                self.policy.promote_after_successes)
+            if decision == "auto_ok":
+                res = self.promote_commit(c.id, approved=True)
+                return "promoted", res["path"]
+            if decision == "requires_confirm":
+                self.store.put_promotion(c.id, decision, "pending", ts=now)
+                self._log("promote_request", {
+                    "claim": c.id, "decision": decision, "override": False,
+                    "source": "consolidate",
+                }, ts=now)
+                return "candidates", None
         if self._is_expired_unused(c, now):
             self.store.set_status(c.id, ClaimStatus.DORMANT, "unused demoted")
             return "decayed", None
@@ -617,11 +1090,3 @@ class Memory:
             return False
         last_used = c.used_at[-1] if c.used_at else c.created_at
         return now - last_used > self.policy.dormant_after_s
-
-    def _is_promotable(self, c: Claim) -> bool:
-        return (
-            c.kind == ClaimKind.EXPERIENCE
-            and c.verify_cmd is not None
-            and c.success_count >= self.policy.promote_after_successes
-            and c.status == ClaimStatus.ACTIVE
-        )

@@ -56,6 +56,8 @@ export interface RetrievedClaim {
   status?: string;
   match_pattern?: string | null;
   source_event_ids?: Array<string | number>;
+  /** Promoted contract path from claim_lineage; null until promotion records one. */
+  skill_path?: string | null;
 }
 
 export interface ConflictEntry {
@@ -67,6 +69,24 @@ export interface RetrieveResult {
   picked: RetrievedClaim[];
   conflicts?: ConflictEntry[];
   injected?: unknown;
+  /** Deliverable notice rows flushed for the current episode (plan 4.1). */
+  notices?: NoticeRow[];
+}
+
+/** One row of the notices table (plan 4.1). kind carries ":audit" for audit rows. */
+export interface NoticeRow {
+  id?: number | string | undefined;
+  claim_id?: string | number | undefined;
+  lineage_anchor?: string | null | undefined;
+  kind: string;
+  text: string;
+  episode_id?: string | null | undefined;
+  created_at?: number | undefined;
+  delivered_at?: number | null | undefined;
+}
+
+export interface NoticesFlushResult {
+  notices: NoticeRow[];
 }
 
 export interface GuardArgs {
@@ -88,9 +108,13 @@ export interface OverrideResult {
   claim?: RetrievedClaim;
 }
 
+/** Four-way verify read (protocol 2): ok / falsified / unknown (timeout) / hearsay. */
+export type VerifyStatus = "ok" | "falsified" | "unknown" | "hearsay";
+
 export interface VerifyResult {
   ok: boolean;
   falsified: boolean;
+  status?: VerifyStatus | undefined;
 }
 
 export interface GetClaimResult {
@@ -109,14 +133,50 @@ export interface DeleteClaimResult {
 export interface SearchArgs {
   query: string;
   k?: number | undefined;
+  /** Query embedding for the semantic channel (plan 3.5); absent = lexical. */
+  ctx_embedding?: number[] | undefined;
+  ctx_model?: string | undefined;
 }
 
 export interface SearchResult {
   claims: RetrievedClaim[];
 }
 
+export interface SetEmbeddingArgs {
+  claim_id: string | number;
+  vector: number[];
+  model: string;
+}
+
+export interface SetEmbeddingResult {
+  stored: boolean;
+}
+
+export interface CardifyResult {
+  claim: RetrievedClaim | null;
+}
+
 export interface ClassifySignalResult {
   signal: SignalKind;
+}
+
+export interface MemorySignalArgs {
+  signal: "correction" | "affirmation";
+  /** The user's exact words (the stashed input line): the card body source. */
+  text: string;
+  /** Model wording: audit trace only, never claim text (plan 8, I1). */
+  reason?: string | undefined;
+  /** Explicit accounting target; default is the most recent closed episode. */
+  episode_id?: string | undefined;
+}
+
+export interface MemorySignalResult {
+  /** True when (episode, signal) was already processed by either channel. */
+  skipped: boolean;
+  applied?: boolean;
+  claim_ids?: Array<string | number>;
+  /** Correction only: the new card built from the user's exact words. */
+  claim?: RetrievedClaim | null;
 }
 
 export interface BeginTaskResult {
@@ -131,6 +191,110 @@ export interface CloseEpisodeResult {
   verdict: string;
   claim_ids: Array<string | number>;
   applied: boolean;
+}
+
+// --- P3 promote confirm flow + visibility (plan 5.1/5.3) -------------------
+
+export interface PromoteCandidate {
+  id: string | number;
+  lineage?:
+    | {
+        anchor?: string | number | null | undefined;
+        skill_path?: string | null | undefined;
+        last_version?: number | undefined;
+      }
+    | null
+    | undefined;
+  /** Suggested action: "auto" (auto_ok) or "confirm". */
+  suggest?: string | undefined;
+  evidence?:
+    | {
+        rows?: number | undefined;
+        wins?: number | undefined;
+        losses?: number | undefined;
+        veto?: string[] | undefined;
+      }
+    | undefined;
+}
+
+export interface PromoteCandidatesResult {
+  candidates: PromoteCandidate[];
+}
+
+/** The confirm-path draft (plan 4.5): commands 全文 + content_hash are the
+ * security gate the approval binds to. */
+export interface PromoteDraft {
+  claim_id: string | number;
+  decision?: string | undefined;
+  suggest?: string | undefined;
+  override: boolean;
+  veto: string[];
+  slug?: string | undefined;
+  anchor?: string | number | undefined;
+  version?: number | undefined;
+  path?: string | undefined;
+  /** Full command list (plan 4.4 extraction), never auto-executed. */
+  commands: string[];
+  /** sha256 of the exact contract bytes the approval binds to. */
+  content_hash: string | null;
+}
+
+export interface PromoteRequestResult {
+  draft: PromoteDraft;
+}
+
+export interface PromoteCommitResult {
+  claim_id: string | number;
+  decision?: string | undefined;
+  override: boolean;
+  veto: string[];
+  state: "approved" | "rejected";
+  path: string | null;
+  commands: string[];
+  content_hash: string | null;
+  claim?: RetrievedClaim | null | undefined;
+}
+
+/** plan 5.3 /memory audit rows: trace set differences, no re-scoring. */
+export interface AuditMissRow {
+  claim_id: string | number;
+  key: string | null;
+  count: number;
+}
+
+export interface AuditFalseTriggerRow {
+  claim_id: string | number;
+  key: string | null;
+  episode_id: string | null;
+}
+
+export interface AuditResult {
+  missed: AuditMissRow[];
+  false_triggers: AuditFalseTriggerRow[];
+}
+
+export interface ClaimDetailResult {
+  claim: RetrievedClaim | null;
+  lineage?:
+    | {
+        anchor?: string | number | null | undefined;
+        skill_path?: string | null | undefined;
+        last_version?: number | undefined;
+      }
+    | null
+    | undefined;
+  /** Every claim sharing the anchor, oldest first. */
+  chain: Array<{
+    id: string | number;
+    key?: string | undefined;
+    status?: string | undefined;
+    status_reason?: string | undefined;
+    created_at?: number | undefined;
+  }>;
+  /** Located SKILL.md (live or _retired/ archive) with its frontmatter status. */
+  contract?: { path: string; status?: string | null | undefined } | null | undefined;
+  evidence: EvidenceRow[];
+  notices: NoticeRow[];
 }
 
 export interface RunDreamResult {
@@ -161,6 +325,33 @@ export interface ImportEventsResult {
 
 export interface GetStateResult {
   watermark_seq: number;
+  /** Protocol generation advertised by the sidecar (serve.py get_state). */
+  protocol?: number | undefined;
+}
+
+export interface EvidenceArgs {
+  claim_id: string | number;
+}
+
+/** One claim_evidence row: rubric_pass and outcome are merged independently. */
+export interface EvidenceRow {
+  episode_id: string;
+  rubric_pass?: boolean | null;
+  outcome?: boolean | null;
+  rubric_updated_at?: number | null;
+  outcome_updated_at?: number | null;
+  created_at?: number;
+}
+
+export interface EvidenceResult {
+  evidence: EvidenceRow[];
+}
+
+/** Error envelope (protocol 2): code is optional and machine-readable. */
+export interface ErrorEnvelope {
+  ok: false;
+  error: string;
+  code?: string | undefined;
 }
 
 export interface StatsResult {
@@ -372,14 +563,19 @@ function resolveMemloopPythonPath(extensionDir: string): string {
   if (packaged !== undefined && existsSync(packaged)) return packaged;
   // MEMLOOP_HOME points at the memloop repo root; otherwise the extension
   // sits at <memloop-root>/pi-bridge, so the root is its parent directory.
+  // The product bridge (<bridge-root>/src or /dist) vendors the package at
+  // <bridge-root>/python, so that layout is probed too.
   const home = process.env.MEMLOOP_HOME ?? path.dirname(extensionDir);
   const srcLayout = path.join(home, "src", "memloop", "serve.py");
   const flatLayout = path.join(home, "memloop", "serve.py");
+  const vendoredLayout = path.join(home, "python", "memloop", "serve.py");
   return existsSync(srcLayout)
     ? path.join(home, "src")
     : existsSync(flatLayout)
       ? home
-      : path.join(home, "src");
+      : existsSync(vendoredLayout)
+        ? path.join(home, "python")
+        : path.join(home, "src");
 }
 
 function resolveServeLaunch(
@@ -687,7 +883,7 @@ export class MemloopSidecar {
     return result;
   }
 
-  async cardify(args: CardifyArgs): Promise<unknown> {
+  async cardify(args: CardifyArgs): Promise<CardifyResult> {
     const record: Record<string, unknown> = {
       event_id: args.event_id,
       key: args.key,
@@ -696,12 +892,21 @@ export class MemloopSidecar {
     if (args.claim_kind !== undefined) record.claim_kind = args.claim_kind;
     if (args.verify_cmd !== undefined) record.verify_cmd = args.verify_cmd;
     if (args.match_pattern !== undefined) record.match_pattern = args.match_pattern;
-    return this.request<unknown>("cardify", record);
+    const raw = await this.request<unknown>("cardify", record);
+    const rec = asRecord(raw);
+    return { claim: normalizeClaim(rec.claim) ?? null };
   }
 
-  async retrieve(args: { context: string; limit?: number | undefined }): Promise<RetrieveResult> {
+  async retrieve(args: {
+    context: string;
+    limit?: number | undefined;
+    ctx_embedding?: number[] | undefined;
+    ctx_model?: string | undefined;
+  }): Promise<RetrieveResult> {
     const record: Record<string, unknown> = { context: args.context };
     if (args.limit !== undefined) record.limit = args.limit;
+    if (args.ctx_embedding !== undefined) record.ctx_embedding = args.ctx_embedding;
+    if (args.ctx_model !== undefined) record.ctx_model = args.ctx_model;
     const raw = await this.request<unknown>("retrieve", record);
     return normalizeRetrieve(raw);
   }
@@ -731,6 +936,7 @@ export class MemloopSidecar {
     return {
       ok: rec.ok === true,
       falsified: rec.falsified === true,
+      status: normalizeVerifyStatus(rec.status),
     };
   }
 
@@ -749,11 +955,33 @@ export class MemloopSidecar {
     return { deleted: rec.deleted === true };
   }
 
+  async noticesFlush(args: {
+    episode_id?: string | undefined;
+  }): Promise<NoticesFlushResult> {
+    const record: Record<string, unknown> = {};
+    if (args.episode_id !== undefined) record.episode_id = args.episode_id;
+    const raw = await this.request<unknown>("notices_flush", record);
+    const rec = asRecord(raw);
+    return { notices: Array.isArray(rec.notices) ? normalizeNotices(rec.notices) : [] };
+  }
+
   async search(args: SearchArgs): Promise<SearchResult> {
     const record: Record<string, unknown> = { query: args.query };
     if (args.k !== undefined) record.k = args.k;
+    if (args.ctx_embedding !== undefined) record.ctx_embedding = args.ctx_embedding;
+    if (args.ctx_model !== undefined) record.ctx_model = args.ctx_model;
     const raw = await this.request<unknown>("search", record);
     return { claims: normalizeClaims(raw) };
+  }
+
+  async setEmbedding(args: SetEmbeddingArgs): Promise<SetEmbeddingResult> {
+    const raw = await this.request<unknown>("set_embedding", {
+      claim_id: args.claim_id,
+      vector: args.vector,
+      model: args.model,
+    });
+    const rec = asRecord(raw);
+    return { stored: rec.stored === true };
   }
 
   async classifySignal(args: { text: string }): Promise<ClassifySignalResult> {
@@ -795,8 +1023,121 @@ export class MemloopSidecar {
     return this.request<unknown>("episode_signal", { signal: args.signal });
   }
 
+  /** Model-labeled feedback (plan 8): shares the episode_signal books. */
+  async memorySignal(args: MemorySignalArgs): Promise<MemorySignalResult> {
+    const record: Record<string, unknown> = { signal: args.signal, text: args.text };
+    if (args.reason !== undefined) record.reason = args.reason;
+    if (args.episode_id !== undefined) record.episode_id = args.episode_id;
+    const raw = await this.request<unknown>("memory_signal", record);
+    const rec = asRecord(raw);
+    const result: MemorySignalResult = { skipped: rec.skipped === true };
+    if (typeof rec.applied === "boolean") result.applied = rec.applied;
+    if (Array.isArray(rec.claim_ids)) result.claim_ids = toIds(rec.claim_ids);
+    if (rec.claim !== undefined) result.claim = normalizeClaim(rec.claim) ?? null;
+    return result;
+  }
+
   async consolidate(): Promise<unknown> {
     return this.request<unknown>("consolidate", {});
+  }
+
+  /** P3 promote confirm flow (plan 5.1): live candidate listing. */
+  async promoteCandidates(): Promise<PromoteCandidatesResult> {
+    const raw = await this.request<unknown>("promote_candidates", {});
+    const rec = asRecord(raw);
+    const list = Array.isArray(rec.candidates) ? rec.candidates : [];
+    return { candidates: list.map(normalizePromoteCandidate) };
+  }
+
+  /** The contract draft behind the confirm path: commands 全文 + hash. */
+  async promoteRequest(args: {
+    claim_id: string | number;
+  }): Promise<PromoteRequestResult> {
+    const raw = await this.request<unknown>("promote_request", {
+      claim_id: args.claim_id,
+    });
+    return { draft: normalizePromoteDraft(asRecord(raw).draft) };
+  }
+
+  /** The single skill-write port: forwards the user's approve/reject.
+   * content_hash binds a commands-carrying commit to the draft's exact
+   * bytes (the server refuses a stale one with code hash_mismatch). */
+  async promoteCommit(args: {
+    claim_id: string | number;
+    approved: boolean;
+    content_hash?: string | null | undefined;
+  }): Promise<PromoteCommitResult> {
+    const raw = await this.request<unknown>("promote_commit", {
+      claim_id: args.claim_id,
+      approved: args.approved,
+      content_hash: args.content_hash ?? null,
+    });
+    const rec = asRecord(raw);
+    return {
+      claim_id: rec.claim_id as string | number,
+      decision: typeof rec.decision === "string" ? rec.decision : undefined,
+      override: rec.override === true,
+      veto: Array.isArray(rec.veto) ? (rec.veto as string[]) : [],
+      state: rec.state === "rejected" ? "rejected" : "approved",
+      path: typeof rec.path === "string" ? rec.path : null,
+      commands: Array.isArray(rec.commands) ? (rec.commands as string[]) : [],
+      content_hash: typeof rec.content_hash === "string" ? rec.content_hash : null,
+      claim: normalizeClaim(rec.claim) ?? null,
+    };
+  }
+
+  /** P3 /memory audit (plan 5.3): trace set differences, no re-scoring. */
+  async audit(): Promise<AuditResult> {
+    const raw = await this.request<unknown>("audit", {});
+    const rec = asRecord(raw);
+    return {
+      missed: (Array.isArray(rec.missed) ? rec.missed : []).map((item) => {
+        const r = asRecord(item);
+        return {
+          claim_id: r.claim_id as string | number,
+          key: typeof r.key === "string" ? r.key : null,
+          count: typeof r.count === "number" ? r.count : 0,
+        };
+      }),
+      false_triggers: (Array.isArray(rec.false_triggers) ? rec.false_triggers : []).map(
+        (item) => {
+          const r = asRecord(item);
+          return {
+            claim_id: r.claim_id as string | number,
+            key: typeof r.key === "string" ? r.key : null,
+            episode_id: typeof r.episode_id === "string" ? r.episode_id : null,
+          };
+        },
+      ),
+    };
+  }
+
+  /** P3 /memory show backing (plan 5.3): one claim's full disclosure. */
+  async claimDetail(args: {
+    claim_id: string | number;
+  }): Promise<ClaimDetailResult> {
+    const raw = await this.request<unknown>("claim_detail", {
+      claim_id: args.claim_id,
+    });
+    const rec = asRecord(raw);
+    const lineage = asRecord(rec.lineage);
+    return {
+      claim: normalizeClaim(rec.claim) ?? null,
+      lineage: Object.keys(lineage).length > 0 ? lineage : null,
+      chain: (Array.isArray(rec.chain) ? rec.chain : []).map((item) => {
+        const r = asRecord(item);
+        return {
+          id: r.id as string | number,
+          key: typeof r.key === "string" ? r.key : undefined,
+          status: typeof r.status === "string" ? r.status : undefined,
+          status_reason: typeof r.status_reason === "string" ? r.status_reason : undefined,
+          created_at: typeof r.created_at === "number" ? r.created_at : undefined,
+        };
+      }),
+      contract: normalizeContract(rec.contract),
+      evidence: Array.isArray(rec.evidence) ? (rec.evidence as EvidenceRow[]) : [],
+      notices: Array.isArray(rec.notices) ? normalizeNotices(rec.notices) : [],
+    };
   }
 
   async runDream(args: {
@@ -820,7 +1161,10 @@ export class MemloopSidecar {
   async getState(): Promise<GetStateResult> {
     const raw = await this.request<unknown>("get_state", { session_key: this.sessionKey });
     const rec = asRecord(raw);
-    return { watermark_seq: typeof rec.watermark_seq === "number" ? rec.watermark_seq : 0 };
+    return {
+      watermark_seq: typeof rec.watermark_seq === "number" ? rec.watermark_seq : 0,
+      protocol: typeof rec.protocol === "number" ? rec.protocol : undefined,
+    };
   }
 
   // Journal-first import: the batch is journaled before it is sent so a crash
@@ -958,6 +1302,8 @@ function normalizeClaim(value: unknown): RetrievedClaim | undefined {
   if (typeof rec.match_pattern === "string") claim.match_pattern = rec.match_pattern;
   if (rec.match_pattern === null) claim.match_pattern = null;
   if (Array.isArray(rec.source_event_ids)) claim.source_event_ids = toIds(rec.source_event_ids);
+  if (typeof rec.skill_path === "string") claim.skill_path = rec.skill_path;
+  if (rec.skill_path === null) claim.skill_path = null;
   return claim;
 }
 
@@ -1013,7 +1359,33 @@ function normalizeRetrieve(raw: unknown): RetrieveResult {
   const result: RetrieveResult = { picked: normalizeClaims(rec.picked) };
   if (rec.conflicts !== undefined) result.conflicts = normalizeConflicts(rec.conflicts);
   if (rec.injected !== undefined) result.injected = rec.injected;
+  if (Array.isArray(rec.notices)) result.notices = normalizeNotices(rec.notices);
   return result;
+}
+
+function normalizeNotices(value: unknown[]): NoticeRow[] {
+  const out: NoticeRow[] = [];
+  for (const item of value) {
+    const rec = asRecord(item);
+    if (typeof rec.kind !== "string" || typeof rec.text !== "string") continue;
+    const row: NoticeRow = { kind: rec.kind, text: rec.text };
+    if (typeof rec.id === "number" || typeof rec.id === "string") row.id = rec.id;
+    if (typeof rec.claim_id === "string" || typeof rec.claim_id === "number")
+      row.claim_id = rec.claim_id;
+    if (typeof rec.lineage_anchor === "string") row.lineage_anchor = rec.lineage_anchor;
+    if (typeof rec.episode_id === "string") row.episode_id = rec.episode_id;
+    if (rec.episode_id === null) row.episode_id = null;
+    if (typeof rec.created_at === "number") row.created_at = rec.created_at;
+    out.push(row);
+  }
+  return out;
+}
+
+function normalizeVerifyStatus(value: unknown): VerifyStatus | undefined {
+  return value === "ok" || value === "falsified" || value === "unknown" ||
+    value === "hearsay"
+    ? value
+    : undefined;
 }
 
 function normalizeGuard(raw: unknown): GuardResult {
@@ -1028,4 +1400,54 @@ function normalizeGuard(raw: unknown): GuardResult {
   if (typeof rec.message === "string") result.message = rec.message;
   result.blocked = rec.blocked === true;
   return result;
+}
+
+function normalizePromoteCandidate(value: unknown): PromoteCandidate {
+  const rec = asRecord(value);
+  const out: PromoteCandidate = { id: rec.id as string | number };
+  if (rec.lineage !== undefined && rec.lineage !== null) {
+    const line = asRecord(rec.lineage);
+    out.lineage = {
+      anchor: (line.anchor ?? null) as string | number | null,
+      skill_path: typeof line.skill_path === "string" ? line.skill_path : null,
+      last_version: typeof line.last_version === "number" ? line.last_version : 0,
+    };
+  }
+  if (typeof rec.suggest === "string") out.suggest = rec.suggest;
+  if (rec.evidence !== undefined && rec.evidence !== null) {
+    const ev = asRecord(rec.evidence);
+    out.evidence = {
+      rows: typeof ev.rows === "number" ? ev.rows : 0,
+      wins: typeof ev.wins === "number" ? ev.wins : 0,
+      losses: typeof ev.losses === "number" ? ev.losses : 0,
+      veto: Array.isArray(ev.veto) ? (ev.veto as string[]) : [],
+    };
+  }
+  return out;
+}
+
+function normalizePromoteDraft(value: unknown): PromoteDraft {
+  const rec = asRecord(value);
+  return {
+    claim_id: rec.claim_id as string | number,
+    decision: typeof rec.decision === "string" ? rec.decision : undefined,
+    suggest: typeof rec.suggest === "string" ? rec.suggest : undefined,
+    override: rec.override === true,
+    veto: Array.isArray(rec.veto) ? (rec.veto as string[]) : [],
+    slug: typeof rec.slug === "string" ? rec.slug : undefined,
+    anchor: (rec.anchor ?? undefined) as string | number | undefined,
+    version: typeof rec.version === "number" ? rec.version : undefined,
+    path: typeof rec.path === "string" ? rec.path : undefined,
+    commands: Array.isArray(rec.commands) ? (rec.commands as string[]) : [],
+    content_hash: typeof rec.content_hash === "string" ? rec.content_hash : null,
+  };
+}
+
+function normalizeContract(value: unknown): { path: string; status?: string | null } | null {
+  const rec = asRecord(value);
+  if (typeof rec.path !== "string") return null;
+  return {
+    path: rec.path,
+    status: typeof rec.status === "string" ? rec.status : null,
+  };
 }
