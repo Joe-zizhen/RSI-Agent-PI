@@ -202,8 +202,7 @@ function readEmbeddingsFrom(settingsPath: string): EmbeddingsConfig | undefined 
     const sectionRec =
       section !== null && typeof section === "object" ? (section as Record<string, unknown>) : {};
     const emb = sectionRec.embeddings;
-    const rec =
-      emb !== null && typeof emb === "object" ? (emb as Record<string, unknown>) : {};
+    const rec = emb !== null && typeof emb === "object" ? (emb as Record<string, unknown>) : {};
     const url = typeof rec.url === "string" ? rec.url.trim() : "";
     const model = typeof rec.model === "string" ? rec.model.trim() : "";
     if (url === "" || model === "") return undefined;
@@ -232,7 +231,7 @@ async function fetchEmbedding(
     if (!res.ok) return undefined;
     const body = (await res.json()) as unknown;
     const rec = inputToRecord(body);
-    const first = Array.isArray(rec.data) ? rec.data[0] : undefined;
+    const first: unknown = Array.isArray(rec.data) ? (rec.data as unknown[])[0] : undefined;
     const vector = inputToRecord(first).embedding;
     if (!Array.isArray(vector) || vector.some((x) => typeof x !== "number")) {
       return undefined;
@@ -561,7 +560,7 @@ export default function memloop(pi: ExtensionAPI) {
                 verify_cmd: command,
                 match_pattern: failure.command,
               });
-              void storeCardEmbedding(active, cardified.claim);
+              storeCardEmbedding(active, cardified.claim).catch(() => undefined);
             } catch (err) {
               ctx.ui.notify(
                 t(`memloop cardify failed: ${String(err)}`, `memloop 成卡失败：${String(err)}`),
@@ -633,7 +632,7 @@ export default function memloop(pi: ExtensionAPI) {
           event_id: eventId,
           key: normalizeKey(text.slice(0, 24)),
         });
-        void storeCardEmbedding(active, cardified.claim);
+        storeCardEmbedding(active, cardified.claim).catch(() => undefined);
       } catch (err) {
         ctx.ui.notify(
           t(`memloop cardify failed: ${String(err)}`, `memloop 成卡失败：${String(err)}`),

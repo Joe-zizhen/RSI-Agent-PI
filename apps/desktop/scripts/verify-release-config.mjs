@@ -120,15 +120,30 @@ function validateCiWorkflow(workflow) {
   );
 }
 
-function validateBuilderConfig(config, desktopPackage, afterRemoveSource) {
+function validateBuilderConfig(config, builderConfigSource, desktopPackage, afterRemoveSource) {
   assert(config.mac?.notarize === true, "electron-builder must notarize the macOS app");
   assert(
     config.dmg?.sign === true,
     "DMG must be signed for Gatekeeper primary-signature verification",
   );
   assert(
-    config.win?.signAndEditExecutable === true,
-    "Windows packaging must preserve executable icon and version metadata",
+    config.win?.signAndEditExecutable === false,
+    "Windows packaging must keep signAndEditExecutable off: this build has no signing certificate and winCodeSign extraction needs symlink privileges",
+  );
+  const signFlagIndex = builderConfigSource.indexOf("signAndEditExecutable: false");
+  assert(
+    signFlagIndex > 0,
+    "electron-builder.yml must set win.signAndEditExecutable to false explicitly",
+  );
+  const signFlagComment = builderConfigSource.slice(
+    Math.max(0, signFlagIndex - 400),
+    signFlagIndex,
+  );
+  assert(
+    signFlagComment.includes("winCodeSign") &&
+      signFlagComment.includes("symlink") &&
+      /no signing cert/i.test(signFlagComment),
+    "electron-builder.yml must document why signAndEditExecutable stays off (winCodeSign symlink privileges, no signing cert)",
   );
 
   const targets = new Set((config.win?.target ?? []).map(({ target }) => target));
@@ -586,6 +601,7 @@ function validateWorkflow(workflow, finalizerSource, linuxVerifierSource, window
 
 const [
   builderConfig,
+  builderConfigSource,
   ciWorkflow,
   workflow,
   finalizerSource,
@@ -598,6 +614,7 @@ const [
   runElectronBuilderSource,
 ] = await Promise.all([
   parseYaml("apps/desktop/electron-builder.yml"),
+  readFile(path.join(repoDir, "apps", "desktop", "electron-builder.yml"), "utf8"),
   parseYaml(".github/workflows/ci.yml"),
   parseYaml(".github/workflows/release.yml"),
   readFile(path.join(scriptDir, "finalize-macos-release.sh"), "utf8"),
@@ -612,7 +629,12 @@ const [
 
 await assertWorkflowActionPolicy(repoDir);
 await validateConfiguration(builderConfig, new DebugLogger(false));
-validateBuilderConfig(builderConfig, JSON.parse(desktopPackageSource), afterRemoveSource);
+validateBuilderConfig(
+  builderConfig,
+  builderConfigSource,
+  JSON.parse(desktopPackageSource),
+  afterRemoveSource,
+);
 validateCiWorkflow(ciWorkflow);
 validateWorkflow(workflow, finalizerSource, linuxVerifierSource, windowsVerifierSource);
 validateGithubDownloadRetry(retrySource, packageWindowsSource, runElectronBuilderSource);
