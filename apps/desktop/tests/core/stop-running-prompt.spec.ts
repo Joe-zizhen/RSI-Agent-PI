@@ -33,7 +33,7 @@ for (const { finish, prompt } of pendingPrompts) {
       await createNamedThread(page, "Pending prompt");
       await page.locator(".session-row", { hasText: "Pending prompt" }).hover();
       await page.getByRole("button", { name: /^Pin Pending prompt/ }).click();
-      const pinnedSection = page.getByRole("region", { name: "Pinned threads" });
+      const pinnedSection = page.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ });
       await expect(pinnedSection).toBeVisible();
       const state = await getDesktopState(page);
       const target = {
@@ -118,7 +118,7 @@ for (const { finish, prompt } of pendingPrompts) {
       );
       await page.getByTestId("composer").fill(prompt);
       await page.getByTestId("send").click();
-      await expect(page.getByRole("button", { name: "Stop run", exact: true })).toBeVisible();
+      await expect(page.getByRole("button", { name: /^(Stop run|停止运行)$/ })).toBeVisible();
       await expect(page.locator(".composer__hint")).toHaveCount(0);
       await pinnedSection.getByRole("button", { name: /^Unpin Pending prompt/ }).click();
       await expect(pinnedSection).toHaveCount(0);
@@ -145,9 +145,9 @@ for (const { finish, prompt } of pendingPrompts) {
         return;
       }
       await clickSession(page, "Pending prompt");
-      await expect(page.getByRole("button", { name: "Stop run", exact: true })).toBeVisible();
-      await page.getByRole("button", { name: "Stop run", exact: true }).click();
-      await expect(page.getByTestId("send")).toHaveAttribute("aria-label", "Send message", {
+      await expect(page.getByRole("button", { name: /^(Stop run|停止运行)$/ })).toBeVisible();
+      await page.getByRole("button", { name: /^(Stop run|停止运行)$/ }).click();
+      await expect(page.getByTestId("send")).toHaveAttribute("aria-label", /^(Send message|发送消息)$/, {
         timeout: 5_000,
       });
       await expect(

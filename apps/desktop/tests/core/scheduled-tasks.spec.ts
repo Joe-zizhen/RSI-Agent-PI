@@ -35,7 +35,9 @@ test("manual create, tabs, pause, and restart keep scheduled tasks", async () =>
     await window.getByTestId("scheduled-task-save").click();
     await expect(window.getByTestId("scheduled-task-editor")).toHaveCount(0);
     await expect(window.getByTestId("scheduled-task-row")).toContainText("Standup ping");
-    await expect(window.getByTestId("scheduled-task-row")).toContainText("Every 10 minutes");
+    await expect(window.getByTestId("scheduled-task-row")).toContainText(
+      /Every 10 minutes|每 10 分钟/,
+    );
     await window.getByTestId("scheduled-task-filter-active").click();
     await expect(window.getByTestId("scheduled-task-row")).toBeVisible();
 
@@ -58,7 +60,7 @@ test("manual create, tabs, pause, and restart keep scheduled tasks", async () =>
     const window = await second.firstWindow();
     await window.getByTestId("sidebar-scheduled").click();
     await expect(window.getByTestId("scheduled-task-row")).toContainText("Standup ping");
-    await expect(window.getByTestId("scheduled-task-row")).toContainText("Paused");
+    await expect(window.getByTestId("scheduled-task-row")).toContainText(/Paused|已暂停/);
     expect((await getDesktopState(window)).scheduledTasks[0]?.status).toBe("paused");
   } finally {
     await second.close();
@@ -269,7 +271,7 @@ test("a second active bind to the same thread is rejected", async () => {
       }
       return app.createScheduledTask({ ...input, title: "Second bind", instruction: "Second" });
     }, payload);
-    expect(second.lastError).toMatch(/already has a scheduled task/i);
+    expect(second.lastError).toMatch(/(already has a scheduled task|此会话已有一个计划任务)/i);
     expect(second.scheduledTasks).toHaveLength(1);
   } finally {
     await harness.close();
@@ -307,7 +309,7 @@ test("past once create is rejected and title-only edit keeps timezone and nextRu
         },
       },
     );
-    expect(past.lastError).toMatch(/future/i);
+    expect(past.lastError).toMatch(/(future|未来)/i);
     expect(past.scheduledTasks).toHaveLength(0);
 
     const created = await window.evaluate(

@@ -12,6 +12,17 @@ const isMac = process.platform === "darwin";
 /** Control on macOS, where Command switches threads, and Alt elsewhere. */
 const tabModifier = isMac ? "Control" : "Alt";
 const tabLabel = (slot: number) => `${isMac ? "⌃" : "Alt+"}${slot}`;
+const TOOL_NAMES = {
+  Review: "Review|审查",
+  Files: "Files|文件",
+  Terminal: "Terminal|终端",
+} as const;
+type ToolName = keyof typeof TOOL_NAMES;
+const toolName = (name: ToolName) => new RegExp(`^(${TOOL_NAMES[name]})$`);
+const tabTitle = (name: ToolName, slot: number) =>
+  new RegExp(
+    `^(${TOOL_NAMES[name]}) \\(${tabLabel(slot).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\)$`,
+  );
 
 test("Control or Alt with 1-9 selects side panel tabs while Cmd or Ctrl keeps switching threads", async () => {
   test.setTimeout(90_000);
@@ -29,11 +40,11 @@ test("Control or Alt with 1-9 selects side panel tabs while Cmd or Ctrl keeps sw
     await createNamedThread(window, "Tab Bravo");
     await selectSidePanel(window, "文件");
     await selectSidePanel(window, "终端");
-    const tabs = window.getByRole("tablist", { name: "Workspace tools" });
-    const tab = (name: string) => tabs.getByRole("tab", { name, exact: true });
+    const tabs = window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ });
+    const tab = (name: ToolName) => tabs.getByRole("tab", { name: toolName(name) });
     await expect(tabs.getByRole("tab")).toHaveCount(3);
-    await expect(tab("Review")).toHaveAttribute("title", `Review (${tabLabel(1)})`);
-    await expect(tab("Files")).toHaveAttribute("title", `Files (${tabLabel(2)})`);
+    await expect(tab("Review")).toHaveAttribute("title", tabTitle("Review", 1));
+    await expect(tab("Files")).toHaveAttribute("title", tabTitle("Files", 2));
 
     // Renderer keydown path, from the composer.
     const composer = window.getByTestId("composer");
@@ -134,8 +145,8 @@ test("Control or Alt with 1-9 selects side panel tabs while Cmd or Ctrl keeps sw
     await expect(title).toHaveText("Tab Alpha");
 
     await window.keyboard.press(desktopShortcut(","));
-    await window.getByRole("button", { name: "Keyboard shortcuts" }).click();
-    const row = window.locator(".settings-row", { hasText: "Switch to side panel tab" });
+    await window.getByRole("button", { name: /^(Keyboard shortcuts|键盘快捷键)$/ }).click();
+    const row = window.locator(".settings-row", { hasText: /Switch to side panel tab|切换到侧边面板标签页/ });
     await expect(row.locator("kbd")).toHaveText([isMac ? "⌃" : "Alt", "1–9"]);
   } finally {
     await harness.close();

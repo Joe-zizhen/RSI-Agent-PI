@@ -37,14 +37,15 @@ test("shows workspace file mentions from the composer and inserts the selected f
     const mentionMenu = window.getByTestId("mention-menu");
     await expect(mentionMenu).toBeVisible();
     await expect(mentionMenu.locator(".mention-menu__section-title")).toHaveText([
-      "Extensions",
-      "Files",
+      /^(Extensions|扩展)$/,
+      /^(Files|文件)$/,
     ]);
-    // pi-gui's two tools, pi's three add-ons (MCP, code mode, tool search) and two files.
-    await expect(mentionMenu.locator(".mention-menu__item")).toHaveCount(7);
-    await expect(mentionMenu).toContainText("MCP servers");
-    await expect(mentionMenu).toContainText("Thread orchestration");
-    await expect(mentionMenu).toContainText("Scheduled tasks");
+    // pi-gui's three built-ins (orchestration, scheduled tasks, memloop), pi's three
+    // add-ons (MCP, code mode, tool search) and two files.
+    await expect(mentionMenu.locator(".mention-menu__item")).toHaveCount(8);
+    await expect(mentionMenu).toContainText(/MCP servers|MCP 服务器/);
+    await expect(mentionMenu).toContainText(/Thread orchestration|会话编排/);
+    await expect(mentionMenu).toContainText(/Scheduled tasks|计划任务/);
 
     await composer.pressSequentially("README");
     await expect(mentionMenu.locator(".mention-menu__item")).toHaveCount(1);
@@ -89,8 +90,8 @@ test("toggles the diff panel from the keyboard shortcut and renders changed file
     await expect(topbarActions.locator(".topbar__icon")).toHaveCount(1);
     await expect(topbarActions.getByLabel("切换侧边面板")).toBeVisible();
     await expect(topbarActions.getByLabel("切换侧边面板")).toHaveAttribute("aria-pressed", "false");
-    await expect(topbarActions.getByLabel("Toggle terminal")).toHaveCount(0);
-    await expect(topbarActions.getByLabel("Toggle review")).toHaveCount(0);
+    await expect(topbarActions.getByLabel(/^(Toggle terminal|切换终端)$/)).toHaveCount(0);
+    await expect(topbarActions.getByLabel(/^(Toggle review|切换审查面板)$/)).toHaveCount(0);
     await expect(topbarActions.getByLabel("Toggle files")).toHaveCount(0);
     await expect(topbarActions.getByLabel(/prompt navigation/i)).toHaveCount(0);
     await expect(topbarActions.getByLabel(/Evidence|Workbench|Open folder/i)).toHaveCount(0);
@@ -105,7 +106,7 @@ test("toggles the diff panel from the keyboard shortcut and renders changed file
 
     await window.keyboard.press(desktopShortcut("R"));
     await expect(diffPanel).toBeVisible();
-    await expect(diffPanel).toHaveAttribute("aria-label", "Review");
+    await expect(diffPanel).toHaveAttribute("aria-label", /^(Review|审查)$/);
     await expect(diffPanel.locator(".diff-panel__file-path")).toHaveText("README.md");
 
     const mainBox = await window.locator(".main").boundingBox();

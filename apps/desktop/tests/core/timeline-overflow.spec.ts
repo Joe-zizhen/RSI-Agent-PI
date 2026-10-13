@@ -56,7 +56,7 @@ async function setElectronWindowSize(
     if (!appWindow) {
       return false;
     }
-    appWindow.setSize(bounds.width, bounds.height);
+    appWindow.setContentSize(bounds.width, bounds.height);
     return true;
   }, size);
   expect(resized).toBe(true);

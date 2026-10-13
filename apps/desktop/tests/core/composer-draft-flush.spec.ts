@@ -202,7 +202,7 @@ test("keeps a draft when the thread is archived by shortcut straight after typin
       hasText: "Archived",
     });
     await archivedRow.hover();
-    await archivedRow.getByLabel(/^Restore Archived/).click();
+    await archivedRow.getByLabel(/^(Restore|恢复) Archived/).click();
     await expect(window.locator(".archived-thread-group")).toHaveCount(0);
     await selectSession(window, "Archived");
     await expect(window.getByTestId("composer")).toHaveValue(draft);

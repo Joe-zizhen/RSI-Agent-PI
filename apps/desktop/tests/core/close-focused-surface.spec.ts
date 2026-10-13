@@ -66,7 +66,7 @@ test("Ctrl or Cmd+W closes the focused Files, Review, or Terminal surface", asyn
 
     await selectSidePanel(window, "审查");
     await expect(changes).toBeVisible();
-    const refresh = changes.getByRole("button", { name: "Refresh" });
+    const refresh = changes.getByRole("button", { name: /^(Refresh|刷新)$/ });
     await expect(refresh).toBeEnabled();
     await refresh.focus();
     await expectFocusWithin(window, ".diff-panel");
@@ -85,7 +85,7 @@ test("Ctrl or Cmd+W closes the focused Files, Review, or Terminal surface", asyn
     await expect(changes).toBeVisible();
     await expect.poll(() => openWindowCount(harness)).toBe(1);
 
-    const refreshAgain = changes.getByRole("button", { name: "Refresh" });
+    const refreshAgain = changes.getByRole("button", { name: /^(Refresh|刷新)$/ });
     await expect(refreshAgain).toBeEnabled();
     await refreshAgain.focus();
     await expectFocusWithin(window, ".diff-panel");

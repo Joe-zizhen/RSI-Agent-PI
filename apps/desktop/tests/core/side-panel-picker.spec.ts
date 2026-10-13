@@ -77,7 +77,7 @@ test("one icon and keyboard shortcuts toggle the selected workspace tool", async
     await pressSidePanelShortcut();
     await expect(terminal).toBeVisible();
     await expect(
-      window.getByRole("tablist", { name: "Workspace tools" }).getByRole("tab"),
+      window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).getByRole("tab"),
     ).toHaveCount(3);
 
     // Cmd+R reaches Review from the terminal on macOS; Ctrl+R stays with the shell elsewhere.

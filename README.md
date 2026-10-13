@@ -113,6 +113,7 @@ The interface language defaults to Simplified Chinese and can be changed in Sett
 
 - 无验证命令的记忆卡标 HEARSAY。此类记忆卡只作线索。
 - 同 key 的多条冲突记忆卡会带 CONFLICTED 标记同时上屏。
+- 通告注入块。通告（notice）是记忆卡状态变化的上屏提醒。通告随任务开始的注入块上屏，包在 `<memloop-notice>` 段内。任务中途产生的通告以后续工具结果的前缀上屏。每条通告只投递一次。通告类型五个：契约撤下（retracted）、纠正（corrected）、被取代（superseded）、被删除（deleted）、新指令（instructed）。审计型通告不投递，只留保留区供 `/memory show` 查看。
 - 工具调用前系统做三级把关。硬拦截（L2）：记忆卡置信度 ≥ 0.80、世界判决 ≥ 3、且带验证命令时，命中失败模式的调用被拦截。提醒（L1）：记忆卡置信度 ≥ 0.60 且 < 0.80 时，命中失败模式的调用在结果前加提醒文字。其余调用放行。
 - 每个任务的回合结束时提示一行「本次引用了 N 条记忆」。每个任务只提示一次。
 
@@ -153,7 +154,7 @@ verdictCmd 是任务结束时运行的世界判决命令。配置有三条途径
 
 ## 主动命令
 
-主动命令分两类。`/memory` 与 `/dreaming` 由用户在输入框输入。`memory_search`、`memory_verify`、`memory_override` 由模型调用。每条命令按四段说明：是什么、怎么用、什么时候用、用了会怎样。
+主动命令分两类。`/memory` 与 `/dreaming` 由用户在输入框输入。`memory_search`、`memory_verify`、`memory_override`、`memory_signal`、`memory_promote_list`、`memory_promote` 由模型调用。每条命令按四段说明：是什么、怎么用、什么时候用、用了会怎样。
 
 ### /memory list
 
@@ -206,6 +207,23 @@ verdictCmd 是任务结束时运行的世界判决命令。配置有三条途径
     测试需加 -x 标志
     验证命令: pytest --collect-only
 → 已物理删除：3
+```
+
+### /memory audit
+
+- 是什么：审计记忆的漏召与误触发。
+- 怎么用：在输入框输入 `/memory audit`。
+- 什么时候用：想核对记忆系统是否漏掉了该用的卡、或是否误导过任务时。
+- 用了会怎样：分两段输出。漏召是检索时进入候选但未被注入的记忆卡，按次数列出。误触发是在判决为失败的任务里被注入过的记忆卡，按场次列出。各段每类最多列 20 条。空列表输出「无」。
+
+示例输出：
+
+```text
+/memory 审计
+漏召（candidates − picked，不重打分）：
+  [3] test_flag x 2
+误触发（注入后 episode loss）：
+  [5] git-hook @ ep-3a1c
 ```
 
 ### /dreaming
@@ -269,7 +287,7 @@ verdictCmd 是任务结束时运行的世界判决命令。配置有三条途径
 - 是什么：对一条记忆卡执行验证命令，对照外部世界检查它是否仍成立。
 - 怎么用：模型调用 `memory_verify`。参数 `claim_id` 填 `memory_search` 返回的记忆卡 id。
 - 什么时候用：若要依赖低置信度记忆卡，请先调用。若怀疑记忆卡过时，也请调用。
-- 用了会怎样：验证通过返回 ok。证伪返回 falsified，该卡被物理删除且不再注入。其余情况返回状态未知。
+- 用了会怎样：返回四态之一。ok：验证命令退出码 0，该卡成立。falsified：验证命令确定性非零退出，该卡被证伪并退出注入集，已升格的契约同步撤下。unknown：验证命令超时，不证伪、不改置信度。hearsay：该卡没有验证命令，无法对照外部世界，只作线索。
 
 示例调用：
 
@@ -291,6 +309,46 @@ verdictCmd 是任务结束时运行的世界判决命令。配置有三条途径
   "name": "memory_override",
   "arguments": { "claim_id": "3", "reason": "本任务就是要清理 node_modules" }
 }
+```
+
+### memory_signal（模型工具）
+
+- 是什么：把用户对刚结束任务的明确反馈记入世界判决。
+- 怎么用：模型调用 `memory_signal`。参数 `signal` 取 `correction` 或 `affirmation`。参数 `reason` 是审计备注，可省略。系统自动附上用户最近一条原话。模型不代写正文。
+- 什么时候用：用户纠正或肯定了工作，且自动通道没有捕获该反馈时。
+- 用了会怎样：`correction` 把上一任务的世界判决记为失败，并把用户原话存成新记忆卡，取代同 key 旧卡。`affirmation` 把上一任务的世界判决记为半权成功，不成卡。同一任务同一信号只处理一次。重复调用不改任何数据。没有可附加的用户原话时返回提示，不做记录。
+
+示例调用：
+
+```json
+{ "name": "memory_signal", "arguments": { "signal": "correction", "reason": "用户点名了错误" } }
+```
+
+### memory_promote_list（模型工具）
+
+- 是什么：列出升格候选。升格（promote）指把成熟的经验卡写成 skill 契约文件。
+- 怎么用：模型调用 `memory_promote_list`。无参数。
+- 什么时候用：想把已验证的经验固化成 skill 时，先列候选。
+- 用了会怎样：逐条返回候选记忆卡 id、建议动作（auto 或 confirm）、谱系版本与证据摘要（胜、负、否决原因）。没有候选时返回「没有升格候选。」
+
+示例调用：
+
+```json
+{ "name": "memory_promote_list", "arguments": {} }
+```
+
+### memory_promote（模型工具）
+
+- 是什么：走用户确认流把一张经验卡升格为 skill 契约。
+- 怎么用：模型调用 `memory_promote`。参数 `claim_id` 填 `memory_promote_list` 返回的 id。不传 `approved` 表示取草案。向用户展示草案并征询后，再调用一次：传 `approved=true` 批准，传 `approved=false` 拒绝。
+- 什么时候用：`memory_promote_list` 里有候选，且用户同意固化时。模型不得代替用户做决定。
+- 用了会怎样：取草案时返回判定、建议动作、否决原因、契约路径、命令全文与内容 hash。批准时写出 SKILL.md 契约文件，卡片升格。拒绝时只记拒绝，卡片保持原状。命令不会被自动执行。
+
+示例调用：
+
+```json
+{ "name": "memory_promote", "arguments": { "claim_id": "7" } }
+{ "name": "memory_promote", "arguments": { "claim_id": "7", "approved": true } }
 ```
 
 ## 更新

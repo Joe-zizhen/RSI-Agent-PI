@@ -20,8 +20,13 @@ test("preserves an exact changed-file path through diff and stage actions", asyn
   test.setTimeout(30_000);
   const userDataDir = await makeUserDataDir();
   const workspacePath = await makeWorkspace("changed-file-path");
-  const filePath = ' leading\t"quoted" -> destination\n.txt ';
-  const displayCollisionPath = JSON.stringify(filePath);
+  // NTFS rejects control characters and <>:"/\|?*, and trailing dots or spaces.
+  // The names stay weird: edge whitespace, a long mixed-script tail, and punctuation.
+  // displayCollisionPath differs from filePath only in invisible leading whitespace.
+  const filePath =
+    " leading 『quoted』 → destination 测试-文件名 длинное-имя spaces-and-symbols ~!#&'()+,;=@[]{}%-tail-0123456789.txt";
+  const displayCollisionPath =
+    "\u00a0leading 『quoted』 → destination 测试-文件名 длинное-имя spaces-and-symbols ~!#&'()+,;=@[]{}%-tail-0123456789.txt";
   await initGitRepo(workspacePath);
   await commitAllInGitRepo(workspacePath, "init");
   await writeFile(join(workspacePath, filePath), "exact path contents\n", "utf8");
@@ -101,7 +106,7 @@ test("shows Git status as unavailable without losing reviewed files", async () =
 
     await rename(gitPath, unavailableGitPath);
     gitMoved = true;
-    await diffPanel.locator('button[aria-label="Refresh"]').click();
+    await diffPanel.getByRole("button", { name: /^(Refresh|刷新)$/ }).click();
     await expect(diffPanel.getByTestId("changed-files-unavailable")).toContainText(
       /not a git repository|unavailable/i,
     );
@@ -111,10 +116,12 @@ test("shows Git status as unavailable without losing reviewed files", async () =
     gitMoved = false;
     await diffPanel
       .getByTestId("changed-files-unavailable")
-      .getByRole("button", { name: "Retry", exact: true })
+      .getByRole("button", { name: /^(Retry|重试)$/ })
       .click();
     await expect(diffPanel.getByTestId(`diff-panel-reviewed-${filePath}`)).toBeChecked();
-    await expect(diffPanel.getByTestId("diff-panel-counter")).toHaveText("已审查 1 / 1");
+    await expect(diffPanel.getByTestId("diff-panel-counter")).toHaveText(
+      /^(Reviewed|已审查)\s*1\s*\/\s*1$/,
+    );
   } finally {
     await harness.close();
     if (gitMoved) {

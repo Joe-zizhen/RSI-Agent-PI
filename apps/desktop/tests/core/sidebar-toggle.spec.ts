@@ -78,7 +78,7 @@ async function setElectronWindowSize(
       if (!window) {
         return false;
       }
-      window.setSize(size.width, size.height);
+      window.setContentSize(size.width, size.height);
       return true;
     },
     { width, height },
@@ -164,7 +164,7 @@ test("toggles and persists the primary sidebar from the button and keyboard shor
 
     await window.keyboard.press(desktopShortcut(","));
     await expectSecondaryTakeover(window, "settings-surface");
-    await window.getByRole("button", { name: "Appearance", exact: true }).click();
+    await window.getByRole("button", { name: /^(Appearance|外观)$/ }).click();
     await window.getByRole("radio", { name: "浅色", exact: true }).click();
     await writeTakeoverProof(window, "settings-light.png");
     await window.keyboard.press(desktopShortcut("B"));

@@ -211,9 +211,7 @@ test("opening the first workspace from the empty state hydrates provider and mod
     await window.keyboard.press(desktopShortcut(","));
     const settingsSurface = window.getByTestId("settings-surface");
     await expect(settingsSurface).toBeVisible();
-    await expect(settingsSurface.getByRole("button", { name: "Refresh", exact: true })).toHaveCount(
-      0,
-    );
+    await expect(settingsSurface.getByRole("button", { name: /^(Refresh|刷新)$/ })).toHaveCount(0);
 
     await window.getByRole("button", { name: "提供商", exact: true }).click();
     await expect(window.locator(".view-header__title")).toHaveText("提供商");

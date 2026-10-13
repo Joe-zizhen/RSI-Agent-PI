@@ -49,12 +49,23 @@ async function prepareWorkspace() {
   return { userDataDir, agentDir, workspacePath };
 }
 
+const TOOL_NAMES: Record<ToolName, { readonly en: string; readonly zh: string }> = {
+  Files: { en: "Files", zh: "文件" },
+  Review: { en: "Review", zh: "审查" },
+  Terminal: { en: "Terminal", zh: "终端" },
+};
+
+const toolName = (name: ToolName) =>
+  new RegExp(`^(${TOOL_NAMES[name].en}|${TOOL_NAMES[name].zh})$`);
+
+const closeTabName = (name: ToolName) =>
+  new RegExp(`^(Close ${TOOL_NAMES[name].en} tab|关闭 ${TOOL_NAMES[name].zh} 标签页)$`);
+
 async function expectActiveTool(window: Page, name: ToolName): Promise<void> {
   await expect(window.getByTestId("workbench")).toBeVisible();
   await expect(
-    window.getByRole("tablist", { name: "Workspace tools" }).getByRole("tab", {
-      name,
-      exact: true,
+    window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).getByRole("tab", {
+      name: toolName(name),
     }),
   ).toHaveAttribute("aria-selected", "true");
 }
@@ -71,7 +82,7 @@ async function addTool(window: Page, name: ToolName): Promise<void> {
   await window.getByTestId("workbench-add-tab").click();
   const chooser = window.getByTestId("workbench-chooser");
   await expect(chooser).toBeVisible();
-  await chooser.getByRole("button", { name, exact: true }).click();
+  await chooser.getByRole("button", { name: toolName(name) }).click();
   await expectActiveTool(window, name);
 }
 
@@ -151,21 +162,21 @@ test("adds singleton tool tabs, closes to a neighbor, and keeps an empty chooser
     ).toContainText("Uncommitted workspace edit");
     await captureToolWidths(harness, window, testInfo, "Review");
     await expect(
-      window.getByRole("tablist", { name: "Workspace tools" }).getByRole("tab"),
-    ).toHaveText(["Review", "Files", "Terminal"]);
+      window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).getByRole("tab"),
+    ).toHaveText([toolName("Review"), toolName("Files"), toolName("Terminal")]);
     await addTool(window, "Terminal");
     await expect(
-      window.getByRole("tablist", { name: "Workspace tools" }).getByRole("tab"),
+      window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).getByRole("tab"),
     ).toHaveCount(3);
 
-    await window.getByRole("button", { name: "Close Terminal tab", exact: true }).click();
+    await window.getByRole("button", { name: closeTabName("Terminal") }).click();
     await expectActiveTool(window, "Files");
-    await window.getByRole("button", { name: "Close Files tab", exact: true }).click();
+    await window.getByRole("button", { name: closeTabName("Files") }).click();
     await expectActiveTool(window, "Review");
-    await window.getByRole("button", { name: "Close Review tab", exact: true }).click();
+    await window.getByRole("button", { name: closeTabName("Review") }).click();
     await expect(window.getByTestId("workbench-chooser")).toBeVisible();
     await expect(
-      window.getByRole("tablist", { name: "Workspace tools" }).getByRole("tab"),
+      window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).getByRole("tab"),
     ).toHaveCount(0);
     await window
       .getByTestId("workbench-chooser")
@@ -298,8 +309,8 @@ test("an invalid or orphaned task layout does not block other saved UI state", a
     await selectSession(window, TASK_B);
     await expectActiveTool(window, "Terminal");
     await expect(
-      window.getByRole("tablist", { name: "Workspace tools" }).getByRole("tab"),
-    ).toHaveText(["Review", "Terminal"]);
+      window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).getByRole("tab"),
+    ).toHaveText([toolName("Review"), toolName("Terminal")]);
     await expect(window.getByTestId("composer")).toHaveValue("Draft for task B");
     await expect.poll(async () => Object.keys(await savedLayouts())).toEqual([layoutB]);
     await selectSession(window, TASK_A);
@@ -363,7 +374,7 @@ test("closing the Terminal view preserves its live shell", async () => {
     );
     await window.keyboard.press("Enter");
     await expect(terminal.locator(".xterm-rows")).toContainText("SHELL_READY");
-    await window.getByRole("button", { name: "Close Terminal tab", exact: true }).click();
+    await window.getByRole("button", { name: closeTabName("Terminal") }).click();
     await expect(terminal).toHaveCount(0);
     await expectActiveTool(window, "Review");
     await addTool(window, "Terminal");
@@ -439,7 +450,7 @@ test("keeps one resizable width across tools, chooser, tasks, and restart", asyn
       await expect.poll(panelWidth).toBe(540);
       await window
         .getByTestId("workbench-chooser")
-        .getByRole("button", { name: tool, exact: true })
+        .getByRole("button", { name: toolName(tool) })
         .click();
       await expectActiveTool(window, tool);
       await expect.poll(panelWidth).toBe(540);
@@ -476,7 +487,7 @@ test("keeps one resizable width across tools, chooser, tasks, and restart", asyn
     await selectSession(window, TASK_A);
     await addTool(window, "Terminal");
     const activeTab = (await window.getByRole("tab", { name: "终端", exact: true }).boundingBox())!;
-    const strip = (await window.getByRole("tablist", { name: "Workspace tools" }).boundingBox())!;
+    const strip = (await window.getByRole("tablist", { name: /^(Workspace tools|工作台工具)$/ }).boundingBox())!;
     expect(activeTab.x).toBeGreaterThanOrEqual(strip.x);
     expect(activeTab.x + activeTab.width).toBeLessThanOrEqual(strip.x + strip.width + 1);
     await handle.focus();

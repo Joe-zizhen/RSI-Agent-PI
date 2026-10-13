@@ -49,7 +49,7 @@ Use this skill when the user wants a short demo workflow.
 
     await window.getByRole("button", { name: "设置", exact: true }).click();
     await expect(window.locator(".settings-view")).toBeVisible();
-    await expect(window.getByText("Notifications", { exact: true })).toBeVisible();
+    await expect(window.getByText(/^(Notifications|通知)$/)).toBeVisible();
     await expect(window.locator(".settings-view")).toContainText("技能斜杠命令");
     const skillCommandsToggle = window.getByRole("switch", {
       name: "启用技能斜杠命令",
@@ -98,14 +98,14 @@ test("skills and extensions live inside settings as one tabbed page", async () =
 
     const surface = window.getByTestId("skills-surface");
     await expect(surface).toBeVisible();
-    await expect(surface.getByRole("tab", { name: /Skills/ })).toHaveAttribute(
+    await expect(surface.getByRole("tab", { name: /^(Skills|技能)\s*\d+$/ })).toHaveAttribute(
       "aria-selected",
       "true",
     );
     const list = window.getByTestId("skills-list");
-    await expect(list.getByRole("heading", { name: /Workspace/ })).toBeVisible();
+    await expect(list.getByRole("heading", { name: /^(Project|项目)\s*\d+$/ })).toBeVisible();
 
-    const rowSwitch = list.getByRole("switch", { name: "Enable Demo Skill" });
+    const rowSwitch = list.getByRole("switch", { name: /^(Enable Demo Skill|启用 Demo Skill)$/ });
     await expect(rowSwitch).toBeChecked();
     await rowSwitch.click();
     await expect(rowSwitch).not.toBeChecked();
@@ -120,14 +120,14 @@ test("skills and extensions live inside settings as one tabbed page", async () =
     await expect(surface).toBeVisible();
     await expect(row).toBeFocused();
 
-    const search = surface.getByLabel("Search skills");
+    const search = surface.getByLabel(/^(Search skills|搜索技能)$/);
     await search.fill("demo");
-    await surface.getByRole("tab", { name: /Skills/ }).focus();
+    await surface.getByRole("tab", { name: /^(Skills|技能)\s*\d+$/ }).focus();
     await window.keyboard.press("ArrowRight");
     const extensionsSurface = window.getByTestId("extensions-surface");
     await expect(extensionsSurface).toBeVisible();
-    await expect(extensionsSurface.getByRole("tab", { name: /Extensions/ })).toBeFocused();
-    await expect(extensionsSurface.getByLabel("Search extensions")).toHaveValue("");
+    await expect(extensionsSurface.getByRole("tab", { name: /^(Extensions|扩展)\s*\d+$/ })).toBeFocused();
+    await expect(extensionsSurface.getByLabel(/^(Search extensions|搜索扩展)$/)).toHaveValue("");
 
     await window.getByRole("button", { name: "通用", exact: true }).click();
     await expect(window.getByTestId("settings-surface")).toBeVisible();

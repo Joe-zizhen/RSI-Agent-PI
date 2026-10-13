@@ -149,7 +149,7 @@ test("selects pinned threads first with 1-9 and paints badges while the modifier
     await charlieRow.hover();
     await window.getByRole("button", { name: /Pin Charlie/ }).click();
 
-    const pinned = window.getByRole("region", { name: "Pinned threads" });
+    const pinned = window.getByRole("region", { name: /^(Pinned threads|已置顶会话)$/ });
     await expect(pinned.locator(".session-row__title")).toHaveText(["Charlie"]);
     await expectTodayTitles(window, ["Bravo", "Alpha"]);
     await expectShortcutBadges(window, ["Charlie", "Bravo", "Alpha"]);
@@ -488,7 +488,7 @@ async function sendComposerPrompt(window: Page, text: string): Promise<void> {
   const composer = window.getByTestId("composer");
   await expect(composer).toBeVisible();
   await composer.fill(text);
-  await window.getByRole("button", { name: "Send message" }).click();
+  await window.getByRole("button", { name: /^(Send message|发送消息)$/ }).click();
   await expect
     .poll(
       async () => {

@@ -12,7 +12,7 @@ import {
   symlink,
   writeFile,
 } from "node:fs/promises";
-import { devNull, tmpdir } from "node:os";
+import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import type {
   ChangeReviewFileStageResult,
@@ -963,7 +963,10 @@ async function readPatch(
   const scratch = await mkdtemp(join(tmpdir(), "pi-gui-review-"));
   try {
     const materialize = async (side: string, name: string, file: WorkingFile) => {
-      if (file.mode === "missing") return devNull;
+      // The literal "/dev/null" is git's empty-file operand on every platform.
+      // os.devNull ("\\.\nul" on Windows) is not: git fails with
+      // "Could not access" and the patch comes back empty.
+      if (file.mode === "missing") return "/dev/null";
       const relative = `${side}/${name}`;
       const target = safePath(scratch, relative);
       await mkdir(dirname(target), { recursive: true });

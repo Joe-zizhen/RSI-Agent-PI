@@ -43,7 +43,7 @@ test("Review picks up outside edits when the window regains focus, without blank
     await window.evaluate(() => {
       const state = window as unknown as { reviewBlanked?: boolean };
       state.reviewBlanked = false;
-      const region = document.querySelector('[aria-label="Review"]')!;
+      const region = document.querySelector('[aria-label="Review"], [aria-label="审查"]')!;
       new MutationObserver(() => {
         if (/Loading (comparison|diff)/.test(region.textContent ?? "")) state.reviewBlanked = true;
       }).observe(region, { childList: true, subtree: true, characterData: true });

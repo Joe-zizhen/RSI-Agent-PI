@@ -63,8 +63,8 @@ function projectExtensionSource(providerId: string, modelId: string): string {
 async function searchAllModels(window: Page, query: string) {
   await window.keyboard.press(desktopShortcut(","));
   await expect(window.getByTestId("settings-surface")).toBeVisible();
-  await window.getByRole("button", { name: "Models", exact: true }).click();
-  await expect(window.locator(".view-header__title")).toHaveText("Models");
+  await window.getByRole("button", { name: /^(Models|模型)$/ }).click();
+  await expect(window.locator(".view-header__title")).toHaveText(/^(Models|模型)$/);
 
   await window.getByLabel("搜索模型").fill(query);
   return window.getByTestId("settings-surface").locator(".model-row");
@@ -90,8 +90,8 @@ test("models registered by an extension appear in settings", async () => {
     const window = await harness.firstWindow();
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "Models", exact: true }).click();
-    await expect(window.locator(".view-header__title")).toHaveText("Models");
+    await window.getByRole("button", { name: /^(Models|模型)$/ }).click();
+    await expect(window.locator(".view-header__title")).toHaveText(/^(Models|模型)$/);
 
     await window.getByLabel("搜索模型").fill(PROVIDER_ID);
 

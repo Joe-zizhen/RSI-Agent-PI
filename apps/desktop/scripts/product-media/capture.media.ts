@@ -503,7 +503,7 @@ test("capture product media from a real run", async () => {
     await expect(runningRows).toHaveCount(0, { timeout: 240_000 });
 
     await page.keyboard.press("Control+,");
-    await page.getByRole("button", { name: "Appearance", exact: true }).click();
+    await page.getByRole("button", { name: /^(Appearance|外观)$/ }).click();
     await page.getByRole("radio", { name: "Dark", exact: true }).click();
     await expect
       .poll(() => page.evaluate(() => document.documentElement.classList.contains("dark")))

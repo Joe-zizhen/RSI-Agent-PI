@@ -626,7 +626,9 @@ test("keeps a single subscription path when an extension creates a child session
 
     const beforeState = await getDesktopState(window);
     const beforeSelectedSessionId = beforeState.selectedSessionId;
-    const resumedCountBefore = await window.getByText("Resumed session", { exact: true }).count();
+    const resumedCountBefore = await window
+      .getByText(/^(Resumed session|已恢复会话记录)$/)
+      .count();
 
     const composer = window.getByTestId("composer");
     await composer.fill("/spawn-child ");
@@ -639,7 +641,7 @@ test("keeps a single subscription path when an extension creates a child session
       })
       .not.toBe(beforeSelectedSessionId);
     await expect(composer).toHaveValue("Child draft");
-    await expect(window.getByText("Resumed session", { exact: true })).toHaveCount(
+    await expect(window.getByText(/^(Resumed session|已恢复会话记录)$/)).toHaveCount(
       resumedCountBefore,
     );
   } finally {

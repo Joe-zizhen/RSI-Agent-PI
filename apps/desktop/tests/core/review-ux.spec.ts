@@ -171,7 +171,7 @@ test("reviewed marks survive relaunch and apply only to the reviewed file revisi
     await expect(reopenedPanel.getByTestId("diff-panel-reviewed-notes.md")).not.toBeChecked();
 
     await commitFiles(workspacePath, ["src/foo.ts"], "land foo");
-    await reopenedPanel.locator('button[aria-label="Refresh"]').click();
+    await reopenedPanel.getByRole("button", { name: /^(Refresh|刷新)$/ }).click();
     await expect(reopenedPanel.locator(".diff-panel__file")).toHaveCount(2);
     await expect(reopenedPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 1 of 2");
 
@@ -201,7 +201,7 @@ test("a new file at a renamed file's old path can be marked reviewed", async () 
     await selectSidePanel(window, "审查");
     const diffPanel = window.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
-    await diffPanel.locator('button[aria-label="Refresh"]').click();
+    await diffPanel.getByRole("button", { name: /^(Refresh|刷新)$/ }).click();
     const recreated = diffPanel.getByTestId("diff-panel-reviewed-notes.md");
     await expect(recreated).toBeVisible();
     await recreated.click();
@@ -221,7 +221,7 @@ test("Files mode shows a file browser and reader instead of the changes reviewer
     await selectSidePanel(window, "审查");
     const diffPanel = window.locator(".diff-panel");
     await expect(diffPanel).toBeVisible();
-    await expect(diffPanel).toHaveAttribute("aria-label", "Review");
+    await expect(diffPanel).toHaveAttribute("aria-label", /^(Review|审查)$/);
     await expect(diffPanel.getByTestId("diff-panel-counter")).toHaveText("Reviewed 0 of 3");
 
     await diffPanel
@@ -252,7 +252,7 @@ test("Files mode shows a file browser and reader instead of the changes reviewer
     await window.getByTestId("file-editor").getByRole("button", { name: "查看源码" }).click();
     await expect(window.getByTestId("file-workbench-preview")).toContainText("# notes");
     await expect(
-      window.getByTestId("file-editor").getByRole("button", { name: "Open" }),
+      window.getByTestId("file-editor").getByRole("button", { name: /^(Open|打开)$/ }),
     ).toBeVisible();
   } finally {
     await harness.close();

@@ -61,7 +61,7 @@ async function openFile(panel: Locator, path: string): Promise<void> {
 
 async function chooseBranch(window: Page, baseRef: string): Promise<void> {
   await chooseReviewScope(window, "分支");
-  await window.getByLabel("Base branch", { exact: true }).fill(baseRef);
+  await window.getByLabel(/^(Base branch|基础分支)$/).fill(baseRef);
   await window.getByRole("button", { name: "对比", exact: true }).click();
 }
 

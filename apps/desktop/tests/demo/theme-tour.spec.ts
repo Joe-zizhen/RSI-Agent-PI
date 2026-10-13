@@ -114,7 +114,7 @@ async function setTheme(window: Page, presetName: string, variant: ResolvedTheme
   await window.getByTestId("composer").focus();
   await window.keyboard.press(desktopShortcut(","));
   await expect(window.getByTestId("settings-surface")).toBeVisible();
-  await window.getByRole("button", { name: "Appearance", exact: true }).click();
+  await window.getByRole("button", { name: /^(Appearance|外观)$/ }).click();
   await window
     .getByRole("radio", { name: variant === "light" ? "浅色" : "深色", exact: true })
     .click();

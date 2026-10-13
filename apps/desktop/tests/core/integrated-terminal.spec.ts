@@ -122,7 +122,7 @@ test("persists the integrated terminal shell setting", async () => {
 
     await window.keyboard.press(desktopShortcut(","));
     await expect(window.getByTestId("settings-surface")).toBeVisible();
-    await window.getByRole("button", { name: "General", exact: true }).click();
+    await window.getByRole("button", { name: /^(General|通用)$/ }).click();
     const shellInput = window.getByLabel("集成终端的 Shell");
     await shellInput.fill("/bin/zsh");
     await shellInput.press("Enter");
