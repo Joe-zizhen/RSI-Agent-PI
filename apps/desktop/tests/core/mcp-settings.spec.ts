@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { homedir } from "node:os";
+import { join, resolve, sep } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import {
   createNamedThread,
@@ -19,6 +20,16 @@ const MCP_SERVER_FIXTURE = resolve(
 
 async function readJson(path: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Mirrors the app's `withHomeAsTilde`: paths under home display with a leading `~`. */
+function displayPath(path: string): string {
+  const home = homedir();
+  return path.startsWith(`${home}${sep}`) ? `~${path.slice(home.length)}` : path;
 }
 
 async function openMcpSettings(window: Page) {
@@ -204,9 +215,14 @@ test("rejects a server Settings cannot run and leaves mcp.json alone", async () 
     const window = await harness.firstWindow();
     await openMcpSettings(window);
     const surface = window.getByTestId("settings-surface");
-    // The copy names the file this app really uses, here the test's own agent directory.
-    await expect(surface.getByTestId("mcp-servers-empty")).toContainText(mcpPath);
-    await expect(surface).toContainText(`Saved to ${mcpPath}.`);
+    // The copy names the file this app really uses, here the test's own agent
+    // directory (displayed home-abbreviated like the app).
+    const shownMcpPath = displayPath(mcpPath);
+    await expect(surface.getByTestId("mcp-servers-empty")).toContainText(shownMcpPath);
+    // The save hint is localized; the named file is what the app really uses.
+    await expect(surface).toContainText(
+      new RegExp(`(?:Saved to |保存到 )${escapeRegExp(shownMcpPath)}[.。]`),
+    );
     await expect(surface.getByTestId("mcp-servers-empty")).toContainText("/mcp");
 
     await surface.getByLabel("服务器名称").fill("local-file");

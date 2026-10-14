@@ -21,12 +21,15 @@ async function withStore(
 }
 
 for (const providers of [[], ["saved-value"], null, false, 0, "saved-value"]) {
-  await test(`rejects malformed providers ${JSON.stringify(providers)} without changing bytes`, async () => {
+  await test(`malformed providers ${JSON.stringify(providers)} list empty and reject writes without changing bytes`, async () => {
     await withStore(async (store, path) => {
       const original = `${JSON.stringify({ providers, futureSetting: { retained: true } }, null, 4)}\n`;
       await writeFile(path, original);
+      // Listing degrades to empty so the settings surface can show the
+      // models-load error instead of an IPC failure.
+      assert.deepEqual(await store.list(), []);
+      assert.equal(await readFile(path, "utf8"), original);
       for (const operation of [
-        () => store.list(),
         () => store.set(endpoint),
         () => store.delete(endpoint.providerId),
       ]) {

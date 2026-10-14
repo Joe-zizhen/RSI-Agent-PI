@@ -99,6 +99,7 @@ import {
   nowIso,
   persistedToolOutput,
   previewFromSessionInfo,
+  resolvedCatalogSessionTitle,
   shouldPersistSnapshotForAgentEvent,
   shouldTailFromDisk,
   singleFlight,
@@ -279,8 +280,6 @@ interface PromptTemplateAdapter {
   readonly sourceInfo?: RuntimeCommandRecord["sourceInfo"];
   readonly filePath?: string;
 }
-
-const NEW_THREAD_PLACEHOLDER_TITLE = "New thread";
 
 interface SkillAdapter {
   readonly name: string;
@@ -3094,20 +3093,6 @@ export class SessionSupervisor {
 
     await this.catalogs.sessions.upsertSession(nextEntry);
   }
-}
-
-function resolvedCatalogSessionTitle(existingTitle: string | undefined, infoTitle: string): string {
-  const trimmedExisting = existingTitle?.trim();
-  if (!trimmedExisting) {
-    return infoTitle;
-  }
-  if (
-    trimmedExisting === NEW_THREAD_PLACEHOLDER_TITLE &&
-    infoTitle !== NEW_THREAD_PLACEHOLDER_TITLE
-  ) {
-    return infoTitle;
-  }
-  return trimmedExisting;
 }
 
 const DEFAULT_SESSION_THINKING_LEVEL = "medium";

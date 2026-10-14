@@ -137,7 +137,7 @@ test("an extension view opens https links and threads beside its own", async () 
     await composer.press("Enter");
     const card = window.getByTestId("extension-card");
     await expect(card.getByRole("button", { name: /Open related thread/ })).toContainText(
-      "Opens thread",
+      /Opens thread|打开会话/,
     );
     await card.getByRole("button", { name: /Open related thread/ }).click();
     await expect(window.locator(".chat-header__title")).toHaveText("Current thread");

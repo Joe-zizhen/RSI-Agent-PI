@@ -2,8 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   determineRunOutcome,
+  isNewThreadPlaceholderTitle,
   messageText,
   persistedToolOutput,
+  resolvedCatalogSessionTitle,
   shouldPersistSnapshotForAgentEvent,
   transcriptFromMessages,
 } from "../dist/session-supervisor-utils.js";
@@ -142,4 +144,28 @@ await test("transcriptFromMessages shows displayed custom messages the way termi
       text: "as a string",
     },
   ]);
+});
+
+await test("a stale placeholder catalog title heals to the resolved session title", () => {
+  // The desktop writes the placeholder in the active UI language, so heal
+  // checks must recognize every placeholder variant, not just "New thread".
+  assert.equal(isNewThreadPlaceholderTitle("New thread"), true);
+  assert.equal(isNewThreadPlaceholderTitle("新会话"), true);
+  assert.equal(isNewThreadPlaceholderTitle("Heal title after reopen"), false);
+
+  assert.equal(
+    resolvedCatalogSessionTitle("New thread", "Heal title after reopen"),
+    "Heal title after reopen",
+  );
+  assert.equal(
+    resolvedCatalogSessionTitle("新会话", "Heal title after reopen"),
+    "Heal title after reopen",
+  );
+  assert.equal(resolvedCatalogSessionTitle("新会话", "New thread"), "新会话");
+});
+
+await test("a resolved catalog title always wins over the session info title", () => {
+  assert.equal(resolvedCatalogSessionTitle("Named", "Older name"), "Named");
+  assert.equal(resolvedCatalogSessionTitle(undefined, "From session info"), "From session info");
+  assert.equal(resolvedCatalogSessionTitle("  ", "From session info"), "From session info");
 });

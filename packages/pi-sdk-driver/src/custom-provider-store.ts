@@ -35,9 +35,19 @@ export class CustomProviderStore {
 
   constructor(private readonly modelsJsonPath: string) {}
 
+  /**
+   * Listing is best-effort display: an unreadable or invalid models.json shows
+   * no custom endpoints instead of surfacing an IPC error. The app's
+   * modelsLoadError banner explains the file problem. Writes stay strict below.
+   */
   async list(): Promise<readonly CustomProviderEntry[]> {
     return this.enqueue(async () => {
-      const data = await readModelsJson(this.modelsJsonPath);
+      let data: ModelsJson;
+      try {
+        data = await readModelsJson(this.modelsJsonPath);
+      } catch {
+        return [];
+      }
       return readCustomProviders(data);
     });
   }

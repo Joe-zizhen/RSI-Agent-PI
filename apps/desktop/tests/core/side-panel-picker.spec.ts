@@ -30,10 +30,11 @@ test("one icon and keyboard shortcuts toggle the selected workspace tool", async
     const chooser = window.getByTestId("workbench-chooser");
     if (!(await chooser.isVisible())) await window.getByTestId("workbench-add-tab").click();
     const modifierLabel = process.platform === "darwin" ? "⌘" : "Ctrl+";
-    const tile = (name: string) => chooser.getByRole("button", { name, exact: true });
-    await expect(tile("Review").locator("kbd")).toHaveText(`${modifierLabel}R`);
-    await expect(tile("Terminal").locator("kbd")).toHaveText(`${modifierLabel}J`);
-    await expect(tile("Files").locator("kbd")).toHaveCount(0);
+    // Chooser tile names are localized via `aria-label`; match either language.
+    const tile = (name: RegExp) => chooser.getByRole("button", { name });
+    await expect(tile(/^Review$|^审查$/).locator("kbd")).toHaveText(`${modifierLabel}R`);
+    await expect(tile(/^Terminal$|^终端$/).locator("kbd")).toHaveText(`${modifierLabel}J`);
+    await expect(tile(/^Files$|^文件$/).locator("kbd")).toHaveCount(0);
     await selectSidePanel(window, "文件");
     await expect(toggle).toHaveAttribute("aria-pressed", "true");
 

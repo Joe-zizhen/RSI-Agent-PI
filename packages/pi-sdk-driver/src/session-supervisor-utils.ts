@@ -138,6 +138,36 @@ export function createWorkspaceRef(path: string, displayName?: string): Workspac
   };
 }
 
+/**
+ * Placeholder thread titles the desktop app writes in each UI language
+ * (`newThreadPlaceholderTitle` in the desktop). A catalog title that is still
+ * one of these is an unnamed thread and may heal to the session's resolved name.
+ */
+const NEW_THREAD_PLACEHOLDER_TITLES = new Set(["New thread", "新会话"]);
+
+export function isNewThreadPlaceholderTitle(title: string): boolean {
+  return NEW_THREAD_PLACEHOLDER_TITLES.has(title);
+}
+
+/**
+ * The catalog title wins once resolved. An untouched placeholder heals to the
+ * name the session file carries, so a stale placeholder catalog entry cannot
+ * hide a generated title after reopen.
+ */
+export function resolvedCatalogSessionTitle(
+  existingTitle: string | undefined,
+  infoTitle: string,
+): string {
+  const trimmedExisting = existingTitle?.trim();
+  if (!trimmedExisting) {
+    return infoTitle;
+  }
+  if (isNewThreadPlaceholderTitle(trimmedExisting) && !isNewThreadPlaceholderTitle(infoTitle)) {
+    return infoTitle;
+  }
+  return trimmedExisting;
+}
+
 export function titleFromSessionInfo(info: SessionInfo): string {
   const preferred = info.name?.trim();
   if (preferred) {
